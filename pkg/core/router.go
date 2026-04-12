@@ -25,6 +25,7 @@ func (r *Runtime) executeRouterMethod(instance *Instance, method string, args []
 		routeInfo := map[string]interface{}{
 			"handler":    handler,
 			"middleware": []string{},
+			"source":     r.CurrentSource,
 		}
 
 		// Add current middleware if any

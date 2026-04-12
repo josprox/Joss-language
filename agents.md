@@ -104,7 +104,9 @@ El motor de vistas en `pkg/core/view.go` procesa el HTML en este orden **secuenc
 
 **Consecuencia directa**: Cualquier `{{ ($item["key"]) ? {...} : {...} }}` dentro de un bloque `@foreach` **FALLARÁ** porque los Block Ternaries se evalúan **antes** de que el loop inyecte `$item`.
 
-**Solución correcta**: Precomputar campos condicionales en el **controller** y pasarlos como campos del item:
+**⚠️ PROHIBICIÓN DE @if**: El motor de vistas **NO SOPORTA** `@if`, `@else` o `@endif`. Estos deben reemplazarse siempre por **Block Ternaries** `{{ ($cond) ? { ... } : { ... } }}`.
+
+**Solución correcta (@foreach)**: Precomputar campos condicionales en el **controller** y pasarlos como campos del item:
 ```joss
 // En el controller, ANTES de pasarlos a la vista:
 foreach ($items as $item) {

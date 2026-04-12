@@ -185,6 +185,21 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Detect Scheme and Host for Dynamic URLs
+	scheme := "http"
+	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+		scheme = "https"
+	}
+	host := r.Host
+	baseUrl := scheme + "://" + host
+
+	// Automatic Sitemap.xml
+	if r.URL.Path == "/sitemap.xml" {
+		w.Header().Set("Content-Type", "application/xml")
+		fmt.Fprintf(w, "%s", rt.GenerateSitemapXML(baseUrl))
+		return
+	}
+
 	// Handle Virtual Assets (Node Modules)
 	if strings.HasPrefix(r.URL.Path, "/assets/vendor/") {
 		// ... existing code ...
@@ -328,12 +343,8 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	reqData["_cookies"] = cookies
 
-	reqData["_host"] = r.Host
-	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
-		reqData["_scheme"] = "https"
-	} else {
-		reqData["_scheme"] = "http"
-	}
+	reqData["_host"] = host
+	reqData["_scheme"] = scheme
 
 	// 4. Session Management
 	sessionID := ""
@@ -704,10 +715,16 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 
 		// If result is string, write it
 		if str, ok := result.(string); ok {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			// Set default content type if not set
+			if w.Header().Get("Content-Type") == "" {
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			}
+
 			w.Write([]byte(str))
-			// Hot Reload Script (WebSocket)
-			fmt.Fprintf(w, `<script>
+
+			// Hot Reload Script (ONLY for HTML)
+			if strings.Contains(w.Header().Get("Content-Type"), "text/html") {
+				fmt.Fprintf(w, `<script>
 				(function() {
 					var conn = new WebSocket("ws://" + location.host + "/__hot_reload");
 					conn.onmessage = function(evt) {
@@ -722,6 +739,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 					};
 				})();
 			</script>`)
+			}
 			return
 		}
 	} else {

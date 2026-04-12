@@ -285,6 +285,7 @@ func reloadApp(changedFile string) {
 				// Optional: clear routes to remove deleted ones
 				currentRuntime.Routes = make(map[string]map[string]interface{})
 			}
+			currentRuntime.CurrentSource = "routes"
 			loadFile(changedFile)
 		} else {
 			// Reload Controller/Model
@@ -342,6 +343,7 @@ func reloadApp(changedFile string) {
 		// Load Routes (routes.joss)
 		routesPath := "routes.joss"
 		if existsFile(routesPath) {
+			currentRuntime.CurrentSource = "routes"
 			loadFile(routesPath)
 		} else {
 			fmt.Println("[DEBUG] routes.joss not found")
@@ -350,6 +352,7 @@ func reloadApp(changedFile string) {
 		// Load API Routes (api.joss)
 		apiRoutesPath := "api.joss"
 		if existsFile(apiRoutesPath) {
+			currentRuntime.CurrentSource = "api"
 			loadFile(apiRoutesPath)
 		}
 

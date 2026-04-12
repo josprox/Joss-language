@@ -152,6 +152,14 @@ func (r *Runtime) RegisterNativeClasses() {
 	// Lang (I18n)
 	r.registerNative("Lang", []string{"get", "set", "locale", "locales"}, (*Runtime).executeLangMethod)
 	r.Variables["Lang"] = &Instance{Class: r.Classes["Lang"], Fields: make(map[string]interface{})}
+
+	// SEO
+	r.registerNative("SEO", []string{"title", "description", "keywords", "og", "canonical", "meta", "render"}, (*Runtime).executeSEOMethod)
+	r.Variables["SEO"] = &Instance{Class: r.Classes["SEO"], Fields: make(map[string]interface{})}
+
+	// Sitemap
+	r.registerNative("Sitemap", []string{"add", "generate"}, (*Runtime).executeSitemapMethod)
+	r.Variables["Sitemap"] = &Instance{Class: r.Classes["Sitemap"], Fields: make(map[string]interface{})}
 }
 
 func (r *Runtime) executeNativeMethod(instance *Instance, method string, args []interface{}) interface{} {

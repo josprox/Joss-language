@@ -10,6 +10,24 @@ import (
 // NativeHandler is a function that executes a native method
 type NativeHandler func(r *Runtime, instance *Instance, method string, args []interface{}) interface{}
 
+// SEOData stores metadata for search engine optimization
+type SEOData struct {
+	Title       string
+	Description string
+	Keywords    []string
+	Canonical   string
+	Meta        map[string]string
+	OG          map[string]string
+}
+
+// SitemapEntry represents a URL in the sitemap
+type SitemapEntry struct {
+	URL        string
+	LastMod    string
+	ChangeFreq string
+	Priority   float64
+}
+
 // Runtime manages the execution environment of a Joss program
 type Runtime struct {
 	Env               map[string]string
@@ -22,6 +40,11 @@ type Runtime struct {
 	CurrentMiddleware []string
 	CustomMiddlewares map[string]interface{} // Name -> Closure/Handler
 	NativeHandlers    map[string]NativeHandler
+
+	// SEO & Sitemap
+	SEO            *SEOData
+	SitemapEntries []SitemapEntry
+	CurrentSource  string // "routes", "api", "app", etc.
 }
 
 // Instance represents an instance of a class

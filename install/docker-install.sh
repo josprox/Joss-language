@@ -61,4 +61,4 @@ chmod +x "$INSTALL_DIR/joss"
 rm -rf "$TEMP_DIR"
 
 echo "[docker-install] ✓ JosSecurity instalado correctamente."
-joss --version || true
+joss version
