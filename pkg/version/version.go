@@ -2,6 +2,6 @@ package version
 
 const Name = "JosSecurity"
 
-const Version = "3.1.4"
+const Version = "3.1.5"
 
-const NameVersion = "HMEcaVersion"
+const NameVersion = "SisSeoVersion"
