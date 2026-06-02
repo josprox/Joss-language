@@ -2,10 +2,12 @@ package core
 
 import (
 	"fmt"
+	"html"
 	"os"
 	"os/exec"
 	"strings"
 
+	"github.com/jossecurity/joss/pkg/i18n"
 	"github.com/jossecurity/joss/pkg/parser"
 )
 
@@ -196,6 +198,29 @@ func (r *Runtime) CallFunction(fn interface{}, args []interface{}) interface{} {
 
 func (r *Runtime) callBuiltin(name string, args []interface{}) (interface{}, bool) {
 	switch name {
+	case "html_escape":
+		if len(args) > 0 {
+			return html.EscapeString(fmt.Sprintf("%v", args[0])), true
+		}
+		return "", true
+	case "__":
+		if len(args) > 0 {
+			if key, ok := args[0].(string); ok {
+				locale := r.GetLocale()
+				return i18n.GlobalManager.Get(locale, key, nil), true
+			}
+		}
+		return "", true
+	case "csrf_field":
+		tokenVal := ""
+		if sessVal, ok := r.Variables["$__session"]; ok {
+			if sessInst, ok := sessVal.(*Instance); ok {
+				if tok, ok := sessInst.Fields["csrf_token"]; ok {
+					tokenVal = fmt.Sprintf("%v", tok)
+				}
+			}
+		}
+		return fmt.Sprintf(`<input type="hidden" name="_token" value="%s">`, tokenVal), true
 	case "print", "echo":
 		for _, arg := range args {
 			fmt.Println(arg)

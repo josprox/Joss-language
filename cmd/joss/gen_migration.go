@@ -24,9 +24,9 @@ class Create%sTable extends Migration {
     func up() {
         // Schema::create automatically handles the prefix defined in env.joss
         Schema::create("%s", func($table) {
-            $table.id()
-            $table.string("name")
-            $table.timestamps()
+            $table->id()
+            $table->string("name")
+            $table->timestamps()
         })
     }
 

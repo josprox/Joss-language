@@ -2,14 +2,12 @@ package core
 
 import (
 	"fmt"
-	"html"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/jossecurity/joss/pkg/i18n"
 	"github.com/jossecurity/joss/pkg/parser"
 )
 
@@ -309,162 +307,51 @@ func (r *Runtime) executeViewMethod(instance *Instance, method string, args []in
 				finalHtml = strings.Replace(finalHtml, fullMatch, string(includeContent), 1)
 			}
 
-			// 3.5 Handle Control Structures
+			// Pre-process csrf_field() to be raw output
+			reCsrfPre := regexp.MustCompile(`\{\{\s*csrf_field\(\)\s*\}\}`)
+			finalHtml = reCsrfPre.ReplaceAllString(finalHtml, `{{! csrf_field() }}`)
 
-			// A. Handle Block Ternaries: {{ ($var) ? { trueBlock } : { falseBlock } }}
-			reBlockTernary := regexp.MustCompile(`\{\{\s*\((.*?)\)\s*\?\s*\{([\s\S]*?)\}\s*:\s*\{([\s\S]*?)\}\s*\}\}`)
-			for {
-				match := reBlockTernary.FindStringSubmatch(finalHtml)
-				if match == nil {
-					break
-				}
-				fullMatch := match[0]
-				condStr := strings.TrimSpace(match[1])
-				trueBlock := match[2]
-				falseBlock := match[3]
-
-				// Evaluate condition using the evaluator
-				condVal := r.evaluateViewExpression(condStr, data)
-
-				if isTruthy(condVal) {
-					finalHtml = strings.Replace(finalHtml, fullMatch, trueBlock, 1)
-				} else {
-					finalHtml = strings.Replace(finalHtml, fullMatch, falseBlock, 1)
-				}
+			// Compile HTML to JOSS script
+			jossScript, errCompile := compileViewToJOSS(finalHtml)
+			if errCompile != nil {
+				return fmt.Sprintf("Error compiling view: %v", errCompile)
 			}
 
-			// B. Handle @foreach($list as $item) ... @endforeach
-			// Allow spaces: @foreach ( $list as $item )
-			reForeach := regexp.MustCompile(`@foreach\s*\(\s*\$([a-zA-Z0-9_]+)\s+as\s+\$([a-zA-Z0-9_]+)\s*\)([\s\S]*?)@endforeach`)
-			for {
-				match := reForeach.FindStringSubmatch(finalHtml)
-				if match == nil {
-					break
-				}
-				fullMatch := match[0]
-				listName := match[1]
-				itemName := match[2]
-				blockContent := match[3]
+			// Parse and execute JOSS script
+			l := parser.NewLexer(jossScript)
+			p := parser.NewParser(l)
+			program := p.ParseProgram()
 
-				var result string
-				if listVal, ok := data[listName]; ok {
-					// Handle []interface{} (from script)
-					if list, ok := listVal.([]interface{}); ok {
-						for _, item := range list {
-							itemHtml := blockContent
-							if itemMap, ok := item.(map[string]interface{}); ok {
-								for k, v := range itemMap {
-									valStr := fmt.Sprintf("%v", v)
-									// Use regex to replace {{ $item.key }} with flexibility for spaces
-									// Pattern: {{ \s* $itemName \. key \s* }}
-									reItem := regexp.MustCompile(fmt.Sprintf(`\{\{\s*\$%s\.%s\s*\}\}`, regexp.QuoteMeta(itemName), regexp.QuoteMeta(k)))
-									itemHtml = reItem.ReplaceAllString(itemHtml, valStr)
-								}
-							} else if itemInst, ok := item.(*Instance); ok {
-								for k, v := range itemInst.Fields {
-									valStr := fmt.Sprintf("%v", v)
-									// Use regex to replace {{ $item.key }} with flexibility for spaces
-									reItem := regexp.MustCompile(fmt.Sprintf(`\{\{\s*\$%s\.%s\s*\}\}`, regexp.QuoteMeta(itemName), regexp.QuoteMeta(k)))
-									itemHtml = reItem.ReplaceAllString(itemHtml, valStr)
-								}
-							}
-							result += itemHtml
-						}
-					} else if listMap, ok := listVal.([]map[string]interface{}); ok {
-						for _, itemMap := range listMap {
-							itemHtml := blockContent
-							for k, v := range itemMap {
-								valStr := fmt.Sprintf("%v", v)
+			if len(p.Errors()) > 0 {
+				return fmt.Sprintf("Error parsing compiled view JOSS script: %v\nScript:\n%s", p.Errors(), jossScript)
+			}
 
-								// 1. Dot notation: {{ $item.key }}
-								reDot := regexp.MustCompile(fmt.Sprintf(`\{\{\s*\$%s\.%s\s*\}\}`, regexp.QuoteMeta(itemName), regexp.QuoteMeta(k)))
-								itemHtml = reDot.ReplaceAllString(itemHtml, valStr)
+			// Inject variables from data map
+			for k, v := range data {
+				r.Variables[k] = v
+			}
 
-								// 2. Bracket notation (single quote): {{ $item['key'] }}
-								reBracket1 := regexp.MustCompile(fmt.Sprintf(`\{\{\s*\$%s\['%s'\]\s*\}\}`, regexp.QuoteMeta(itemName), regexp.QuoteMeta(k)))
-								itemHtml = reBracket1.ReplaceAllString(itemHtml, valStr)
-
-								// 3. Bracket notation (double quote): {{ $item["key"] }}
-								reBracket2 := regexp.MustCompile(fmt.Sprintf(`\{\{\s*\$%s\["%s"\]\s*\}\}`, regexp.QuoteMeta(itemName), regexp.QuoteMeta(k)))
-								itemHtml = reBracket2.ReplaceAllString(itemHtml, valStr)
-							}
-							result += itemHtml
+			var result interface{}
+			func() {
+				defer func() {
+					if rec := recover(); rec != nil {
+						if rp, ok := rec.(*ReturnPanic); ok {
+							result = rp.Value
+						} else {
+							panic(rec) // Bubble up database or other execution panics
 						}
 					}
+				}()
+
+				for _, stmt := range program.Statements {
+					r.executeStatement(stmt)
 				}
-				finalHtml = strings.Replace(finalHtml, fullMatch, result, 1)
+			}()
+
+			finalHtml = ""
+			if result != nil {
+				finalHtml = fmt.Sprintf("%v", result)
 			}
-
-			// 3.8 Handle Helpers (Pre-Evaluator)
-			tokenVal := ""
-			if token, ok := data["csrf_token"]; ok {
-				tokenVal = fmt.Sprintf("%v", token)
-			}
-
-			// Use Regex for whitespace flexibility
-			reCsrf := regexp.MustCompile(`\{\{\s*csrf_field\(\)\s*\}\}`)
-			if reCsrf.MatchString(finalHtml) {
-				fmt.Printf("[View DEBUG] Replaced {{ csrf_field() }} via Regex with token: %s\n", tokenVal)
-				field := fmt.Sprintf(`<input type="hidden" name="_token" value="%s">`, tokenVal)
-				finalHtml = reCsrf.ReplaceAllString(finalHtml, field)
-			} else {
-				// Fallback
-				if strings.Contains(finalHtml, "csrf_field()") {
-					fmt.Println("[View DEBUG] Regex failed but found 'csrf_field()'. Attempting direct replace.")
-					field := fmt.Sprintf(`<input type="hidden" name="_token" value="%s">`, tokenVal)
-					finalHtml = strings.ReplaceAll(finalHtml, "{{ csrf_field() }}", field)
-					finalHtml = strings.ReplaceAll(finalHtml, "{{csrf_field()}}", field)
-				}
-			}
-
-			// Handle I18n helper: {{ __('key') }}
-			// Regex to match {{ __('key') }} or {{ __("key") }}
-			reLang := regexp.MustCompile(`\{\{\s*__\(\s*['"]([^'"]+)['"]\s*\)\s*\}\}`)
-			finalHtml = reLang.ReplaceAllStringFunc(finalHtml, func(match string) string {
-				submatch := reLang.FindStringSubmatch(match)
-				if len(submatch) > 1 {
-					key := submatch[1]
-					locale := r.GetLocale() // Use current locale
-					return i18n.GlobalManager.Get(locale, key, nil)
-				}
-				return match
-			})
-
-			// 4. Variable Replacement (Evaluator Based)
-
-			// Handle {{ ... }}
-			reTags := regexp.MustCompile(`\{\{(.*?)\}\}`)
-			finalHtml = reTags.ReplaceAllStringFunc(finalHtml, func(match string) string {
-				content := match[2 : len(match)-2] // Remove {{ and }}
-				content = strings.TrimSpace(content)
-
-				// Check for Raw Output {{! ... }}
-				isRaw := false
-				if strings.HasPrefix(content, "!") {
-					isRaw = true
-					content = strings.TrimSpace(strings.TrimPrefix(content, "!"))
-				}
-
-				// Skip if it looks like a block ternary start/end or other control structure leftovers
-				if strings.Contains(content, "? {") {
-					return match // Skip
-				}
-
-				// Evaluate
-				val := r.evaluateViewExpression(content, data)
-
-				// Handle nil explicitly to avoid printing "<nil>"
-				if val == nil {
-					return ""
-				}
-
-				valStr := fmt.Sprintf("%v", val)
-
-				if isRaw {
-					return valStr
-				}
-				return html.EscapeString(valStr)
-			})
 
 			// 5. Asset Injection (Node Modules Only)
 			vendorCSS, vendorJS := am.GetVendorIncludes()
@@ -475,13 +362,13 @@ func (r *Runtime) executeViewMethod(instance *Instance, method string, args []in
 			// Inject CSS (Vendor Only)
 			if strings.Contains(finalHtml, "<!-- JOSS_ASSETS -->") {
 				// Custom placeholder
-				finalHtml = strings.Replace(finalHtml, "<!-- JOSS_ASSETS -->", vendorCSS, 1) // Removed dynamicCSS
+				finalHtml = strings.Replace(finalHtml, "<!-- JOSS_ASSETS -->", vendorCSS, 1)
 			} else if strings.Contains(finalHtml, "</head>") {
 				// Inject before head close
-				finalHtml = strings.Replace(finalHtml, "</head>", vendorCSS+"</head>", 1) // Removed dynamicCSS
+				finalHtml = strings.Replace(finalHtml, "</head>", vendorCSS+"</head>", 1)
 			} else {
 				// Just prepend
-				finalHtml = vendorCSS + finalHtml // Removed dynamicCSS
+				finalHtml = vendorCSS + finalHtml
 			}
 
 			// Inject JS
@@ -495,4 +382,212 @@ func (r *Runtime) executeViewMethod(instance *Instance, method string, args []in
 		}
 	}
 	return nil
+}
+
+// compileViewToJOSS translates HTML view to JOSS script
+func compileViewToJOSS(htmlStr string) (string, error) {
+	var jossCode strings.Builder
+	
+	escapeJossString := func(s string) string {
+		s = strings.ReplaceAll(s, "\\", "\\\\")
+		s = strings.ReplaceAll(s, "\"", "\\\"")
+		s = strings.ReplaceAll(s, "\n", "\\n")
+		s = strings.ReplaceAll(s, "\r", "\\r")
+		return s
+	}
+
+	reForeachStart := regexp.MustCompile(`^@foreach\s*\(\s*\$([a-zA-Z0-9_]+)\s+as\s+\$([a-zA-Z0-9_]+)\s*\)`)
+	reExprRaw := regexp.MustCompile(`^\{\{!(.*?)\}\}`)
+	reExprEscaped := regexp.MustCompile(`^\{\{(.*?)\}\}`)
+
+	translateExpr := func(expr string) string {
+		reDot := regexp.MustCompile(`\$([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)`)
+		for reDot.MatchString(expr) {
+			expr = reDot.ReplaceAllString(expr, "$$$1->$2")
+		}
+		return expr
+	}
+
+	var compileRange func(str string) string
+	compileRange = func(str string) string {
+		var code strings.Builder
+		i := 0
+		n := len(str)
+		
+		flushText := func(start, end int) {
+			if start >= end {
+				return
+			}
+			txt := str[start:end]
+			code.WriteString(fmt.Sprintf("$__output = $__output . \"%s\";\n", escapeJossString(txt)))
+		}
+
+		lastIdx := 0
+
+		for i < n {
+			// 1. Check @foreach
+			if strings.HasPrefix(str[i:], "@foreach") {
+				if m := reForeachStart.FindStringSubmatch(str[i:]); m != nil {
+					flushText(lastIdx, i)
+					
+					listVar := m[1]
+					itemVar := m[2]
+					fullMatchLen := len(m[0])
+					
+					depth := 1
+					j := i + fullMatchLen
+					endIdx := -1
+					for j < n {
+						if strings.HasPrefix(str[j:], "@foreach") {
+							depth++
+							j += 8
+						} else if strings.HasPrefix(str[j:], "@endforeach") {
+							depth--
+							if depth == 0 {
+								endIdx = j
+								break
+							}
+							j += 11
+						} else {
+							j++
+						}
+					}
+					
+					if endIdx != -1 {
+						body := str[i+fullMatchLen : endIdx]
+						code.WriteString(fmt.Sprintf("foreach ($%s as $%s) {\n", listVar, itemVar))
+						code.WriteString(compileRange(body))
+						code.WriteString("}\n")
+						
+						i = endIdx + 11
+						lastIdx = i
+						continue
+					}
+				}
+			}
+
+			// 2. Check Block Ternary
+			if i+4 < n && str[i] == '{' && str[i+1] == '{' {
+				k := i + 2
+				for k < n && (str[k] == ' ' || str[k] == '\t' || str[k] == '\n' || str[k] == '\r') {
+					k++
+				}
+				if k < n && str[k] == '(' {
+					condStart := k + 1
+					condEnd := findMatchingPair(str, k, '(', ')')
+					if condEnd != -1 {
+						q := condEnd + 1
+						for q < n && (str[q] == ' ' || str[q] == '\t' || str[q] == '\n' || str[q] == '\r') {
+							q++
+						}
+						if q < n && str[q] == '?' {
+							tbStart := q + 1
+							for tbStart < n && (str[tbStart] == ' ' || str[tbStart] == '\t' || str[tbStart] == '\n' || str[tbStart] == '\r') {
+								tbStart++
+							}
+							if tbStart < n && str[tbStart] == '{' {
+								tbEnd := findMatchingPair(str, tbStart, '{', '}')
+								if tbEnd != -1 {
+									col := tbEnd + 1
+									for col < n && (str[col] == ' ' || str[col] == '\t' || str[col] == '\n' || str[col] == '\r') {
+										col++
+									}
+									if col < n && str[col] == ':' {
+										fbStart := col + 1
+										for fbStart < n && (str[fbStart] == ' ' || str[fbStart] == '\t' || str[fbStart] == '\n' || str[fbStart] == '\r') {
+											fbStart++
+										}
+										if fbStart < n && str[fbStart] == '{' {
+											fbEnd := findMatchingPair(str, fbStart, '{', '}')
+											if fbEnd != -1 {
+												closeBraces := fbEnd + 1
+												for closeBraces < n && (str[closeBraces] == ' ' || str[closeBraces] == '\t' || str[closeBraces] == '\n' || str[closeBraces] == '\r') {
+													closeBraces++
+												}
+												if closeBraces+1 < n && str[closeBraces] == '}' && str[closeBraces+1] == '}' {
+													flushText(lastIdx, i)
+													
+													condExpr := str[condStart:condEnd]
+													trueBody := str[tbStart+1 : tbEnd]
+													falseBody := str[fbStart+1 : fbEnd]
+													
+													code.WriteString(fmt.Sprintf("(%s) ? {\n", translateExpr(condExpr)))
+													code.WriteString(compileRange(trueBody))
+													code.WriteString("} : {\n")
+													code.WriteString(compileRange(falseBody))
+													code.WriteString("};\n")
+													
+													i = closeBraces + 2
+													lastIdx = i
+													continue
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			// 3. Check Raw Expression: {{! expr }}
+			if strings.HasPrefix(str[i:], "{{!") {
+				if m := reExprRaw.FindStringSubmatch(str[i:]); m != nil {
+					flushText(lastIdx, i)
+					
+					expr := strings.TrimSpace(m[1])
+					fullMatchLen := len(m[0])
+					
+					code.WriteString(fmt.Sprintf("$__output = $__output . (%s);\n", translateExpr(expr)))
+					
+					i += fullMatchLen
+					lastIdx = i
+					continue
+				}
+			}
+
+			// 4. Check Escaped Expression: {{ expr }}
+			if strings.HasPrefix(str[i:], "{{") {
+				if m := reExprEscaped.FindStringSubmatch(str[i:]); m != nil {
+					flushText(lastIdx, i)
+					
+					expr := strings.TrimSpace(m[1])
+					fullMatchLen := len(m[0])
+					
+					code.WriteString(fmt.Sprintf("$__output = $__output . html_escape(%s);\n", translateExpr(expr)))
+					
+					i += fullMatchLen
+					lastIdx = i
+					continue
+				}
+			}
+
+			i++
+		}
+		
+		flushText(lastIdx, n)
+		return code.String()
+	}
+
+	jossCode.WriteString("let string $__output = \"\";\n")
+	jossCode.WriteString(compileRange(htmlStr))
+	jossCode.WriteString("return $__output;\n")
+
+	return jossCode.String(), nil
+}
+
+func findMatchingPair(s string, startPos int, startChar, endChar rune) int {
+	depth := 0
+	for idx, r := range s[startPos:] {
+		if r == startChar {
+			depth++
+		} else if r == endChar {
+			depth--
+			if depth == 0 {
+				return startPos + idx
+			}
+		}
+	}
+	return -1
 }

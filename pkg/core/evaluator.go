@@ -51,6 +51,8 @@ func (r *Runtime) evaluateExpression(exp parser.Expression) interface{} {
 		return r.evaluatePrefix(e)
 	case *parser.PostfixExpression:
 		return r.evaluatePostfix(e)
+	case *parser.MatchExpression:
+		return r.evaluateMatch(e)
 	}
 	return nil
 }

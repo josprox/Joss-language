@@ -106,3 +106,52 @@ return View::render("home", {"name": "Jose"})
 // Carga 'app/views/auth/login.joss.html' con notación de punto
 return View::render("auth.login")
 ```
+
+---
+
+## ⚠️ Reglas y Limitaciones del Motor de Vistas (CRÍTICO)
+
+El motor de renderizado de JosSecurity traduce las plantillas `.joss.html` a scripts JOSS ejecutables para una velocidad de procesamiento superior y ejecución nativa. Debido a esto, se aplican las siguientes reglas obligatorias:
+
+### 1. Prohibición de `@if`
+El motor **no soporta** las directivas `@if`, `@else` o `@endif`. Toda lógica condicional debe ser manejada mediante **Block Ternaries** en la sintaxis:
+```html
+{{ ($condicion) ? { <p>Mostrar si es verdadero</p> } : { <p>Mostrar si es falso</p> } }}
+```
+
+### 2. Orden de Procesamiento
+Las plantillas se procesan secuencialmente en el siguiente orden:
+1. `@extends` y `@yield` (herencia de layouts)
+2. `@include` (inclusión de sub-vistas)
+3. **Block Ternaries** `{{ ($cond) ? { ... } : { ... } }}`
+4. **`@foreach`**
+5. Helpers (`{{ csrf_field() }}`)
+6. Expresiones simples (`{{ $var }}`)
+
+### 3. Gotcha Crítico con `@foreach`
+Como los **Block Ternaries** se procesan **antes** de que el loop `@foreach` inyecte variables de iteración, cualquier ternario complejo que dependa del item iterado (ej: `{{ ($item.activo) ? { ... } : { ... } }}`) **fallará**.
+
+**Solución**: Precomputar los campos condicionales en el **controlador** antes de pasar el arreglo a la vista:
+```joss
+// En el controlador:
+foreach ($items as $item) {
+    $item["estado_badge"] = ($item["is_online"]) ? "<span class='badge-online'>Online</span>" : "<span class='badge-offline'>Offline</span>"
+}
+return View::render("dashboard", ["items": $items])
+```
+En la vista, simplemente use:
+```html
+{{ $item.estado_badge }}
+```
+
+### 4. Auth::user() en Vistas
+`Auth::user()` retorna un objeto de clase (`*Instance`). El renderizador de plantillas no puede evaluar campos complejos de instancias con notación `$user.name` en la vista. 
+**Nunca pase `Auth::user()` completo a `View::render()`.** Extraiga los campos individuales que necesite en el controlador antes de renderizar la vista:
+```joss
+// CORRECTO en el controlador:
+$u = Auth::user()
+return View::render("dashboard", {
+    "user_name":  $u->name,
+    "user_email": $u->email
+})
+```

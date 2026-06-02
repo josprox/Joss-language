@@ -50,6 +50,7 @@ const (
 	DOUBLE_COLON  = "::"
 	PIPE          = "|>"
 	NULL_COALESCE = "??"
+	FAT_ARROW     = "=>"
 
 	// Keywords
 	FUNCTION = "FUNCTION"
@@ -81,6 +82,8 @@ const (
 	EXTENDS = "EXTENDS"
 	IF      = "IF"
 	ELSE    = "ELSE"
+	MATCH   = "MATCH"
+	DEFAULT = "DEFAULT"
 )
 
 type Token struct {
@@ -118,6 +121,8 @@ var keywords = map[string]TokenType{
 	"extends":   EXTENDS,
 	"@import":   IMPORT,
 	"import":    IMPORT,
+	"match":     MATCH,
+	"default":   DEFAULT,
 }
 
 func LookupIdent(ident string) TokenType {

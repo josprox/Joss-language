@@ -110,6 +110,44 @@ $nivel = ($puntos > 1000) ? "Oro" :
 }
 ```
 
+### Expresión `match`
+
+La expresión `match` bifurca la ejecución basándose en una comparación estricta de valores (tipo y valor idénticos). Al ser una expresión evaluable, retorna un valor que puede ser asignado o impreso.
+
+#### Características clave:
+- **Comparación Estricta**: No realiza coerción de tipos (ej. `1` no coincide con `"1"` ni con `1.0`).
+- **Múltiples Claves**: Permite asociar múltiples condiciones separadas por comas en un solo brazo.
+- **Brazo por Defecto (`default`)**: Actúa como fallback si ninguna otra clave coincide.
+- **Evaluación Segura**: Si no hay coincidencia y no se define un brazo `default`, retorna `nil` de forma segura.
+
+#### Ejemplo de uso:
+```joss
+$status = 200;
+
+$mensaje = match ($status) {
+    200, 201 => "Creado / Exitoso",
+    301, 302 => "Redirección",
+    400, 404 => "Error en cliente",
+    default  => "Error de servidor o desconocido"
+};
+
+print($mensaje); // Imprime: Creado / Exitoso
+```
+
+#### Uso complejo (Match Anidado y Coincidencia de Arrays/Maps):
+```joss
+$user = {
+    "role": "admin",
+    "level": 10
+};
+
+$role_desc = match ($user) {
+    { "role": "admin", "level": 10 } => "Administrador Principal",
+    { "role": "admin", "level": 5 }  => "Administrador Junior",
+    default => "Usuario Estándar"
+};
+```
+
 ### Operador Elvis (?:) y Null Coalescing (??)
 
 ```joss

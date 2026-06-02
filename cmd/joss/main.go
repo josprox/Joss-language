@@ -196,5 +196,13 @@ func executeScript(filename string) {
 	}
 
 	rt := core.NewRuntime()
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("\n[Error de Ejecución JOSS] %v\n", r)
+			os.Exit(1)
+		}
+	}()
+
 	rt.Execute(program)
 }

@@ -319,3 +319,36 @@ func (be *BlockExpression) TokenLiteral() string { return be.Token.Literal }
 func (be *BlockExpression) String() string {
 	return be.Block.String()
 }
+
+type MatchArm struct {
+	Keys      []Expression
+	IsDefault bool
+	Value     Expression
+}
+
+type MatchExpression struct {
+	Token   Token // The MATCH token
+	Subject Expression
+	Arms    []MatchArm
+}
+
+func (me *MatchExpression) expressionNode()      {}
+func (me *MatchExpression) TokenLiteral() string { return me.Token.Literal }
+func (me *MatchExpression) String() string {
+	var out bytes.Buffer
+	out.WriteString("match (")
+	out.WriteString(me.Subject.String())
+	out.WriteString(") {")
+	armsStr := []string{}
+	for _, arm := range me.Arms {
+		keysStr := []string{}
+		for _, k := range arm.Keys {
+			keysStr = append(keysStr, k.String())
+		}
+		armsStr = append(armsStr, strings.Join(keysStr, ", ")+" => "+arm.Value.String())
+	}
+	out.WriteString(strings.Join(armsStr, ", "))
+	out.WriteString("}")
+	return out.String()
+}
+

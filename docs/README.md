@@ -8,6 +8,7 @@ Guía completa de JosSecurity v3.0 (Gold Master)
 - [SINTAXIS.md](./SINTAXIS.md) - Sintaxis completa del lenguaje
   - Variables y tipos
   - Operadores ternarios (reemplazo de if/else)
+  - Expresión `match` (bifurcación con tipo estricto)
   - Clases y herencia
   - Funciones
   - Loops (foreach)
@@ -188,6 +189,3 @@ Crear issue en el repositorio con:
 - Código de ejemplo
 
 ---
-
-**Versión**: JosSecurity v3.3.0
-**Última actualización**: 2026-02-22

@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/jossecurity/joss/pkg/parser"
 )
@@ -733,4 +734,67 @@ func (r *Runtime) evaluatePrefix(pe *parser.PrefixExpression) interface{} {
 	}
 
 	return nil
+}
+
+func (r *Runtime) evaluateMatch(me *parser.MatchExpression) interface{} {
+	subject := r.evaluateExpression(me.Subject)
+
+	var defaultArm *parser.MatchArm
+	for _, arm := range me.Arms {
+		if arm.IsDefault {
+			defaultArm = &arm
+			continue
+		}
+
+		for _, keyExpr := range arm.Keys {
+			keyVal := r.evaluateExpression(keyExpr)
+			if strictCompare(subject, keyVal) {
+				return r.evaluateExpression(arm.Value)
+			}
+		}
+	}
+
+	if defaultArm != nil {
+		return r.evaluateExpression(defaultArm.Value)
+	}
+
+	return nil
+}
+
+func strictCompare(a, b interface{}) bool {
+	a = normalizeNumber(a)
+	b = normalizeNumber(b)
+	if a == nil || b == nil {
+		return a == b
+	}
+	return reflect.DeepEqual(a, b)
+}
+
+func normalizeNumber(v interface{}) interface{} {
+	if v == nil {
+		return nil
+	}
+	switch val := v.(type) {
+	case int:
+		return int64(val)
+	case int32:
+		return int64(val)
+	case int16:
+		return int64(val)
+	case int8:
+		return int64(val)
+	case uint:
+		return int64(val)
+	case uint64:
+		return int64(val)
+	case uint32:
+		return int64(val)
+	case uint16:
+		return int64(val)
+	case uint8:
+		return int64(val)
+	case float32:
+		return float64(val)
+	}
+	return v
 }

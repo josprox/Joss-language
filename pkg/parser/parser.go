@@ -90,6 +90,7 @@ func NewParser(l *Lexer) *Parser {
 	p.registerPrefix(BANG, p.parsePrefixExpression)
 	p.registerPrefix(MINUS, p.parsePrefixExpression)
 	p.registerPrefix(FUNCTION, p.parseFunctionLiteral)
+	p.registerPrefix(MATCH, p.parseMatchExpression)
 
 	p.infixParseFns = make(map[TokenType]infixParseFn)
 	p.registerInfix(PLUS, p.parseInfixExpression)

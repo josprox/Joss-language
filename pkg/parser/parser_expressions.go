@@ -347,7 +347,29 @@ func (p *Parser) parseInfixExpression(left Expression) Expression {
 	p.nextToken()
 	expression.Right = p.parseExpression(precedence)
 
+	if expression.Operator == "." {
+		if call, ok := expression.Right.(*CallExpression); ok {
+			funcName := call.Function.String()
+			if isBlueprintMethod(funcName) {
+				msg := fmt.Sprintf("Línea %d: Uso de '.' sospechoso para llamar al método '%s'. En JosSecurity, el acceso a métodos de objetos o mapas usa '->' (ej. $objeto->%s())", p.curToken.Line, funcName, funcName)
+				p.errors = append(p.errors, msg)
+			}
+		}
+	}
+
 	return expression
+}
+
+func isBlueprintMethod(name string) bool {
+	switch name {
+	case "id", "string", "text", "integer", "tinyInteger", "smallInteger", "mediumInteger", "bigInteger",
+		"unsignedInteger", "unsignedBigInteger", "float", "double", "decimal", "char", "mediumText",
+		"longText", "date", "dateTime", "time", "timestamp", "timestamps", "softDeletes", "boolean",
+		"json", "enum", "increments", "bigIncrements", "unique", "nullable", "unsigned", "default",
+		"comment", "foreign", "references", "on", "onDelete", "onUpdate", "dropColumn":
+		return true
+	}
+	return false
 }
 
 func (p *Parser) parseTernaryExpression(condition Expression) Expression {
@@ -562,3 +584,97 @@ func (p *Parser) parsePostfixExpression(left Expression) Expression {
 		Left:     left,
 	}
 }
+
+func (p *Parser) parseMatchExpression() Expression {
+	exp := &MatchExpression{Token: p.curToken}
+
+	if !p.expectPeek(LPAREN) {
+		return nil
+	}
+
+	p.nextToken()
+	exp.Subject = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(RPAREN) {
+		return nil
+	}
+
+	if !p.expectPeek(LBRACE) {
+		return nil
+	}
+
+	p.nextToken()
+
+	exp.Arms = []MatchArm{}
+
+	for !p.curTokenIs(RBRACE) && !p.curTokenIs(EOF) {
+		if p.curTokenIs(NEWLINE) {
+			p.nextToken()
+			continue
+		}
+
+		var keys []Expression
+		for {
+			if p.curTokenIs(NEWLINE) {
+				p.nextToken()
+				continue
+			}
+
+			if p.curTokenIs(DEFAULT) {
+				keys = append(keys, &Identifier{Token: p.curToken, Value: "default"})
+			} else {
+				keyExp := p.parseExpression(LOWEST)
+				if keyExp == nil {
+					return nil
+				}
+				keys = append(keys, keyExp)
+			}
+
+			if p.peekTokenIs(COMMA) {
+				p.nextToken() // curToken is COMMA
+				p.nextToken() // curToken is start of next key
+				continue
+			}
+			break
+		}
+
+		if !p.expectPeek(FAT_ARROW) {
+			return nil
+		}
+
+		p.nextToken() // move past FAT_ARROW
+
+		valueExp := p.parseExpression(LOWEST)
+		if valueExp == nil {
+			return nil
+		}
+
+		isDefault := false
+		for _, k := range keys {
+			if ident, ok := k.(*Identifier); ok && ident.Value == "default" && ident.Token.Type == DEFAULT {
+				isDefault = true
+				break
+			}
+		}
+
+		arm := MatchArm{
+			Keys:      keys,
+			IsDefault: isDefault,
+			Value:     valueExp,
+		}
+		exp.Arms = append(exp.Arms, arm)
+
+		if p.peekTokenIs(COMMA) {
+			p.nextToken() // curToken is COMMA
+		}
+
+		p.nextToken() // move to next token (NEWLINE, RBRACE, or next arm)
+	}
+
+	if p.curTokenIs(RBRACE) {
+		return exp
+	}
+
+	return nil
+}
+
