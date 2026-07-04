@@ -41,6 +41,9 @@ JWT_SECRET="tu_secreto_muy_largo_y_aleatorio"
 JWT_INITIAL_EXPIRY_MONTHS="3"
 JWT_REFRESH_EXPIRY_MONTHS="6"
 
+# CORS (Seguridad Web)
+CORS_WEB="*"             # "*" para desarrollo local | whitelist separada por comas en prod
+
 # Correo
 MAIL_HOST="smtp.gmail.com"
 MAIL_PORT="587"
@@ -55,6 +58,9 @@ REDIS_PASSWORD=""
 # Cookies
 COOKIE_SESSION="2592000"  # 30 días en segundos
 ```
+
+### Autogeneración de Claves Criptográficas (Nativo)
+Si al iniciar el runtime de Joss se detecta que las variables `APP_KEY` o `JWT_SECRET` en tu archivo `env.joss` se encuentran vacías, ausentes o poseen valores por defecto inseguros (menores a 32 caracteres), el runtime **las generará automáticamente** utilizando algoritmos criptográficos robustos (`crypto/rand`) y actualizará físicamente tu archivo `env.joss` al instante sin necesidad de intervención manual.
 
 ### Variables Disponibles
 

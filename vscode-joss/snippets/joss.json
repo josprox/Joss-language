@@ -551,5 +551,42 @@
       "\\$valid = Auth::validateToken(${1:\\$token})"
     ],
     "description": "Validate a Bearer token"
+  },
+  "Notify Broadcast": {
+    "prefix": "notify:all",
+    "body": [
+      "\\$notify = new Notify()",
+      "\\$notify.title(\"${1:Title}\").message(\"${2:Message}\").segment(\"all\").send()"
+    ],
+    "description": "Send a broadcast notification to all users"
+  },
+  "Notify User": {
+    "prefix": "notify:user",
+    "body": [
+      "\\$notify = new Notify()",
+      "\\$notify.title(\"${1:Title}\").message(\"${2:Message}\").user(${3:userId}).send()"
+    ],
+    "description": "Send a push notification to a specific user"
+  },
+  "Session Get": {
+    "prefix": "session:get",
+    "body": [
+      "Session::get(\"${1:key}\")"
+    ],
+    "description": "Get a value from session"
+  },
+  "Session Put": {
+    "prefix": "session:put",
+    "body": [
+      "Session::put(\"${1:key}\", ${2:value})"
+    ],
+    "description": "Put a value in session"
+  },
+  "Session Forget": {
+    "prefix": "session:forget",
+    "body": [
+      "Session::forget(\"${1:key}\")"
+    ],
+    "description": "Forget a session key"
   }
 }

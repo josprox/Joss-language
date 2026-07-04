@@ -10,7 +10,7 @@ import (
 func activateAI() {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("🚀  JosSecurity AI Activation Wizard  🚀")
+	fmt.Println("🚀  Joss AI Activation Wizard  🚀")
 	fmt.Println("----------------------------------------")
 	fmt.Println("Este asistente configurará la IA nativa en tu proyecto.")
 	fmt.Println("")

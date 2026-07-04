@@ -70,6 +70,9 @@ joss new web mi_proyecto_web
 
 ## Desarrollo
 
+### Cierre Interactivo Rápido (q)
+Cualquier comando de ejecución interactivo (`joss server start`, `joss run`, `joss program start`) soporta la detención rápida mediante el teclado. Al ingresar la letra **`q`** (en minúscula) en la consola y pulsar **Enter**, el CLI terminará inmediatamente la ejecución de forma limpia.
+
 ### `joss server start`
 
 Inicia el servidor HTTP de desarrollo en el puerto 8000.

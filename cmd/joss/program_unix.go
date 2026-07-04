@@ -13,6 +13,6 @@ import (
 var defaultLogo []byte
 
 func startProgram() {
-	fmt.Println("Starting JosSecurity Server (WebView not supported on this platform yet)...")
+	fmt.Println("Starting Joss Server (WebView not supported on this platform yet)...")
 	server.Start(nil)
 }

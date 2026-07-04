@@ -22,7 +22,7 @@ import (
 var runnerWindows []byte
 
 func buildWeb() {
-	fmt.Println("Iniciando compilación WEB de JosSecurity...")
+	fmt.Println("Iniciando compilación WEB de Joss...")
 
 	// 1. Validate Structure (Strict Topology)
 	required := []string{
@@ -36,7 +36,7 @@ func buildWeb() {
 	for _, f := range required {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
 			fmt.Printf("Error de Arquitectura: Falta archivo/directorio requerido '%s'\n", f)
-			fmt.Println("La Biblia de JosSecurity requiere una estructura estricta.")
+			fmt.Println("La Biblia de Joss requiere una estructura estricta.")
 			return
 		}
 	}
@@ -164,7 +164,7 @@ func buildWeb() {
 }
 
 func buildProgram() {
-	fmt.Println("Iniciando compilación PROGRAM de JosSecurity (SECURE MODE)...")
+	fmt.Println("Iniciando compilación PROGRAM de Joss (SECURE MODE)...")
 
 	// 1. Ask for Target OS
 	fmt.Println("Seleccione el sistema operativo destino:")

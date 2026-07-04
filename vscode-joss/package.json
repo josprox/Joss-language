@@ -1,8 +1,8 @@
 {
   "name": "joss-language",
-  "displayName": "JosSecurity Language Support",
-  "description": "Advanced language support for JosSecurity with LSP, go-to-definition, hover, diagnostics, and security analysis",
-  "version": "3.3.0",
+  "displayName": "Joss Language Support",
+  "description": "Advanced language support for Joss with LSP, go-to-definition, hover, diagnostics, and security analysis",
+  "version": "3.4.1",
   "icon": "images/icon.png",
   "publisher": "jossecurity",
   "engines": {
@@ -157,14 +157,14 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "JosSecurity",
+      "title": "Joss",
       "properties": {
         "joss.indexOnOpen": {
           "type": "boolean",
           "default": true,
           "description": "Automatically index workspace when opening a .joss file"
         },
-        "joss.enableJosSecurity": {
+        "joss.enableJoss": {
           "type": "boolean",
           "default": true,
           "description": "Enable security analysis"

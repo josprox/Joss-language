@@ -1,7 +1,9 @@
 package core
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
@@ -283,6 +285,83 @@ func (r *Runtime) LoadEnv(fs http.FileSystem) {
 			r.Env[k] = v
 		}
 	}
+
+	// 5. Autogenerate JWT_SECRET and APP_KEY if weak or missing
+	updatedEnv := false
+	jwtSec := r.Env["JWT_SECRET"]
+	if jwtSec == "" || jwtSec == "joss_default_secret_change_in_production" || len(jwtSec) < 32 {
+		r.Env["JWT_SECRET"] = generateSecureKey()
+		updatedEnv = true
+		fmt.Println("[Security] Advertencia: JWT_SECRET inexistente o debil. Autogenerando uno nuevo y seguro...")
+	}
+
+	appKey := r.Env["APP_KEY"]
+	if appKey == "" || appKey == "joss_default_secret_change_in_production" || len(appKey) < 32 {
+		r.Env["APP_KEY"] = generateSecureKey()
+		updatedEnv = true
+		fmt.Println("[Security] Advertencia: APP_KEY inexistente o debil. Autogenerando uno nuevo y seguro...")
+	}
+
+	if updatedEnv {
+		r.writeEnvJoss()
+	}
+}
+
+func generateSecureKey() string {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "joss_fallback_secret_secure_key_123456"
+	}
+	return hex.EncodeToString(bytes)
+}
+
+func (r *Runtime) writeEnvJoss() {
+	filePath := "env.joss"
+	if _, err := os.Stat("env.joss"); os.IsNotExist(err) {
+		if _, errDot := os.Stat(".env"); errDot == nil {
+			filePath = ".env"
+		} else {
+			f, errCreate := os.Create("env.joss")
+			if errCreate != nil {
+				return
+			}
+			f.Close()
+		}
+	}
+
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return
+	}
+
+	lines := strings.Split(string(content), "\n")
+	hasJWT := false
+	hasKey := false
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "JWT_SECRET=") {
+			lines[i] = fmt.Sprintf("JWT_SECRET=\"%s\"", r.Env["JWT_SECRET"])
+			hasJWT = true
+		} else if strings.HasPrefix(trimmed, "APP_KEY=") {
+			lines[i] = fmt.Sprintf("APP_KEY=\"%s\"", r.Env["APP_KEY"])
+			hasKey = true
+		}
+	}
+
+	var newLines []string
+	for _, l := range lines {
+		newLines = append(newLines, l)
+	}
+	if !hasJWT {
+		newLines = append(newLines, fmt.Sprintf("JWT_SECRET=\"%s\"", r.Env["JWT_SECRET"]))
+	}
+	if !hasKey {
+		newLines = append(newLines, fmt.Sprintf("APP_KEY=\"%s\"", r.Env["APP_KEY"]))
+	}
+
+	os.WriteFile(filePath, []byte(strings.Join(newLines, "\n")), 0644)
+	fmt.Printf("[Security] Archivo de entorno %s actualizado con claves de seguridad fuertes.\n", filePath)
 }
 
 // GetDB ensures the database connection is initialized and returns it.
@@ -337,6 +416,8 @@ func (r *Runtime) GetDB() *sql.DB {
 		r.EnsureCronTable()
 		r.EnsureMigrationTable()
 		r.EnsureAuthTables()
+		r.EnsureMFATables()
+		r.EnsureNotificationTables()
 
 		// Connection Pooling Settings
 		db.SetMaxOpenConns(25)

@@ -84,7 +84,7 @@ func startProgram() {
 	}
 	defer w.Destroy()
 
-	w.SetTitle("JosSecurity App")
+	w.SetTitle("Joss App")
 	w.SetSize(1024, 768, webview2.HintNone)
 
 	// Navigate to local server

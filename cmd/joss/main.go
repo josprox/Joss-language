@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "modernc.org/sqlite"
@@ -14,6 +16,21 @@ import (
 )
 
 func main() {
+	// Listener global en background para terminar con la tecla "q"
+	go func() {
+		reader := bufio.NewReader(os.Stdin)
+		for {
+			text, err := reader.ReadString('\n')
+			if err != nil {
+				return
+			}
+			if strings.TrimSpace(text) == "q" {
+				fmt.Println("\n[Joss] Terminando ejecucion por peticion del usuario (tecla 'q')...")
+				os.Exit(0)
+			}
+		}
+	}()
+
 	if len(os.Args) < 2 {
 		printHelp()
 		os.Exit(1)

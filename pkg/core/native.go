@@ -39,8 +39,23 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.NativeHandlers["GranMySQL"] = (*Runtime).executeGranMySQLMethod
 
 	// Auth
-	r.registerNative("Auth", []string{"user", "check", "guest", "id", "logout", "attempt", "create", "hasRole", "verify", "refresh", "delete"}, (*Runtime).executeAuthMethod)
+	r.registerNative("Auth", []string{"user", "check", "guest", "id", "logout", "attempt", "create", "hasRole", "verify", "refresh", "delete", "login", "complete2FA"}, (*Runtime).executeAuthMethod)
 	r.Variables["Auth"] = &Instance{Class: r.Classes["Auth"], Fields: make(map[string]interface{})}
+
+	// AuthLoginResult
+	r.registerNative("AuthLoginResult", []string{"require2FA", "onSuccess", "onChallenge", "onFail", "response"}, (*Runtime).executeAuthLoginResultMethod)
+
+	// MFA
+	r.registerNative("MFA", []string{"verify", "policy", "challenge", "generateTOTP", "verifyTOTP", "generateRecoveryCodes", "verifyRecoveryCode"}, (*Runtime).executeMFAMethod)
+	r.Variables["MFA"] = &Instance{Class: r.Classes["MFA"], Fields: make(map[string]interface{})}
+
+	// Notify
+	r.registerNative("Notify", []string{"app", "apps", "segment", "user", "title", "message", "html", "inApp", "schedule", "send"}, (*Runtime).executeNotifyMethod)
+	r.Variables["Notify"] = &Instance{Class: r.Classes["Notify"], Fields: make(map[string]interface{})}
+
+	// TwoFactor
+	r.registerNative("TwoFactor", []string{"verify", "required", "challenge"}, (*Runtime).executeTwoFactorMethod)
+	r.Variables["TwoFactor"] = &Instance{Class: r.Classes["TwoFactor"], Fields: make(map[string]interface{})}
 
 	// System
 	r.registerNative("System", []string{"env", "Run", "load_driver", "log"}, (*Runtime).executeSystemMethod)
@@ -107,7 +122,7 @@ func (r *Runtime) RegisterNativeClasses() {
 
 	// Session
 	r.registerNative("Session", []string{"get", "put", "has", "forget", "all"}, (*Runtime).executeSessionMethod)
-	// Session is instantiated per request
+	r.Variables["Session"] = &Instance{Class: r.Classes["Session"], Fields: make(map[string]interface{})}
 
 	// UUID
 	r.registerNative("UUID", []string{"generate", "v4"}, (*Runtime).executeUUIDMethod)

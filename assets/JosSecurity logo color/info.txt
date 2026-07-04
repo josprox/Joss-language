@@ -1,14 +1,14 @@
 
 Hope you enjoy your new logo, here are the people that
 made your beautiful logo happen :)
-font name: Neuton-Regular
-font link: https://fonts.google.com/specimen/Neuton
-font author: Brian Zick
-font author site: https://brianskywalker.deviantart.com/
+font name: Midiet_Serif_Bold
+font link: http://www.yoworks.com/midiet/index.html
+font author: Yamaoka Yasuhiro
+font author site: http://www.yoworks.com/
 
 
-icon designer: romzicon
-icon designer link: /creator/romzicon/
+icon designer: undefined
+icon designer link: undefined
         
-{"bg-gradient-0":"#177775","bg-gradient-1":"#28D2BF","icon":"#ffffff","font":"#ffffff","slogan":"#ffffff"}
+{"bg":"#FCE0DD","icon-gradient-1":"#FA9169","slogan":"#52242c","font":"#3E1018","icon-gradient-0":"#EA1F59"}
       

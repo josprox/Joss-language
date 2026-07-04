@@ -13,8 +13,8 @@ import (
 // Dispatch handles HTTP requests based on defined routes
 func (r *Runtime) Dispatch(method, path string, reqData, sessData map[string]interface{}) (interface{}, error) {
 	// Inject Request and Session
-	r.Variables["$__request"] = &Instance{Fields: reqData}
-	r.Variables["$__session"] = &Instance{Fields: sessData}
+	r.Variables["$__request"] = &Instance{Class: r.Classes["Request"], Fields: reqData}
+	r.Variables["$__session"] = &Instance{Class: r.Classes["Session"], Fields: sessData}
 
 	// Match Route
 	var handler interface{}

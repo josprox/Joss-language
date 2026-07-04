@@ -28,6 +28,73 @@ func (r *Runtime) executeAuthMethod(instance *Instance, method string, args []in
 	r.ensureAuthTables(usersTable, rolesTable, prefix)
 
 	switch method {
+	case "complete2FA":
+		if len(args) >= 1 {
+			var userId int
+			switch v := args[0].(type) {
+			case int:
+				userId = v
+			case float64:
+				userId = int(v)
+			case int64:
+				userId = int(v)
+			default:
+				fmt.Sscanf(fmt.Sprintf("%v", v), "%d", &userId)
+			}
+
+			if r.GetDB() == nil {
+				return nil
+			}
+
+			var email, username, roleName sql.NullString
+			query := fmt.Sprintf(`
+				SELECT u.email, u.username, r.name 
+				FROM %s u 
+				LEFT JOIN %s r ON u.role_id = r.id 
+				WHERE u.id = ?`, usersTable, rolesTable)
+
+			err := r.GetDB().QueryRow(query, userId).Scan(&email, &username, &roleName)
+			if err == nil {
+				// Generar token JWT real con datos reales del usuario
+				return r.generateJWT(userId, email.String, username.String, roleName.String, false)
+			}
+			return nil
+		}
+		return nil
+
+	case "login":
+		if len(args) >= 2 {
+			email := strings.TrimSpace(fmt.Sprintf("%v", args[0]))
+			password := fmt.Sprintf("%v", args[1])
+
+			resultFields := make(map[string]interface{})
+			resultFields["email"] = email
+			resultFields["password"] = password
+			resultFields["runtime"] = r
+			resultFields["requires_2fa"] = false
+
+			jwt := r.executeAuthMethod(instance, "attempt", []interface{}{email, password})
+			if jwtVal, ok := jwt.(string); ok && jwtVal != "" {
+				resultFields["success"] = true
+				resultFields["jwt"] = jwtVal
+				var userId int
+				query := fmt.Sprintf("SELECT id FROM %s WHERE email = ?", usersTable)
+				err := r.GetDB().QueryRow(query, email).Scan(&userId)
+				if err == nil {
+					resultFields["user_id"] = userId
+				}
+			} else {
+				resultFields["success"] = false
+				resultFields["error"] = "Credenciales incorrectas o cuenta no verificada"
+			}
+
+			return &Instance{
+				Class:  r.Classes["AuthLoginResult"],
+				Fields: resultFields,
+			}
+		}
+		return nil
+
 	case "create":
 		// Auth::create({ ... })
 		if len(args) > 0 {

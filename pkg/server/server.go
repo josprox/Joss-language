@@ -110,7 +110,7 @@ func Start(fileSystem http.FileSystem) {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	fmt.Printf("Iniciando servidor JosSecurity en http://localhost:%s\n", port)
+	fmt.Printf("Iniciando servidor Joss en http://localhost:%s\n", port)
 	if err := srv.ListenAndServe(); err != nil {
 		fmt.Printf("Error iniciando servidor: %v\n", err)
 	}

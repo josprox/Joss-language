@@ -531,12 +531,14 @@ func (p *Parser) parseNewExpression() Expression {
 func (p *Parser) parseMemberExpression(left Expression) Expression {
 	exp := &MemberExpression{Token: p.curToken, Left: left}
 
-	if !p.expectPeek(IDENT) {
-		return nil
+	if isIdentifierOrKeyword(p.peekToken.Type) {
+		p.nextToken()
+		exp.Property = &Identifier{Token: p.curToken, Value: p.curToken.Literal}
+		return exp
 	}
-	exp.Property = &Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
-	return exp
+	p.expectPeek(IDENT)
+	return nil
 }
 
 func (p *Parser) parseAssignExpression(left Expression) Expression {
@@ -676,5 +678,18 @@ func (p *Parser) parseMatchExpression() Expression {
 	}
 
 	return nil
+}
+
+func isIdentifierOrKeyword(t TokenType) bool {
+	if t == IDENT {
+		return true
+	}
+	switch t {
+	case FUNCTION, VAR, TRUE, FALSE, RETURN, PRINT, ECHO, CLASS, INIT,
+		NAMESPACE, IMPORT, NEW, FOREACH, AS, THIS, ISSET, EMPTY, BREAK,
+		CONTINUE, WHILE, DO, TRY, CATCH, THROW, EXTENDS, IF, ELSE, MATCH, DEFAULT:
+		return true
+	}
+	return false
 }
 

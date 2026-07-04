@@ -169,6 +169,31 @@ Retorna `true` si la eliminación fue exitosa.
 Auth::delete(Auth::id())
 ```
 
+#### `Auth::login(string $email, string $password)`
+Genera una sesión fluida. Retorna una instancia de `AuthLoginResult`.
+Soporta los callbacks encadenados: `require2FA()`, `onSuccess(callback)`, `onChallenge(callback)`, `onFail(callback)`, y `response()`.
+
+```joss
+$loginResult = Auth::login("user@example.com", "password")
+$loginResult->require2FA()
+
+return $loginResult->onSuccess(function($jwt) {
+    return Response::redirect("/dashboard")->withCookie("joss_token", $jwt)
+})->onChallenge(function($tempToken) {
+    Session::put("temp_2fa_token", $tempToken)
+    return Response::redirect("/2fa/verify")
+})->onFail(function($error) {
+    return Response::back()->with("error", "Credenciales inválidas")
+})->response()
+```
+
+#### `Auth::complete2FA(int $userId)`
+Genera el token JWT definitivo para el usuario superando el desafío 2FA de forma nativa.
+
+```joss
+$jwtFinal = Auth::complete2FA($userId)
+```
+
 #### `Auth::validateToken(string $token)`
 Valida un token Bearer y establece la sesión del usuario si es válido.
 
@@ -1293,5 +1318,87 @@ $zip->extract("backup.zip", "extracted_data/")
 Escribe contenido (texto o binario) en el archivo especificado. Retorna `true` si es exitoso.
 ```joss
 file_put_contents("archivos/nota.txt", "Hola mundo")
+```
+
+---
+
+## Notify
+
+Módulo nativo fluido para el envío y almacenamiento de notificaciones nativas push e in-app mediante WebSockets.
+
+### Métodos
+
+#### `app(string $appName)`
+Define la aplicación de destino de la notificación.
+```joss
+$notify->app("joss_red")
+```
+
+#### `segment(string $segmentName)`
+Filtra destinatarios por segmento o rol (ej. `"all"` para broadcast o `"admin"` para todos los administradores).
+```joss
+$notify->segment("all")
+```
+
+#### `user(int $userId)`
+Establece un destinatario de usuario único para la notificación.
+```joss
+$notify->user(1)
+```
+
+#### `title(string $title)`
+Define el título de la notificación.
+```joss
+$notify->title("Alerta del Sistema")
+```
+
+#### `message(string $message)`
+Define el cuerpo o texto principal del mensaje.
+```joss
+$notify->message("Ejecución finalizada")
+```
+
+#### `html(string $htmlContent)`
+Permite asociar contenido HTML enriquecido para la vista in-app de la app móvil.
+```joss
+$notify->html("<h1>Actualización</h1><p>Novedades...</p>")
+```
+
+#### `inApp()`
+Cambia el tipo de la notificación a `"in_app"` (por defecto es `"push"`).
+```joss
+$notify->inApp()
+```
+
+#### `send()`
+Envía la notificación. Si el usuario está conectado, se emite de inmediato por WebSockets; si no, se persiste como `pending` en base de datos. Retorna `true` si es exitoso.
+```joss
+$success = $notify->send()
+```
+
+---
+
+## Session
+
+Módulo nativo estático para gestionar los datos de la sesión HTTP actual en memoria o Redis.
+
+### Métodos
+
+#### `Session::get(string $key)`
+Obtiene un valor almacenado en la sesión.
+```joss
+$token = Session::get("temp_2fa_token")
+```
+
+#### `Session::put(string $key, mixed $value)`
+Guarda un valor en la sesión.
+```joss
+Session::put("user_role", "admin")
+```
+
+#### `Session::forget(string $key)`
+Elimina una llave específica de la sesión actual.
+```joss
+Session::forget("temp_2fa_token")
 ```
 
