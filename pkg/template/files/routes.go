@@ -27,6 +27,8 @@ Router::middleware("auth")
     Router::get("/profile", "ProfileController@index")
     Router::post("/profile/update", "ProfileController@update")
     Router::post("/profile/delete", "ProfileController@delete")
+    Router::post("/profile/2fa/activate", "ProfileController@activate2FA")
+    Router::post("/profile/2fa/deactivate", "ProfileController@deactivate2FA")
     Router::get("/logout", "AuthController@logout")
 Router::end()
 `,

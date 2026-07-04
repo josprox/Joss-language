@@ -9,9 +9,9 @@ import (
 	"github.com/jossecurity/joss/pkg/template/files"
 )
 
-// CreateBibleProject crea un nuevo proyecto con la estructura de La Biblia de JosSecurity
+// CreateBibleProject crea un nuevo proyecto con la estructura de La Biblia de Joss
 func CreateBibleProject(path string) {
-	fmt.Printf("Creando proyecto JosSecurity (Estructura Biblia) en: %s\n", path)
+	fmt.Printf("Creando proyecto Joss (Estructura Biblia) en: %s\n", path)
 
 	// Create directory structure
 	dirs := []string{
@@ -81,7 +81,7 @@ func CreateBibleProject(path string) {
 
 // CreateConsoleProject creates a backend-only console project
 func CreateConsoleProject(path string) {
-	fmt.Printf("Creando proyecto JosSecurity Console en: %s\n", path)
+	fmt.Printf("Creando proyecto Joss Console en: %s\n", path)
 
 	// Create directory structure (no views, assets, public, routes)
 	dirs := []string{

@@ -79,6 +79,8 @@ func changeDatabaseEngine(target string) {
 		prefix := "js_"
 		if val, ok := envMap["PREFIX"]; ok {
 			prefix = val
+		} else if val, ok := envMap["DB_PREFIX"]; ok {
+			prefix = val
 		}
 
 		if table == "sqlite_sequence" || table == prefix+"migration" || table == prefix+"cron" {
@@ -198,6 +200,9 @@ func changeDatabasePrefix(newPrefix string) {
 	envMap := readEnvFile(GetEnvFile())
 	currentPrefix := envMap["PREFIX"]
 	if currentPrefix == "" {
+		currentPrefix = envMap["DB_PREFIX"]
+	}
+	if currentPrefix == "" {
 		currentPrefix = "js_" // Default
 	}
 
@@ -256,6 +261,7 @@ func changeDatabasePrefix(newPrefix string) {
 
 	// 6. Update env.joss
 	updateEnvFile(GetEnvFile(), "PREFIX", newPrefix)
+	updateEnvFile(GetEnvFile(), "DB_PREFIX", newPrefix)
 	fmt.Printf("Prefijo actualizado. %d tablas renombradas.\n", count)
 }
 

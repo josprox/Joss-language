@@ -23,10 +23,7 @@ func (r *Runtime) executeSchemaMethod(instance *Instance, method string, args []
 		if len(args) >= 2 {
 			tableName := args[0].(string)
 
-			prefix := "js_"
-			if val, ok := r.Env["PREFIX"]; ok {
-				prefix = val
-			}
+			prefix := r.dbPrefix()
 
 			if !strings.HasPrefix(tableName, prefix) {
 				tableName = prefix + tableName
@@ -94,10 +91,7 @@ func (r *Runtime) executeSchemaMethod(instance *Instance, method string, args []
 	case "table":
 		if len(args) >= 2 {
 			tableName := args[0].(string)
-			prefix := "js_"
-			if val, ok := r.Env["PREFIX"]; ok {
-				prefix = val
-			}
+			prefix := r.dbPrefix()
 			if !strings.HasPrefix(tableName, prefix) {
 				tableName = prefix + tableName
 			}
@@ -135,10 +129,7 @@ func (r *Runtime) executeSchemaMethod(instance *Instance, method string, args []
 		if len(args) >= 2 {
 			from := args[0].(string)
 			to := args[1].(string)
-			prefix := "js_"
-			if val, ok := r.Env["PREFIX"]; ok {
-				prefix = val
-			}
+			prefix := r.dbPrefix()
 			if !strings.HasPrefix(from, prefix) {
 				from = prefix + from
 			}
@@ -156,10 +147,7 @@ func (r *Runtime) executeSchemaMethod(instance *Instance, method string, args []
 	case "drop", "dropIfExists":
 		if len(args) >= 1 {
 			tableName := args[0].(string)
-			prefix := "js_"
-			if val, ok := r.Env["PREFIX"]; ok {
-				prefix = val
-			}
+			prefix := r.dbPrefix()
 			if !strings.HasPrefix(tableName, prefix) {
 				tableName = prefix + tableName
 			}
@@ -170,10 +158,7 @@ func (r *Runtime) executeSchemaMethod(instance *Instance, method string, args []
 	case "hasTable":
 		if len(args) >= 1 {
 			tableName := args[0].(string)
-			prefix := "js_"
-			if val, ok := r.Env["PREFIX"]; ok {
-				prefix = val
-			}
+			prefix := r.dbPrefix()
 			if !strings.HasPrefix(tableName, prefix) {
 				tableName = prefix + tableName
 			}
@@ -193,10 +178,7 @@ func (r *Runtime) executeSchemaMethod(instance *Instance, method string, args []
 		if len(args) >= 2 {
 			tableName := args[0].(string)
 			columnName := args[1].(string)
-			prefix := "js_"
-			if val, ok := r.Env["PREFIX"]; ok {
-				prefix = val
-			}
+			prefix := r.dbPrefix()
 			if !strings.HasPrefix(tableName, prefix) {
 				tableName = prefix + tableName
 			}

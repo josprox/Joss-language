@@ -14,14 +14,14 @@ func createController(name string) {
 	var content string
 	if isConsoleProject() {
 		content = fmt.Sprintf(`class %s {
-    function index() {
+    func index() {
         print("Hello from %s")
     }
 }`, name, name)
 	} else {
 		content = fmt.Sprintf(`class %s {
-    function index() {
-        return View.render("%s/index")
+    func index() {
+        return View::render("%s/index")
     }
 }`, name, strings.ToLower(name))
 	}
@@ -37,10 +37,8 @@ func createModel(name string) {
 	// Fix: singularize first to avoid double pluralization
 	tableName := prefix + strings.ToLower(pluralize(singularize(name)))
 
-	content := fmt.Sprintf(`class %s extends GranDB {
-    function constructor() {
-        // Table inferred from class name: %s
-    }
+	content := fmt.Sprintf(`class %s extends GranMySQL {
+    $tabla = "%s"
 }`, name, tableName)
 
 	writeGenFile(path, content)
@@ -63,7 +61,7 @@ func createView(name string) {
 
 	os.MkdirAll(filepath.Dir(path), 0755)
 
-	content := fmt.Sprintf(`@extends('layouts.app')
+	content := fmt.Sprintf(`@extends('layouts.master')
 
 @section('content')
     <h1>View: %s</h1>

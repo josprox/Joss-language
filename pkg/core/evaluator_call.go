@@ -9,6 +9,7 @@ import (
 
 	"github.com/jossecurity/joss/pkg/i18n"
 	"github.com/jossecurity/joss/pkg/parser"
+	"reflect"
 )
 
 func (r *Runtime) CallMethod(method *parser.MethodStatement, instance *Instance, args []parser.Expression) (res interface{}) {
@@ -245,11 +246,25 @@ func (r *Runtime) callBuiltin(name string, args []interface{}) (interface{}, boo
 		return nil, true
 	case "len", "count":
 		if len(args) == 1 {
+			if args[0] == nil {
+				return int64(0), true
+			}
 			if list, ok := args[0].([]interface{}); ok {
 				return int64(len(list)), true
 			}
+			if listMap, ok := args[0].([]map[string]interface{}); ok {
+				return int64(len(listMap)), true
+			}
+			if m, ok := args[0].(map[string]interface{}); ok {
+				return int64(len(m)), true
+			}
 			if str, ok := args[0].(string); ok {
 				return int64(len(str)), true
+			}
+			// Fallback usando reflection para cualquier slice o array
+			val := reflect.ValueOf(args[0])
+			if val.Kind() == reflect.Slice || val.Kind() == reflect.Array {
+				return int64(val.Len()), true
 			}
 		}
 		return int64(0), true
@@ -364,7 +379,7 @@ func (r *Runtime) callBuiltin(name string, args []interface{}) (interface{}, boo
 			}
 		}
 		return nil, true
-	case "keys":
+	case "keys", "array_keys":
 		if len(args) == 1 {
 			if m, ok := args[0].(map[string]interface{}); ok {
 				keys := []interface{}{}
@@ -375,7 +390,7 @@ func (r *Runtime) callBuiltin(name string, args []interface{}) (interface{}, boo
 			}
 		}
 		return []interface{}{}, true
-	case "values":
+	case "values", "array_values":
 		if len(args) == 1 {
 			if m, ok := args[0].(map[string]interface{}); ok {
 				vals := []interface{}{}

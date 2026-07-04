@@ -125,6 +125,8 @@ func main() {
 			return
 		}
 		createMigration(os.Args[2])
+	case "db:seed":
+		runSeeders()
 	case "migrate":
 		runMigrations()
 	case "migrate:fresh":

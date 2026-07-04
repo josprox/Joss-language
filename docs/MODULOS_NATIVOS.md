@@ -346,12 +346,12 @@ $db->table("users")->insert(
 )
 ```
 
-#### `innerJoin(string $tabla, string $col1, string $op, string $col2)`
+#### `join(string $tabla, string $col1, string $op, string $col2)` / `innerJoin(string $tabla, string $col1, string $op, string $col2)`
 Realiza un INNER JOIN.
 
 ```joss
 $db->table("users")
-   ->innerJoin("roles", "users.role_id", "=", "roles.id")
+   ->join("roles", "users.role_id", "=", "roles.id")
    ->get()
 ```
 

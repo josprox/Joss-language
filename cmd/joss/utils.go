@@ -98,6 +98,7 @@ func printHelp() {
 	fmt.Printf("  make:crud [Tabla]       - %s\n", tr("CreateCRUD"))
 	fmt.Printf("  remove:crud [Tabla]     - %s\n", tr("removeCRUD"))
 	fmt.Printf("  make:migration [Name]   - %s\n", tr("createMigration"))
+	fmt.Printf("  db:seed                 - Ejecuta seeders de app/database/seeders\n")
 	fmt.Printf("  migrate                 - %s\n", tr("exeMigrate"))
 	fmt.Printf("  migrate:fresh           - %s\n", tr("exeMigrateFresh"))
 	fmt.Printf("  new [web|console] [path]- %s\n", tr("createProject"))

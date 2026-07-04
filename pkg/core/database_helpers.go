@@ -88,10 +88,7 @@ func (r *Runtime) applyTablePrefix(name string) string {
 	if r.Env == nil {
 		return name
 	}
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	if prefix == "" {
 		return name
 	}
@@ -106,10 +103,7 @@ func (r *Runtime) applyColumnPrefix(name string) string {
 	if r.Env == nil {
 		return name
 	}
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	if prefix == "" {
 		return name
 	}
@@ -146,13 +140,23 @@ func (r *Runtime) getTable(instance *Instance) string {
 		return ""
 	}
 
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	tableName := prefix + strings.ToLower(r.pluralize(className))
 	instance.Fields["_table"] = tableName
 	return tableName
+}
+
+func (r *Runtime) dbPrefix() string {
+	if r == nil || r.Env == nil {
+		return "js_"
+	}
+	if val := strings.TrimSpace(r.Env["PREFIX"]); val != "" {
+		return val
+	}
+	if val := strings.TrimSpace(r.Env["DB_PREFIX"]); val != "" {
+		return val
+	}
+	return "js_"
 }
 
 // pluralize helper

@@ -11,10 +11,7 @@ func (r *Runtime) EnsureMigrationTable() {
 		return
 	}
 
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	tableName := prefix + "migration"
 
 	query := fmt.Sprintf(`
@@ -55,10 +52,7 @@ func (r *Runtime) GetExecutedMigrations() map[string]bool {
 		return executed
 	}
 
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	tableName := prefix + "migration"
 
 	rows, err := r.GetDB().Query(fmt.Sprintf("SELECT migration FROM %s", tableName))
@@ -82,10 +76,7 @@ func (r *Runtime) GetNextBatch() int {
 		return 1
 	}
 
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	tableName := prefix + "migration"
 
 	var maxBatch sql.NullInt64
@@ -105,10 +96,7 @@ func (r *Runtime) LogMigration(migration string, batch int) {
 		return
 	}
 
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	tableName := prefix + "migration"
 
 	_, err := r.GetDB().Exec(fmt.Sprintf("INSERT INTO %s (migration, batch) VALUES (?, ?)", tableName), migration, batch)

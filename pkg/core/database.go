@@ -117,7 +117,7 @@ func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args
 		instance.Fields["_bindings"] = bindings
 		return instance
 
-	case "innerJoin":
+	case "join", "innerJoin":
 		if len(args) >= 4 {
 			table := r.applyTablePrefix(args[0].(string))
 			first := r.applyColumnPrefix(args[1].(string))

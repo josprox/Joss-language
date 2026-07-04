@@ -15,10 +15,7 @@ import (
 
 // Auth Implementation
 func (r *Runtime) executeAuthMethod(instance *Instance, method string, args []interface{}) interface{} {
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	usersTable := prefix + "users"
 	rolesTable := prefix + "roles"
 
@@ -28,6 +25,16 @@ func (r *Runtime) executeAuthMethod(instance *Instance, method string, args []in
 	r.ensureAuthTables(usersTable, rolesTable, prefix)
 
 	switch method {
+	case "hash":
+		if len(args) >= 1 {
+			hashedBytes, err := bcrypt.GenerateFromPassword([]byte(fmt.Sprintf("%v", args[0])), bcrypt.DefaultCost)
+			if err != nil {
+				return nil
+			}
+			return string(hashedBytes)
+		}
+		return nil
+
 	case "complete2FA":
 		if len(args) >= 1 {
 			var userId int
@@ -505,10 +512,7 @@ func (r *Runtime) executeAuthMethod(instance *Instance, method string, args []in
 			if id, ok := args[0].(int); ok {
 				var email, username, roleName string
 				// Need to join with roles to get role name
-				prefix := "js_"
-				if val, ok := r.Env["PREFIX"]; ok {
-					prefix = val
-				}
+				prefix := r.dbPrefix()
 				usersTable := prefix + "users"
 				rolesTable := prefix + "roles"
 

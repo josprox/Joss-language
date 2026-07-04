@@ -13,7 +13,23 @@ func (p *Parser) parseExpression(precedence int) Expression {
 	}
 	leftExp := prefix()
 
-	for !p.peekTokenIs(SEMICOLON) && !p.peekTokenIs(NEWLINE) && precedence < p.peekPrecedence() {
+	for {
+		if p.peekTokenIs(SEMICOLON) || p.peekTokenIs(EOF) {
+			return leftExp
+		}
+
+		if p.peekTokenIs(NEWLINE) {
+			p.nextToken()
+			if !isExpressionContinuation(p.peekToken.Type) {
+				return leftExp
+			}
+			continue
+		}
+
+		if precedence >= p.peekPrecedence() {
+			return leftExp
+		}
+
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
 			return leftExp
@@ -25,6 +41,16 @@ func (p *Parser) parseExpression(precedence int) Expression {
 	}
 
 	return leftExp
+}
+
+func isExpressionContinuation(t TokenType) bool {
+	switch t {
+	case ARROW, DOUBLE_COLON, DOT, LPAREN, LBRACKET, QUESTION, NULL_COALESCE,
+		PLUS, MINUS, SLASH, ASTERISK, PERCENT, AND, OR, EQ, NOT_EQ, LT, GT, LTE, GTE,
+		SHIFT_LEFT, SHIFT_RIGHT, PIPE:
+		return true
+	}
+	return false
 }
 
 func (p *Parser) parseIdentifier() Expression {
@@ -692,4 +718,3 @@ func isIdentifierOrKeyword(t TokenType) bool {
 	}
 	return false
 }
-

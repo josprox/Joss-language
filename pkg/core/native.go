@@ -35,7 +35,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	// GranDB
 	r.registerNative("GranDB", []string{}, (*Runtime).executeGranMySQLMethod)
 	// Alias for compatibility
-	r.registerNative("GranMySQL", []string{"table", "select", "where", "innerJoin", "leftJoin", "rightJoin", "get", "first", "insert", "update", "delete", "deleteAll", "truncate", "query", "orderBy", "limit", "offset", "count"}, (*Runtime).executeGranMySQLMethod)
+	r.registerNative("GranMySQL", []string{"table", "select", "where", "join", "innerJoin", "leftJoin", "rightJoin", "get", "first", "insert", "update", "delete", "deleteAll", "truncate", "query", "orderBy", "limit", "offset", "count"}, (*Runtime).executeGranMySQLMethod)
 	r.NativeHandlers["GranMySQL"] = (*Runtime).executeGranMySQLMethod
 
 	// Auth

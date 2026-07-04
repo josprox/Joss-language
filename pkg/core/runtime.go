@@ -286,6 +286,13 @@ func (r *Runtime) LoadEnv(fs http.FileSystem) {
 		}
 	}
 
+	if r.Env["PREFIX"] == "" && r.Env["DB_PREFIX"] != "" {
+		r.Env["PREFIX"] = r.Env["DB_PREFIX"]
+	}
+	if r.Env["DB_PREFIX"] == "" && r.Env["PREFIX"] != "" {
+		r.Env["DB_PREFIX"] = r.Env["PREFIX"]
+	}
+
 	// 5. Autogenerate JWT_SECRET and APP_KEY if weak or missing
 	updatedEnv := false
 	jwtSec := r.Env["JWT_SECRET"]

@@ -7,14 +7,31 @@ func GetControllerFiles(path string) map[string]string {
 		filepath.Join(path, "app", "controllers", "ProfileController.joss"): `class ProfileController {
     function index() {
         $u = Auth::user()
+        $userId = Auth::id()
+
+        $prefix = System::env("PREFIX") ?? "js_"
+        $mfa = new MfaManager()
+        $mfa->setPrefix($prefix)
+        
+        $hasTOTP = $mfa->hasTOTP($userId)
+        $qrCode = ""
+        
+        (!$hasTOTP) ? {
+            $qrCode = $mfa->generateTOTP($userId, $u->email)
+        } : {}
+
         return View::render("profile/index", {
-            "title":      "Mi Perfil",
-            "first_name": $u->first_name,
-            "last_name":  $u->last_name,
-            "email":      $u->email,
-            "phone":      $u->phone,
-            "role_id":    $u->role_id,
-            "username":   $u->username
+            "title":       "Mi Perfil",
+            "first_name":  $u->first_name,
+            "last_name":   $u->last_name,
+            "email":       $u->email,
+            "phone":       $u->phone,
+            "role_id":     $u->role_id,
+            "username":    $u->username,
+            "mfa_enabled": $hasTOTP,
+            "qr_code":     $qrCode,
+            "success":     Session::get("success"),
+            "error":       Session::get("error")
         })
     }
 
@@ -32,6 +49,25 @@ func GetControllerFiles(path string) map[string]string {
         $success = Auth::update($id, $data)
 
         return ($success) ? Response::redirect("/profile")->with("success", "Perfil actualizado correctamente.") : Response::back()->with("error", "Error al actualizar el perfil.")
+    }
+
+    function activate2FA() {
+        $code = Request::input("code")
+        $prefix = System::env("PREFIX") ?? "js_"
+        $mfa = new MfaManager()
+        $mfa->setPrefix($prefix)
+        
+        $success = $mfa->verifyAndActivateTOTP(Auth::id(), $code)
+        return ($success) ? Response::redirect("/profile")->with("success", "Autenticación de dos factores (2FA) activada con éxito.") : Response::redirect("/profile")->with("error", "Código de verificación inválido.")
+    }
+
+    function deactivate2FA() {
+        $prefix = System::env("PREFIX") ?? "js_"
+        $mfa = new MfaManager()
+        $mfa->setPrefix($prefix)
+        
+        $success = $mfa->deactivateTOTP(Auth::id())
+        return ($success) ? Response::redirect("/profile")->with("success", "Autenticación de dos factores (2FA) desactivada.") : Response::redirect("/profile")->with("error", "Error al desactivar la autenticación de dos factores.")
     }
 
     function delete() {

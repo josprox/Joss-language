@@ -10,10 +10,7 @@ func (r *Runtime) EnsureCronTable() {
 		return
 	}
 
-	prefix := "js_"
-	if val, ok := r.Env["PREFIX"]; ok {
-		prefix = val
-	}
+	prefix := r.dbPrefix()
 	tableName := prefix + "cron"
 
 	query := fmt.Sprintf(`

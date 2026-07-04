@@ -31,6 +31,10 @@ func isConsoleProject() bool {
 }
 
 func writeGenFile(path, content string) {
+	if _, err := os.Stat(path); err == nil && !hasArg("--force") {
+		fmt.Printf("Skipped existing file: %s (use --force to overwrite)\n", path)
+		return
+	}
 	err := ioutil.WriteFile(path, []byte(content), 0644)
 	if err != nil {
 		fmt.Printf("Error creating file %s: %v\n", path, err)
@@ -67,8 +71,20 @@ func loadEnvConfig() (string, string, string, string, string, string, string) {
 
 	prefix := config["PREFIX"]
 	if prefix == "" {
+		prefix = config["DB_PREFIX"]
+	}
+	if prefix == "" {
 		prefix = "js_" // Default
 	}
 
 	return config["DB"], config["DB_PATH"], config["DB_HOST"], config["DB_USER"], config["DB_PASS"], config["DB_NAME"], prefix
+}
+
+func hasArg(flag string) bool {
+	for _, arg := range os.Args[1:] {
+		if arg == flag {
+			return true
+		}
+	}
+	return false
 }
