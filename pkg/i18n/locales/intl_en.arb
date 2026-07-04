@@ -139,5 +139,16 @@
   "errTypeError": "Type Error: Argument %d (%s) must be of type %s...",
   "errPropertyNotFound": "Error: Property or method '%s' not found in class '%s'",
   "errAuthEncryptFailed": "Auth Error: Failed to encrypt password",
-  "errAuthNoDbConnection": "Auth Error: No database connection configured"
+  "errAuthNoDbConnection": "Auth Error: No database connection configured",
+  "aiProviderGroq": "1) Groq (Recommended - Llama 3 super fast)",
+  "aiProviderOpenai": "2) OpenAI (GPT-4 / GPT-3.5)",
+  "aiProviderGemini": "3) Gemini (Google)",
+  "aiChooseOption": "Choose an option (1-3): ",
+  "aiSelectedProvider": "✅ Selected provider: {provider}",
+  "aiModelToUse": "Model to use [{model}]: ",
+  "aiEnterApiKey": "Enter your API KEY for {provider} ({key}): ",
+  "aiSavingConfig": "Saving configuration in {file}...",
+  "brevoEnablePrompt": "Do you want to activate BREVO_API? (y/n): ",
+  "brevoEnterKey": "Enter your Brevo API Key: ",
+  "brevoReadError": "Error reading {file}: {error}"
 }

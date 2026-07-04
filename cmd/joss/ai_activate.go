@@ -18,10 +18,10 @@ func activateAI() {
 
 	// 1. Selector de Proveedor
 	fmt.Println(i18n.Tr("aiSelectProvider"))
-	fmt.Println("1) Groq (Recomendado - Llama 3 super rápido)")
-	fmt.Println("2) OpenAI (GPT-4 / GPT-3.5)")
-	fmt.Println("3) Gemini (Google)")
-	fmt.Print("Elige una opción (1-3): ")
+	fmt.Println(i18n.Tr("aiProviderGroq"))
+	fmt.Println(i18n.Tr("aiProviderOpenai"))
+	fmt.Println(i18n.Tr("aiProviderGemini"))
+	fmt.Print(i18n.Tr("aiChooseOption"))
 
 	providerOption, _ := reader.ReadString('\n')
 	providerOption = strings.TrimSpace(providerOption)
@@ -48,11 +48,11 @@ func activateAI() {
 		apiKeyKey = "GROQ_API_KEY"
 	}
 
-	fmt.Printf("\n✅ Proveedor seleccionado: %s\n", strings.ToUpper(provider))
+	fmt.Println("\n" + i18n.Tr("aiSelectedProvider", map[string]interface{}{"provider": strings.ToUpper(provider)}))
 	fmt.Println("")
 
 	// 2. Selector de Modelo
-	fmt.Printf("Modelo a usar [%s]: ", modelDefault)
+	fmt.Print(i18n.Tr("aiModelToUse", map[string]interface{}{"model": modelDefault}))
 	modelInput, _ := reader.ReadString('\n')
 	modelInput = strings.TrimSpace(modelInput)
 	if modelInput == "" {
@@ -60,7 +60,7 @@ func activateAI() {
 	}
 
 	// 3. API Key
-	fmt.Printf("\nIndica tu API KEY para %s (%s): ", strings.ToUpper(provider), apiKeyKey)
+	fmt.Print("\n" + i18n.Tr("aiEnterApiKey", map[string]interface{}{"provider": strings.ToUpper(provider), "key": apiKeyKey}))
 	apiKeyInput, _ := reader.ReadString('\n')
 	apiKeyInput = strings.TrimSpace(apiKeyInput)
 
@@ -76,7 +76,7 @@ func activateAI() {
 		envFile = ".env"
 	}
 
-	fmt.Printf("\nGuardando configuración en %s...\n", envFile)
+	fmt.Println("\n" + i18n.Tr("aiSavingConfig", map[string]interface{}{"file": envFile}))
 
 	updateEnvFile(envFile, "AI_PROVIDER", provider)
 	updateEnvFile(envFile, "AI_MODEL", modelInput)

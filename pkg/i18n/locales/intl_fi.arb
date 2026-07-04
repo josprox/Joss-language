@@ -1,143 +1,154 @@
 {
   "@@locale": "fi",
-  "startServerWeb": "Käynnistä verkkopalvelin",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Käynnistä sovellus työpöytätilassa",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Suorita joss-skripti",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Rakenna projekti jakelua varten",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Luo uusi ohjain",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Luo uusi väliohjelmisto",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Luo uusi malli",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Luo uusi näkymä",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Luo MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Luo täydellinen CRUD taulukon perusteella",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Poista taulukolle luotu CRUD",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Luo uusi siirto",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Suorita odottavat siirrot",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Poista kaikki taulukot ja suorita siirrot uudelleen",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Luo uusi projekti",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Vaihda tietokantamoottori (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Vaihda taulukon etuliite",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Määritä tallennustila (paikallinen|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Määritä interaktiivinen natiivi AI",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Näyttää nykyisen version",
-  "@version": {
-    "description": ""
-  },
-  "helpPrint": "Näytä tämä ohje",
-  "@helpPrint": {
-    "description": ""
-  },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
-    "description": ""
-  },
-  "aiWizardTitle": "🚀 Joss AI -aktivointivelho 🚀",
   "@aiWizardTitle": {
     "description": ""
   },
-  "aiWizardConfig": "Tämä ohjattu toiminto määrittää alkuperäisen tekoälyn projektissasi.",
-  "aiSelectProvider": "Valitse AI-palveluntarjoajasi:",
-  "aiInvalidOption": "Virheellinen vaihtoehto. ",
-  "aiNoApiKeyWarning": "⚠️ Varoitus: API-avainta ei ole annettu. ",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
+  "@helpPrint": {
+    "description": ""
+  },
+  "@removeCRUD": {
+    "description": ""
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Luo täydellinen CRUD taulukon perusteella",
+  "CreateController": "Luo uusi ohjain",
+  "CreateMVC": "Luo MVC",
+  "CreateMiddleware": "Luo uusi väliohjelmisto",
+  "CreateModel": "Luo uusi malli",
+  "CreateView": "Luo uusi näkymä",
+  "IaActivate": "Määritä interaktiivinen natiivi AI",
   "aiActivatedSuccess": "✅ NATIVE AI AKTIVOI ONNISTUSTI",
+  "aiChooseOption": "Valitse vaihtoehto (1-3): ",
+  "aiEnterApiKey": "Syötä API-avain kohteelle {provider} ({key}): ",
+  "aiInvalidOption": "Virheellinen vaihtoehto. ",
+  "aiModelToUse": "Käytettävä malli [{model}]: ",
+  "aiNoApiKeyWarning": "⚠️ Varoitus: API-avainta ei ole annettu. ",
+  "aiProviderGemini": "3) Gemini (Google)",
+  "aiProviderGroq": "1) Groq (Suositeltu - erittäin nopea Llama 3)",
+  "aiProviderOpenai": "2) OpenAI (GPT-4 / GPT-3.5)",
+  "aiSavingConfig": "Tallennetaan kokoonpanoa tiedostoon {file}...",
+  "aiSelectProvider": "Valitse AI-palveluntarjoajasi:",
+  "aiSelectedProvider": "✅ Valittu palveluntarjoaja: {provider}",
   "aiTryScript": "Kokeile nyt: joss run your_script.joss",
-  "brevoTitle": "--- Brevo API Configuration ---",
-  "brevoNoEnvError": "Virhe: Nykyisestä hakemistosta ei löytynyt env.joss- eikä .env-tiedostoa.",
-  "brevoEmptyKeyError": "Virhe: API-avain ei voi olla tyhjä.",
+  "aiWizardConfig": "Tämä ohjattu toiminto määrittää alkuperäisen tekoälyn projektissasi.",
+  "aiWizardTitle": "🚀 Joss AI -aktivointivelho 🚀",
   "brevoActivatedSuccess": "✅ BREVO_API aktivoitu ja määritetty onnistuneesti.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
   "brevoDisabledSuccess": "✅ BREVO_API poistettu käytöstä.",
-  "buildWebStart": "Aloitetaan Joss WEB build...",
-  "buildSchemaError": "Jossin Raamattu vaatii tiukan rakenteen.",
-  "buildEnvMissingError": "Arkkitehtuurivirhe: Puuttuva ympäristötiedosto ('env.joss' tai '.env')",
+  "brevoEmptyKeyError": "Virhe: API-avain ei voi olla tyhjä.",
+  "brevoEnablePrompt": "Haluatko ottaa käyttöön BREVO_API:n? (y/n): ",
+  "brevoEnterKey": "Syötä Brevo API -avaimesi: ",
+  "brevoNoEnvError": "Virhe: Nykyisestä hakemistosta ei löytynyt env.joss- eikä .env-tiedostoa.",
+  "brevoReadError": "Virhe luettaessa tiedostoa {file}: {error}",
+  "brevoTitle": "--- Brevo API Configuration ---",
   "buildCopyFiles": "Kopioidaan projektitiedostoja...",
-  "buildNodeModulesInclude": "-> node_modules sisällytetään.",
-  "buildNodeModulesOmit": "-> node_modules jätetään pois.",
   "buildDbCopied": "Tietokanta kopioitu rakennukseen/",
+  "buildDbCopiedProgram": "Tietokanta kopioitu rakennukseen/tallennustilaan/",
   "buildEncryptEnv": "Salataan tuotantoympäristöä...",
-  "buildWebSuccess": "WEB Build suoritettu onnistuneesti 'build/'-kansiossa.",
-  "buildWebDeployTip": "Ota käyttöön lataamalla 'build/'-kansion sisältö palvelimellesi.",
-  "buildWebRunTip": "Sinun tarvitsee vain ajaa \"joss run main.joss\" sen sisällä palvelimella.",
+  "buildEnvEncryptedSuccess": "Ympäristö salattu ja upotettu env.enc",
+  "buildEnvMissingError": "Arkkitehtuurivirhe: Puuttuva ympäristötiedosto ('env.joss' tai '.env')",
+  "buildInjectDbPath": "Lisätään DB_PATH=\"Storage/database.sqlite\" konfiguraatiota upotettuun env.joss-tiedostoon...",
+  "buildNodeModulesInclude": "-\u003e node_modules sisällytetään.",
+  "buildNodeModulesOmit": "-\u003e node_modules jätetään pois.",
+  "buildOsNotSupported": "Tässä esikäännetyssä versiossa tuetaan vain Windowsia.",
+  "buildPackAssets": "Salataan ja pakataan omaisuutta...",
+  "buildProgramDataDir": "build/data/ (tyhjä toistaiseksi)",
+  "buildProgramDbSqlite": "build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
   "buildProgramStart": "Aloitetaan Joss PROGRAM -koontiversio (SECURE MODE)...",
+  "buildProgramStructure": "Rakenne:",
+  "buildProgramSuccess": "OHJELMA Rakennus on suoritettu onnistuneesti 'build/'-kansiossa.",
+  "buildSchemaError": "Jossin Raamattu vaatii tiukan rakenteen.",
   "buildSelectOs": "Valitse kohdekäyttöjärjestelmä:",
   "buildSelectOsWindows": "1. Windows",
-  "buildOsNotSupported": "Tässä esikäännetyssä versiossa tuetaan vain Windowsia.",
+  "buildWebDeployTip": "Ota käyttöön lataamalla 'build/'-kansion sisältö palvelimellesi.",
+  "buildWebRunTip": "Sinun tarvitsee vain ajaa \"joss run main.joss\" sen sisällä palvelimella.",
+  "buildWebStart": "Aloitetaan Joss WEB build...",
+  "buildWebSuccess": "WEB Build suoritettu onnistuneesti 'build/'-kansiossa.",
   "buildWindowsCompile": "Käännetään Windowsille...",
-  "buildPackAssets": "Salataan ja pakataan omaisuutta...",
-  "buildInjectDbPath": "Lisätään DB_PATH=\"Storage/database.sqlite\" konfiguraatiota upotettuun env.joss-tiedostoon...",
-  "buildEnvEncryptedSuccess": "Ympäristö salattu ja upotettu env.enc",
-  "buildDbCopiedProgram": "Tietokanta kopioitu rakennukseen/tallennustilaan/",
-  "buildProgramSuccess": "OHJELMA Rakennus on suoritettu onnistuneesti 'build/'-kansiossa.",
-  "buildProgramStructure": "Rakenne:",
-  "buildProgramErrorLog": "build/error.log",
-  "buildProgramDbSqlite": "build/Storage/database.sqlite",
-  "buildProgramDataDir": "build/data/ (tyhjä toistaiseksi)",
-  "dbEngineAlready": "Tietokantamoottori on jo",
+  "changeDBMotor": "Vaihda tietokantamoottori (mysql/sqlite)",
+  "changeDBPrefix": "Vaihda taulukon etuliite",
+  "compileProjectDist": "Rakenna projekti jakelua varten",
+  "createMigration": "Luo uusi siirto",
+  "createProject": "Luo uusi projekti",
   "dbConnectedSourceDest": "Yhdistetty lähteeseen ja kohteeseen.",
-  "dbPrepareDestSchema": "Valmistellaan skeemaa kohdetietokannassa...",
+  "dbEngineAlready": "Tietokantamoottori on jo",
   "dbMigrateStart": "Aloitetaan tietojen siirtoa...",
   "dbPrefixAlready": "Etuliite on jo",
-  "errFunctionNotFound": "Virhe: Funktiota '%s' ei löydy",
-  "errViewNotFound": "Virhe: näkymää '%s' ei löydy",
-  "errLayoutNotFound": "Virhe: Asettelua '%s' ei löydy",
-  "errTypeError": "Tyyppivirhe: Argumentin %d (%s) on oltava tyyppiä %s...",
-  "errPropertyNotFound": "Virhe: Ominaisuutta tai menetelmää '%s' ei löydy luokasta '%s'",
+  "dbPrepareDestSchema": "Valmistellaan skeemaa kohdetietokannassa...",
   "errAuthEncryptFailed": "Todennusvirhe: Salasanan salaus epäonnistui",
-  "errAuthNoDbConnection": "Auth Error: Tietokantayhteyttä ei ole määritetty"
+  "errAuthNoDbConnection": "Auth Error: Tietokantayhteyttä ei ole määritetty",
+  "errFunctionNotFound": "Virhe: Funktiota '%s' ei löydy",
+  "errLayoutNotFound": "Virhe: Asettelua '%s' ei löydy",
+  "errPropertyNotFound": "Virhe: Ominaisuutta tai menetelmää '%s' ei löydy luokasta '%s'",
+  "errTypeError": "Tyyppivirhe: Argumentin %d (%s) on oltava tyyppiä %s...",
+  "errViewNotFound": "Virhe: näkymää '%s' ei löydy",
+  "exeMigrate": "Suorita odottavat siirrot",
+  "exeMigrateFresh": "Poista kaikki taulukot ja suorita siirrot uudelleen",
+  "helpPrint": "Näytä tämä ohje",
+  "removeCRUD": "Poista taulukolle luotu CRUD",
+  "runJossScript": "Suorita joss-skripti",
+  "settingsUserStorage": "Määritä tallennustila (paikallinen|OCI|AWS|Azure)",
+  "startProgramDesktop": "Käynnistä sovellus työpöytätilassa",
+  "startServerWeb": "Käynnistä verkkopalvelin",
+  "version": "Näyttää nykyisen version"
 }

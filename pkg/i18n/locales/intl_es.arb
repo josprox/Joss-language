@@ -139,5 +139,16 @@
   "errTypeError": "Error de tipo: El argumento %d (%s) debe ser de tipo %s...",
   "errPropertyNotFound": "Error: Propiedad o método '%s' no encontrado en la clase '%s'",
   "errAuthEncryptFailed": "Error de autenticación: No se pudo encriptar la contraseña",
-  "errAuthNoDbConnection": "Error de autenticación: No se ha configurado ninguna conexión a la base de datos"
+  "errAuthNoDbConnection": "Error de autenticación: No se ha configurado ninguna conexión a la base de datos",
+  "aiProviderGroq": "1) Groq (Recomendado - Llama 3 super rápido)",
+  "aiProviderOpenai": "2) OpenAI (GPT-4 / GPT-3.5)",
+  "aiProviderGemini": "3) Gemini (Google)",
+  "aiChooseOption": "Elige una opción (1-3): ",
+  "aiSelectedProvider": "✅ Proveedor seleccionado: {provider}",
+  "aiModelToUse": "Modelo a usar [{model}]: ",
+  "aiEnterApiKey": "Indica tu API KEY para {provider} ({key}): ",
+  "aiSavingConfig": "Guardando configuración en {file}...",
+  "brevoEnablePrompt": "¿Deseas activar BREVO_API? (y/n): ",
+  "brevoEnterKey": "Introduce tu Brevo API Key: ",
+  "brevoReadError": "Error leyendo {file}: {error}"
 }

@@ -1,143 +1,154 @@
 {
   "@@locale": "de",
-  "startServerWeb": "Starten Sie den Webserver",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Starten Sie die Anwendung im Desktop-Modus",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Führen Sie ein Joss-Skript aus",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Erstellen Sie das Projekt zur Verteilung",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Erstellen Sie einen neuen Controller",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Erstellen Sie neue Middleware",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Erstellen Sie ein neues Modell",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Erstellen Sie eine neue Ansicht",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Erstellen Sie MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Erstellen Sie ein vollständiges CRUD basierend auf einer Tabelle",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Entfernen Sie das für eine Tabelle generierte CRUD",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Erstellen Sie eine neue Migration",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Führen Sie ausstehende Migrationen aus",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Löschen Sie alle Tabellen und führen Sie die Migrationen erneut aus",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Erstellen Sie ein neues Projekt",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Ändern Sie die Datenbank-Engine (MySQL/SQLite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Ändern Sie das Tabellenpräfix",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Speicher konfigurieren (lokal|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Richten Sie interaktive native KI ein",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Zeigt die aktuelle Version an",
-  "@version": {
-    "description": ""
-  },
-  "helpPrint": "Diese Hilfe anzeigen",
-  "@helpPrint": {
-    "description": ""
-  },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
-    "description": ""
-  },
-  "aiWizardTitle": "🚀 Joss AI-Aktivierungsassistent 🚀",
   "@aiWizardTitle": {
     "description": ""
   },
-  "aiWizardConfig": "Dieser Assistent konfiguriert die native KI in Ihrem Projekt.",
-  "aiSelectProvider": "Wählen Sie Ihren KI-Anbieter:",
-  "aiInvalidOption": "Ungültige Option. ",
-  "aiNoApiKeyWarning": "⚠️ Warnung: Kein API-Schlüssel eingegeben. ",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
+  "@helpPrint": {
+    "description": ""
+  },
+  "@removeCRUD": {
+    "description": ""
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Erstellen Sie ein vollständiges CRUD basierend auf einer Tabelle",
+  "CreateController": "Erstellen Sie einen neuen Controller",
+  "CreateMVC": "Erstellen Sie MVC",
+  "CreateMiddleware": "Erstellen Sie neue Middleware",
+  "CreateModel": "Erstellen Sie ein neues Modell",
+  "CreateView": "Erstellen Sie eine neue Ansicht",
+  "IaActivate": "Richten Sie interaktive native KI ein",
   "aiActivatedSuccess": "✅ NATIVE KI ERFOLGREICH AKTIVIERT",
+  "aiChooseOption": "Wählen Sie eine Option (1-3): ",
+  "aiEnterApiKey": "Geben Sie Ihren API-Schlüssel für {provider} ({key}) ein: ",
+  "aiInvalidOption": "Ungültige Option. ",
+  "aiModelToUse": "Zu verwendendes Modell [{model}]: ",
+  "aiNoApiKeyWarning": "⚠️ Warnung: Kein API-Schlüssel eingegeben. ",
+  "aiProviderGemini": "3) Gemini (Google)",
+  "aiProviderGroq": "1) Groq (Empfohlen - Llama 3 superschnell)",
+  "aiProviderOpenai": "2) OpenAI (GPT-4 / GPT-3.5)",
+  "aiSavingConfig": "Konfiguration in {file} wird gespeichert...",
+  "aiSelectProvider": "Wählen Sie Ihren KI-Anbieter:",
+  "aiSelectedProvider": "✅ Ausgewählter Anbieter: {provider}",
   "aiTryScript": "Versuchen Sie es jetzt mit: joss run your_script.joss",
-  "brevoTitle": "--- Brevo API-Konfiguration ---",
-  "brevoNoEnvError": "Fehler: Im aktuellen Verzeichnis wurde weder die Datei env.joss noch die Datei .env gefunden.",
-  "brevoEmptyKeyError": "Fehler: Der API-Schlüssel darf nicht leer sein.",
+  "aiWizardConfig": "Dieser Assistent konfiguriert die native KI in Ihrem Projekt.",
+  "aiWizardTitle": "🚀 Joss AI-Aktivierungsassistent 🚀",
   "brevoActivatedSuccess": "✅ BREVO_API erfolgreich aktiviert und konfiguriert.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
   "brevoDisabledSuccess": "✅ BREVO_API deaktiviert.",
-  "buildWebStart": "Joss WEB-Build wird gestartet...",
-  "buildSchemaError": "Die Joss-Bibel erfordert eine strenge Struktur.",
-  "buildEnvMissingError": "Architekturfehler: Fehlende Umgebungsdatei („env.joss“ oder „.env“)",
+  "brevoEmptyKeyError": "Fehler: Der API-Schlüssel darf nicht leer sein.",
+  "brevoEnablePrompt": "Möchten Sie BREVO_API aktivieren? (y/n): ",
+  "brevoEnterKey": "Geben Sie Ihren Brevo-API-Schlüssel ein: ",
+  "brevoNoEnvError": "Fehler: Im aktuellen Verzeichnis wurde weder die Datei env.joss noch die Datei .env gefunden.",
+  "brevoReadError": "Fehler beim Lesen von {file}: {error}",
+  "brevoTitle": "--- Brevo API-Konfiguration ---",
   "buildCopyFiles": "Projektdateien werden kopiert...",
-  "buildNodeModulesInclude": "-> node_modules werden eingebunden.",
-  "buildNodeModulesOmit": "-> node_modules wird weggelassen.",
   "buildDbCopied": "Datenbank nach build/ kopiert",
+  "buildDbCopiedProgram": "Datenbank nach build/Storage/ kopiert",
   "buildEncryptEnv": "Verschlüsselungsumgebung für die Produktion...",
-  "buildWebSuccess": "WEB-Build im Ordner „build/“ erfolgreich abgeschlossen.",
-  "buildWebDeployTip": "Laden Sie zum Bereitstellen den Inhalt des Ordners „build/“ auf Ihren Server hoch.",
-  "buildWebRunTip": "Sie müssen nur „joss run main.joss“ darin auf dem Server ausführen.",
+  "buildEnvEncryptedSuccess": "Umgebung verschlüsselt und eingebettet als env.enc",
+  "buildEnvMissingError": "Architekturfehler: Fehlende Umgebungsdatei („env.joss“ oder „.env“)",
+  "buildInjectDbPath": "Einfügen der DB_PATH=\"Storage/database.sqlite\"-Konfiguration in eingebettete env.joss ...",
+  "buildNodeModulesInclude": "-\u003e node_modules werden eingebunden.",
+  "buildNodeModulesOmit": "-\u003e node_modules wird weggelassen.",
+  "buildOsNotSupported": "In dieser vorkompilierten Version wird nur Windows unterstützt.",
+  "buildPackAssets": "Assets verschlüsseln und verpacken...",
+  "buildProgramDataDir": "build/data/ (vorerst leer)",
+  "buildProgramDbSqlite": "build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
   "buildProgramStart": "Joss PROGRAM Build wird gestartet (SICHERER MODUS) ...",
+  "buildProgramStructure": "Struktur:",
+  "buildProgramSuccess": "PROGRAM Build im Ordner „build/“ erfolgreich abgeschlossen.",
+  "buildSchemaError": "Die Joss-Bibel erfordert eine strenge Struktur.",
   "buildSelectOs": "Wählen Sie das Zielbetriebssystem aus:",
   "buildSelectOsWindows": "1. Windows",
-  "buildOsNotSupported": "In dieser vorkompilierten Version wird nur Windows unterstützt.",
+  "buildWebDeployTip": "Laden Sie zum Bereitstellen den Inhalt des Ordners „build/“ auf Ihren Server hoch.",
+  "buildWebRunTip": "Sie müssen nur „joss run main.joss“ darin auf dem Server ausführen.",
+  "buildWebStart": "Joss WEB-Build wird gestartet...",
+  "buildWebSuccess": "WEB-Build im Ordner „build/“ erfolgreich abgeschlossen.",
   "buildWindowsCompile": "Kompilieren für Windows...",
-  "buildPackAssets": "Assets verschlüsseln und verpacken...",
-  "buildInjectDbPath": "Einfügen der DB_PATH=\"Storage/database.sqlite\"-Konfiguration in eingebettete env.joss ...",
-  "buildEnvEncryptedSuccess": "Umgebung verschlüsselt und eingebettet als env.enc",
-  "buildDbCopiedProgram": "Datenbank nach build/Storage/ kopiert",
-  "buildProgramSuccess": "PROGRAM Build im Ordner „build/“ erfolgreich abgeschlossen.",
-  "buildProgramStructure": "Struktur:",
-  "buildProgramErrorLog": "build/error.log",
-  "buildProgramDbSqlite": "build/Storage/database.sqlite",
-  "buildProgramDataDir": "build/data/ (vorerst leer)",
-  "dbEngineAlready": "Die Datenbank-Engine ist bereits vorhanden",
+  "changeDBMotor": "Ändern Sie die Datenbank-Engine (MySQL/SQLite)",
+  "changeDBPrefix": "Ändern Sie das Tabellenpräfix",
+  "compileProjectDist": "Erstellen Sie das Projekt zur Verteilung",
+  "createMigration": "Erstellen Sie eine neue Migration",
+  "createProject": "Erstellen Sie ein neues Projekt",
   "dbConnectedSourceDest": "Verbunden mit Quelle und Ziel.",
-  "dbPrepareDestSchema": "Schema wird in der Zieldatenbank vorbereitet...",
+  "dbEngineAlready": "Die Datenbank-Engine ist bereits vorhanden",
   "dbMigrateStart": "Datenmigration wird gestartet...",
   "dbPrefixAlready": "Das Präfix ist bereits vorhanden",
-  "errFunctionNotFound": "Fehler: Funktion „%s“ nicht gefunden",
-  "errViewNotFound": "Fehler: Ansicht „%s“ nicht gefunden",
-  "errLayoutNotFound": "Fehler: Layout „%s“ nicht gefunden",
-  "errTypeError": "Typfehler: Argument %d (%s) muss vom Typ %s sein...",
-  "errPropertyNotFound": "Fehler: Eigenschaft oder Methode „%s“ nicht in Klasse „%s“ gefunden",
+  "dbPrepareDestSchema": "Schema wird in der Zieldatenbank vorbereitet...",
   "errAuthEncryptFailed": "Authentifizierungsfehler: Passwort konnte nicht verschlüsselt werden",
-  "errAuthNoDbConnection": "Authentifizierungsfehler: Keine Datenbankverbindung konfiguriert"
+  "errAuthNoDbConnection": "Authentifizierungsfehler: Keine Datenbankverbindung konfiguriert",
+  "errFunctionNotFound": "Fehler: Funktion „%s“ nicht gefunden",
+  "errLayoutNotFound": "Fehler: Layout „%s“ nicht gefunden",
+  "errPropertyNotFound": "Fehler: Eigenschaft oder Methode „%s“ nicht in Klasse „%s“ gefunden",
+  "errTypeError": "Typfehler: Argument %d (%s) muss vom Typ %s sein...",
+  "errViewNotFound": "Fehler: Ansicht „%s“ nicht gefunden",
+  "exeMigrate": "Führen Sie ausstehende Migrationen aus",
+  "exeMigrateFresh": "Löschen Sie alle Tabellen und führen Sie die Migrationen erneut aus",
+  "helpPrint": "Diese Hilfe anzeigen",
+  "removeCRUD": "Entfernen Sie das für eine Tabelle generierte CRUD",
+  "runJossScript": "Führen Sie ein Joss-Skript aus",
+  "settingsUserStorage": "Speicher konfigurieren (lokal|OCI|AWS|Azure)",
+  "startProgramDesktop": "Starten Sie die Anwendung im Desktop-Modus",
+  "startServerWeb": "Starten Sie den Webserver",
+  "version": "Zeigt die aktuelle Version an"
 }
