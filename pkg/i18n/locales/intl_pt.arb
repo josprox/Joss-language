@@ -1,91 +1,143 @@
 {
   "@@locale": "pt",
-  "startServerWeb": "Inicie o servidor web",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Inicie o aplicativo no modo desktop",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Execute um script joss",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Construa o projeto para distribuição",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Crie um novo controlador",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Crie um novo middleware",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Crie um novo modelo",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Crie uma nova visualização",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Criar MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Crie CRUD completo com base em uma tabela",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Remover CRUD gerado para uma tabela",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Crie uma nova migração",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Execute migrações pendentes",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Exclua todas as tabelas e execute novamente as migrações",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Crie um novo projeto",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Alterar o mecanismo de banco de dados (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Alterar o prefixo da tabela",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Configurar armazenamento (local|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Configure IA nativa interativa",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Mostra a versão atual",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Mostrar esta ajuda",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Crie CRUD completo com base em uma tabela",
+  "CreateController": "Crie um novo controlador",
+  "CreateMVC": "Criar MVC",
+  "CreateMiddleware": "Crie um novo middleware",
+  "CreateModel": "Crie um novo modelo",
+  "CreateView": "Crie uma nova visualização",
+  "IaActivate": "Configure IA nativa interativa",
+  "aiActivatedSuccess": "✅ IA NATIVA ATIVADA COM SUCESSO",
+  "aiInvalidOption": "Opção inválida. ",
+  "aiNoApiKeyWarning": "⚠️ Aviso: nenhuma chave API inserida. ",
+  "aiSelectProvider": "Selecione seu provedor de IA:",
+  "aiTryScript": "Experimente agora com: joss run your_script.joss",
+  "aiWizardConfig": "Este assistente configurará a IA nativa em seu projeto.",
+  "aiWizardTitle": "🚀 Assistente de ativação Joss AI 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API ativado e configurado com sucesso.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API desativado.",
+  "brevoEmptyKeyError": "Erro: a chave API não pode estar vazia.",
+  "brevoNoEnvError": "Erro: Nem o arquivo env.joss nem .env foi encontrado no diretório atual.",
+  "brevoTitle": "--- Configuração da API Brevo ---",
+  "buildCopyFiles": "Copiando arquivos do projeto...",
+  "buildDbCopied": "Banco de dados copiado para build/",
+  "buildDbCopiedProgram": "Banco de dados copiado para build/Storage/",
+  "buildEncryptEnv": "Criptografando ambiente para produção...",
+  "buildEnvEncryptedSuccess": "Ambiente criptografado e incorporado como env.enc",
+  "buildEnvMissingError": "Erro de arquitetura: arquivo de ambiente ausente ('env.joss' ou '.env')",
+  "buildInjectDbPath": "Injetando configuração DB_PATH = \"Storage/database.sqlite\" no env.joss incorporado ...",
+  "buildNodeModulesInclude": "-\u003e node_modules serão incluídos.",
+  "buildNodeModulesOmit": "-\u003e node_modules será omitido.",
+  "buildOsNotSupported": "Somente Windows é compatível com esta versão pré-compilada.",
+  "buildPackAssets": "Criptografando e empacotando ativos...",
+  "buildProgramDataDir": "build/data/ (vazio por enquanto)",
+  "buildProgramDbSqlite": "  build/Storage/database.sqlite",
+  "buildProgramErrorLog": "  build/error.log",
+  "buildProgramStart": "Iniciando a construção do Joss PROGRAM (MODO SEGURO)...",
+  "buildProgramStructure": "Estrutura:",
+  "buildProgramSuccess": "PROGRAMA Build concluído com sucesso na pasta 'build/'.",
+  "buildSchemaError": "A Bíblia Joss requer uma estrutura rígida.",
+  "buildSelectOs": "Selecione o sistema operacional de destino:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "Para implantar, carregue o conteúdo da pasta 'build/' em seu servidor.",
+  "buildWebRunTip": "Você só precisa executar 'joss run main.joss' dentro dele no servidor.",
+  "buildWebStart": "Iniciando a construção do Joss WEB...",
+  "buildWebSuccess": "WEB Build concluído com sucesso na pasta 'build/'.",
+  "buildWindowsCompile": "Compilando para Windows...",
+  "changeDBMotor": "Alterar o mecanismo de banco de dados (mysql/sqlite)",
+  "changeDBPrefix": "Alterar o prefixo da tabela",
+  "compileProjectDist": "Construa o projeto para distribuição",
+  "createMigration": "Crie uma nova migração",
+  "createProject": "Crie um novo projeto",
+  "dbConnectedSourceDest": "Conectado à origem e ao destino.",
+  "dbEngineAlready": "O mecanismo de banco de dados já está",
+  "dbMigrateStart": "Iniciando migração de dados...",
+  "dbPrefixAlready": "O prefixo já está",
+  "dbPrepareDestSchema": "Preparando esquema no banco de dados de destino...",
+  "errAuthEncryptFailed": "Erro de autenticação: falha ao criptografar a senha",
+  "errAuthNoDbConnection": "Erro de autenticação: nenhuma conexão de banco de dados configurada",
+  "errFunctionNotFound": "Erro: Função '%s' não encontrada",
+  "errLayoutNotFound": "Erro: Layout '%s' não encontrado",
+  "errPropertyNotFound": "Erro: Propriedade ou método '%s' não encontrado na classe '%s'",
+  "errTypeError": "Erro de tipo: o argumento %d (%s) deve ser do tipo %s...",
+  "errViewNotFound": "Erro: Visualização '%s' não encontrada",
+  "exeMigrate": "Execute migrações pendentes",
+  "exeMigrateFresh": "Exclua todas as tabelas e execute novamente as migrações",
+  "helpPrint": "Mostrar esta ajuda",
+  "removeCRUD": "Remover CRUD gerado para uma tabela",
+  "runJossScript": "Execute um script joss",
+  "settingsUserStorage": "Configurar armazenamento (local|OCI|AWS|Azure)",
+  "startProgramDesktop": "Inicie o aplicativo no modo desktop",
+  "startServerWeb": "Inicie o servidor web",
+  "version": "Mostra a versão atual"
 }

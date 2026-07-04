@@ -1,91 +1,143 @@
 {
   "@@locale": "nl",
-  "startServerWeb": "Start de webserver",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Start de applicatie in desktopmodus",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Voer een joss-script uit",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Bouw het project voor distributie",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Maak een nieuwe controller",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Maak nieuwe middleware",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Maak een nieuw model",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Maak een nieuwe weergave",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "MVC maken",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Creëer volledige CRUD op basis van een tabel",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Verwijder CRUD gegenereerd voor een tabel",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Maak een nieuwe migratie",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Voer lopende migraties uit",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Verwijder alle tabellen en voer de migraties opnieuw uit",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Maak een nieuw project",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Wijzig de database-engine (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Wijzig het tabelvoorvoegsel",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Opslag configureren (lokaal|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Zet interactieve Native AI op",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Toont de huidige versie",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Laat deze hulp zien",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Creëer volledige CRUD op basis van een tabel",
+  "CreateController": "Maak een nieuwe controller",
+  "CreateMVC": "MVC maken",
+  "CreateMiddleware": "Maak nieuwe middleware",
+  "CreateModel": "Maak een nieuw model",
+  "CreateView": "Maak een nieuwe weergave",
+  "IaActivate": "Zet interactieve Native AI op",
+  "aiActivatedSuccess": "✅ NATIVE AI SUCCESVOL GEACTIVEERD",
+  "aiInvalidOption": "Ongeldige optie. ",
+  "aiNoApiKeyWarning": "⚠️ Waarschuwing: geen API-sleutel ingevoerd. ",
+  "aiSelectProvider": "Selecteer uw AI-provider:",
+  "aiTryScript": "Probeer het nu met: joss run your_script.joss",
+  "aiWizardConfig": "Deze wizard configureert de native AI in uw project.",
+  "aiWizardTitle": "🚀 Joss AI-activeringswizard 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API succesvol geactiveerd en geconfigureerd.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API uitgeschakeld.",
+  "brevoEmptyKeyError": "Fout: de API-sleutel mag niet leeg zijn.",
+  "brevoNoEnvError": "Fout: Er is geen env.joss- noch .env-bestand gevonden in de huidige map.",
+  "brevoTitle": "--- Brevo API-configuratie ---",
+  "buildCopyFiles": "Projectbestanden kopiëren...",
+  "buildDbCopied": "Database gekopieerd om te bouwen/",
+  "buildDbCopiedProgram": "Database gekopieerd naar build/Opslag/",
+  "buildEncryptEnv": "Omgeving versleutelen voor productie...",
+  "buildEnvEncryptedSuccess": "Omgeving gecodeerd en ingebed als env.enc",
+  "buildEnvMissingError": "Architectuurfout: ontbrekend omgevingsbestand ('env.joss' of '.env')",
+  "buildInjectDbPath": "DB_PATH=\"Storage/database.sqlite\" configuratie in ingebedde env.joss injecteren...",
+  "buildNodeModulesInclude": "-\u003e node_modules worden opgenomen.",
+  "buildNodeModulesOmit": "-\u003e node_modules worden weggelaten.",
+  "buildOsNotSupported": "Alleen Windows wordt ondersteund in deze vooraf gecompileerde versie.",
+  "buildPackAssets": "Assets versleutelen en verpakken...",
+  "buildProgramDataDir": "build/data/ (voorlopig leeg)",
+  "buildProgramDbSqlite": "  build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
+  "buildProgramStart": "Joss PROGRAM-build starten (VEILIGE MODUS)...",
+  "buildProgramStructure": "Structuur:",
+  "buildProgramSuccess": "PROGRAMMA Build is succesvol voltooid in de map 'build/'.",
+  "buildSchemaError": "De Joss-bijbel vereist een strikte structuur.",
+  "buildSelectOs": "Selecteer het doelbesturingssysteem:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "Om te implementeren uploadt u de inhoud van de map 'build/' naar uw server.",
+  "buildWebRunTip": "U hoeft alleen 'joss run main.joss' erin op de server uit te voeren.",
+  "buildWebStart": "Joss WEB-build starten...",
+  "buildWebSuccess": "WEB Build is succesvol voltooid in de map 'build/'.",
+  "buildWindowsCompile": "Compileren voor Windows...",
+  "changeDBMotor": "Wijzig de database-engine (mysql/sqlite)",
+  "changeDBPrefix": "Wijzig het tabelvoorvoegsel",
+  "compileProjectDist": "Bouw het project voor distributie",
+  "createMigration": "Maak een nieuwe migratie",
+  "createProject": "Maak een nieuw project",
+  "dbConnectedSourceDest": "Verbonden met bron en bestemming.",
+  "dbEngineAlready": "De database-engine is er al",
+  "dbMigrateStart": "Gegevensmigratie starten...",
+  "dbPrefixAlready": "Het voorvoegsel is al",
+  "dbPrepareDestSchema": "Schema voorbereiden in doeldatabase...",
+  "errAuthEncryptFailed": "Auth-fout: kan het wachtwoord niet coderen",
+  "errAuthNoDbConnection": "Verificatiefout: geen databaseverbinding geconfigureerd",
+  "errFunctionNotFound": "Fout: Functie '%s' niet gevonden",
+  "errLayoutNotFound": "Fout: Layout '%s' niet gevonden",
+  "errPropertyNotFound": "Fout: eigenschap of methode '%s' niet gevonden in klasse '%s'",
+  "errTypeError": "Typefout: Argument %d (%s) moet van het type %s zijn",
+  "errViewNotFound": "Fout: Weergave '%s' niet gevonden",
+  "exeMigrate": "Voer lopende migraties uit",
+  "exeMigrateFresh": "Verwijder alle tabellen en voer de migraties opnieuw uit",
+  "helpPrint": "Laat deze hulp zien",
+  "removeCRUD": "Verwijder CRUD gegenereerd voor een tabel",
+  "runJossScript": "Voer een joss-script uit",
+  "settingsUserStorage": "Opslag configureren (lokaal|OCI|AWS|Azure)",
+  "startProgramDesktop": "Start de applicatie in desktopmodus",
+  "startServerWeb": "Start de webserver",
+  "version": "Toont de huidige versie"
 }

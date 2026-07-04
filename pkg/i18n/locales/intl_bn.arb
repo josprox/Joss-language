@@ -1,91 +1,143 @@
 {
   "@@locale": "bn",
-  "startServerWeb": "ওয়েব সার্ভার শুরু করুন",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "ডেস্কটপ মোডে অ্যাপ্লিকেশন শুরু করুন",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "একটি জস স্ক্রিপ্ট চালান",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "বিতরণের জন্য প্রকল্প তৈরি করুন",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "একটি নতুন নিয়ামক তৈরি করুন",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "নতুন মিডলওয়্যার তৈরি করুন",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "একটি নতুন মডেল তৈরি করুন",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "একটি নতুন ভিউ তৈরি করুন",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "MVC তৈরি করুন",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "একটি টেবিলের উপর ভিত্তি করে সম্পূর্ণ CRUD তৈরি করুন",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "একটি টেবিলের জন্য তৈরি করা CRUD সরান",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "একটি নতুন মাইগ্রেশন তৈরি করুন",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "মুলতুবি মাইগ্রেশন চালান",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "সমস্ত টেবিল মুছুন এবং পুনরায় মাইগ্রেশন চালান",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "একটি নতুন প্রকল্প তৈরি করুন",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "ডাটাবেস ইঞ্জিন পরিবর্তন করুন (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "টেবিলের উপসর্গ পরিবর্তন করুন",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "স্টোরেজ কনফিগার করুন (স্থানীয়|OCI|AWS| Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "ইন্টারেক্টিভ নেটিভ এআই সেট আপ করুন",
   "@IaActivate": {
     "description": ""
   },
-  "version": "বর্তমান সংস্করণ দেখায়",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "এই সাহায্য দেখান",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "একটি টেবিলের উপর ভিত্তি করে সম্পূর্ণ CRUD তৈরি করুন",
+  "CreateController": "একটি নতুন নিয়ামক তৈরি করুন",
+  "CreateMVC": "MVC তৈরি করুন",
+  "CreateMiddleware": "নতুন মিডলওয়্যার তৈরি করুন",
+  "CreateModel": "একটি নতুন মডেল তৈরি করুন",
+  "CreateView": "একটি নতুন ভিউ তৈরি করুন",
+  "IaActivate": "ইন্টারেক্টিভ নেটিভ এআই সেট আপ করুন",
+  "aiActivatedSuccess": "✅ নেটিভ এআই সফলভাবে সক্রিয় হয়েছে",
+  "aiInvalidOption": "অবৈধ বিকল্প। ",
+  "aiNoApiKeyWarning": "⚠️ সতর্কতা: কোন API কী প্রবেশ করানো হয়নি। ",
+  "aiSelectProvider": "আপনার AI প্রদানকারী নির্বাচন করুন:",
+  "aiTryScript": "এখনই চেষ্টা করুন: joss run your_script.joss",
+  "aiWizardConfig": "এই উইজার্ড আপনার প্রকল্পে নেটিভ এআই কনফিগার করবে।",
+  "aiWizardTitle": "🚀 জস এআই অ্যাক্টিভেশন উইজার্ড 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API সক্রিয় এবং সফলভাবে কনফিগার করা হয়েছে।",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API নিষ্ক্রিয়।",
+  "brevoEmptyKeyError": "ত্রুটি: API কী খালি থাকতে পারে না।",
+  "brevoNoEnvError": "ত্রুটি: বর্তমান ডিরেক্টরিতে env.joss বা .env ফাইল পাওয়া যায়নি।",
+  "brevoTitle": "--- ব্রেভো এপিআই কনফিগারেশন ---",
+  "buildCopyFiles": "প্রকল্প ফাইল অনুলিপি করা হচ্ছে...",
+  "buildDbCopied": "ডাটাবেস তৈরি করতে কপি করা হয়েছে/",
+  "buildDbCopiedProgram": "বিল্ড/স্টোরেজ/ এ ডাটাবেস কপি করা হয়েছে",
+  "buildEncryptEnv": "উৎপাদনের জন্য পরিবেশ এনক্রিপ্ট করা হচ্ছে...",
+  "buildEnvEncryptedSuccess": "পরিবেশ এনক্রিপ্ট করা এবং env.enc হিসাবে এমবেড করা",
+  "buildEnvMissingError": "আর্কিটেকচার ত্রুটি: পরিবেশ ফাইল অনুপস্থিত ('env.joss' বা '.env')",
+  "buildInjectDbPath": "এমবেডেড env.joss-এ DB_PATH=\"Storage/database.sqlite\" কনফিগারেশন ইনজেকশন করা হচ্ছে...",
+  "buildNodeModulesInclude": "-\u003e node_modules অন্তর্ভুক্ত করা হবে।",
+  "buildNodeModulesOmit": "-\u003e node_modules বাদ দেওয়া হবে।",
+  "buildOsNotSupported": "এই প্রাক-সংকলিত সংস্করণে শুধুমাত্র উইন্ডোজ সমর্থিত।",
+  "buildPackAssets": "এনক্রিপ্টিং এবং প্যাকেজিং সম্পদ...",
+  "buildProgramDataDir": "  build/data/ (এখন খালি)",
+  "buildProgramDbSqlite": "build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
+  "buildProgramStart": "জস প্রোগ্রাম বিল্ড (সিকিউর মোড) শুরু হচ্ছে...",
+  "buildProgramStructure": "গঠন:",
+  "buildProgramSuccess": "'build/' ফোল্ডারে প্রোগ্রাম বিল্ড সফলভাবে সম্পন্ন হয়েছে।",
+  "buildSchemaError": "জস বাইবেলের একটি কঠোর কাঠামোর প্রয়োজন।",
+  "buildSelectOs": "লক্ষ্য অপারেটিং সিস্টেম নির্বাচন করুন:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "স্থাপন করতে, আপনার সার্ভারে 'বিল্ড/' ফোল্ডারের বিষয়বস্তু আপলোড করুন।",
+  "buildWebRunTip": "আপনাকে শুধুমাত্র সার্ভারে এর ভিতরে 'joss run main.joss' চালাতে হবে।",
+  "buildWebStart": "Joss WEB বিল্ড শুরু হচ্ছে...",
+  "buildWebSuccess": "'build/' ফোল্ডারে WEB বিল্ড সফলভাবে সম্পন্ন হয়েছে।",
+  "buildWindowsCompile": "উইন্ডোজের জন্য কম্পাইল করা হচ্ছে...",
+  "changeDBMotor": "ডাটাবেস ইঞ্জিন পরিবর্তন করুন (mysql/sqlite)",
+  "changeDBPrefix": "টেবিলের উপসর্গ পরিবর্তন করুন",
+  "compileProjectDist": "বিতরণের জন্য প্রকল্প তৈরি করুন",
+  "createMigration": "একটি নতুন মাইগ্রেশন তৈরি করুন",
+  "createProject": "একটি নতুন প্রকল্প তৈরি করুন",
+  "dbConnectedSourceDest": "উৎস এবং গন্তব্যের সাথে সংযুক্ত।",
+  "dbEngineAlready": "ডাটাবেস ইঞ্জিন ইতিমধ্যে",
+  "dbMigrateStart": "ডেটা মাইগ্রেশন শুরু হচ্ছে...",
+  "dbPrefixAlready": "উপসর্গ ইতিমধ্যে",
+  "dbPrepareDestSchema": "গন্তব্য ডাটাবেসে স্কিমা প্রস্তুত করা হচ্ছে...",
+  "errAuthEncryptFailed": "প্রমাণ ত্রুটি: পাসওয়ার্ড এনক্রিপ্ট করতে ব্যর্থ হয়েছে৷",
+  "errAuthNoDbConnection": "প্রমাণ ত্রুটি: কোনো ডাটাবেস সংযোগ কনফিগার করা নেই৷",
+  "errFunctionNotFound": "ত্রুটি: ফাংশন '%s' পাওয়া যায়নি",
+  "errLayoutNotFound": "ত্রুটি: লেআউট '%s' পাওয়া যায়নি",
+  "errPropertyNotFound": "ত্রুটি: সম্পত্তি বা পদ্ধতি '%s' ক্লাস '%s' পাওয়া যায়নি",
+  "errTypeError": "প্রকার ত্রুটি: আর্গুমেন্ট %d (%s) টাইপের হতে হবে %s...",
+  "errViewNotFound": "ত্রুটি: দেখুন '%s' পাওয়া যায়নি",
+  "exeMigrate": "মুলতুবি মাইগ্রেশন চালান",
+  "exeMigrateFresh": "সমস্ত টেবিল মুছুন এবং পুনরায় মাইগ্রেশন চালান",
+  "helpPrint": "এই সাহায্য দেখান",
+  "removeCRUD": "একটি টেবিলের জন্য তৈরি করা CRUD সরান",
+  "runJossScript": "একটি জস স্ক্রিপ্ট চালান",
+  "settingsUserStorage": "স্টোরেজ কনফিগার করুন (স্থানীয়|OCI|AWS| Azure)",
+  "startProgramDesktop": "ডেস্কটপ মোডে অ্যাপ্লিকেশন শুরু করুন",
+  "startServerWeb": "ওয়েব সার্ভার শুরু করুন",
+  "version": "বর্তমান সংস্করণ দেখায়"
 }

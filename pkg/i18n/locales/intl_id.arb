@@ -1,91 +1,143 @@
 {
   "@@locale": "id",
-  "startServerWeb": "Mulai server web",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Mulai aplikasi dalam mode desktop",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Jalankan skrip joss",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Bangun proyek untuk distribusi",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Buat pengontrol baru",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Buat middleware baru",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Buat model baru",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Buat tampilan baru",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Buat MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Buat CRUD lengkap berdasarkan tabel",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Hapus CRUD yang dihasilkan untuk sebuah tabel",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Buat migrasi baru",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Jalankan migrasi yang tertunda",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Hapus semua tabel dan jalankan kembali migrasi",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Buat proyek baru",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Mengubah mesin database (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Ubah awalan tabel",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Konfigurasikan penyimpanan (lokal|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Siapkan AI Asli yang interaktif",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Menampilkan versi saat ini",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Tunjukkan bantuan ini",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Buat CRUD lengkap berdasarkan tabel",
+  "CreateController": "Buat pengontrol baru",
+  "CreateMVC": "Buat MVC",
+  "CreateMiddleware": "Buat middleware baru",
+  "CreateModel": "Buat model baru",
+  "CreateView": "Buat tampilan baru",
+  "IaActivate": "Siapkan AI Asli yang interaktif",
+  "aiActivatedSuccess": "✅ AI ASLI BERHASIL DIAKTIFKAN",
+  "aiInvalidOption": "Opsi tidak valid. ",
+  "aiNoApiKeyWarning": "⚠️ Peringatan: Tidak ada Kunci API yang dimasukkan. ",
+  "aiSelectProvider": "Pilih penyedia AI Anda:",
+  "aiTryScript": "Coba sekarang dengan: joss run your_script.joss",
+  "aiWizardConfig": "Wizard ini akan mengonfigurasi AI asli di proyek Anda.",
+  "aiWizardTitle": "🚀 Penyihir Aktivasi Joss AI 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API berhasil diaktifkan dan dikonfigurasi.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API dinonaktifkan.",
+  "brevoEmptyKeyError": "Kesalahan: Kunci API tidak boleh kosong.",
+  "brevoNoEnvError": "Kesalahan: File env.joss atau .env tidak ditemukan di direktori saat ini.",
+  "brevoTitle": "--- Konfigurasi API Brevo ---",
+  "buildCopyFiles": "Menyalin file proyek...",
+  "buildDbCopied": "Basis data disalin ke build/",
+  "buildDbCopiedProgram": "Basis data disalin ke build/Penyimpanan/",
+  "buildEncryptEnv": "Mengenkripsi lingkungan untuk produksi...",
+  "buildEnvEncryptedSuccess": "Lingkungan dienkripsi dan disematkan sebagai env.enc",
+  "buildEnvMissingError": "Kesalahan Arsitektur: File lingkungan tidak ada ('env.joss' atau '.env')",
+  "buildInjectDbPath": "Menyuntikkan konfigurasi DB_PATH=\"Storage/database.sqlite\" ke env.joss yang tertanam...",
+  "buildNodeModulesInclude": "-\u003e node_modules akan disertakan.",
+  "buildNodeModulesOmit": "-\u003e node_modules akan dihilangkan.",
+  "buildOsNotSupported": "Hanya Windows yang didukung dalam versi pra-kompilasi ini.",
+  "buildPackAssets": "Mengenkripsi dan mengemas aset...",
+  "buildProgramDataDir": "build/data/ (kosong untuk saat ini)",
+  "buildProgramDbSqlite": "  build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
+  "buildProgramStart": "Memulai pembuatan PROGRAM Joss (MODE AMAN)...",
+  "buildProgramStructure": "Struktur:",
+  "buildProgramSuccess": "PROGRAM Build berhasil diselesaikan di folder 'build/'.",
+  "buildSchemaError": "Joss Bible memerlukan struktur yang ketat.",
+  "buildSelectOs": "Pilih sistem operasi target:",
+  "buildSelectOsWindows": "1.jendela Windows",
+  "buildWebDeployTip": "Untuk menyebarkan, unggah konten folder 'build/' ke server Anda.",
+  "buildWebRunTip": "Anda hanya perlu menjalankan 'joss run main.joss' di dalamnya di server.",
+  "buildWebStart": "Memulai pembuatan Joss WEB...",
+  "buildWebSuccess": "WEB Build berhasil diselesaikan di folder 'build/'.",
+  "buildWindowsCompile": "Kompilasi untuk Windows...",
+  "changeDBMotor": "Mengubah mesin database (mysql/sqlite)",
+  "changeDBPrefix": "Ubah awalan tabel",
+  "compileProjectDist": "Bangun proyek untuk distribusi",
+  "createMigration": "Buat migrasi baru",
+  "createProject": "Buat proyek baru",
+  "dbConnectedSourceDest": "Terhubung ke sumber dan tujuan.",
+  "dbEngineAlready": "Mesin database sudah",
+  "dbMigrateStart": "Memulai migrasi data...",
+  "dbPrefixAlready": "Awalannya sudah",
+  "dbPrepareDestSchema": "Mempersiapkan skema di database tujuan...",
+  "errAuthEncryptFailed": "Kesalahan Otentikasi: Gagal mengenkripsi kata sandi",
+  "errAuthNoDbConnection": "Kesalahan Auth: Tidak ada koneksi database yang dikonfigurasi",
+  "errFunctionNotFound": "Kesalahan: Fungsi '%s' tidak ditemukan",
+  "errLayoutNotFound": "Kesalahan: Tata letak '%s' tidak ditemukan",
+  "errPropertyNotFound": "Kesalahan: Properti atau metode '%s' tidak ditemukan di kelas '%s'",
+  "errTypeError": "Kesalahan Jenis: Argumen %d (%s) harus bertipe %s...",
+  "errViewNotFound": "Kesalahan: Tampilan '%s' tidak ditemukan",
+  "exeMigrate": "Jalankan migrasi yang tertunda",
+  "exeMigrateFresh": "Hapus semua tabel dan jalankan kembali migrasi",
+  "helpPrint": "Tunjukkan bantuan ini",
+  "removeCRUD": "Hapus CRUD yang dihasilkan untuk sebuah tabel",
+  "runJossScript": "Jalankan skrip joss",
+  "settingsUserStorage": "Konfigurasikan penyimpanan (lokal|OCI|AWS|Azure)",
+  "startProgramDesktop": "Mulai aplikasi dalam mode desktop",
+  "startServerWeb": "Mulai server web",
+  "version": "Menampilkan versi saat ini"
 }

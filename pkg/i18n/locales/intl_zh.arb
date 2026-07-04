@@ -1,91 +1,143 @@
 {
   "@@locale": "zh",
-  "startServerWeb": "启动网络服务器",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "以桌面模式启动应用程序",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "运行 joss 脚本",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "构建用于分发的项目",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "创建一个新的控制器",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "创建新的中间件",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "创建一个新模型",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "创建一个新视图",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "创建MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "基于表创建完整的CRUD",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "删除为表生成的 CRUD",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "创建新的迁移",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "运行待处理的迁移",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "删除所有表并重新运行迁移",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "创建一个新项目",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "更改数据库引擎（mysql/sqlite）",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "更改表前缀",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "配置存储（本地|OCI|AWS|Azure）",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "设置交互式原生 AI",
   "@IaActivate": {
     "description": ""
   },
-  "version": "显示当前版本",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "显示此帮助",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "基于表创建完整的CRUD",
+  "CreateController": "创建一个新的控制器",
+  "CreateMVC": "创建MVC",
+  "CreateMiddleware": "创建新的中间件",
+  "CreateModel": "创建一个新模型",
+  "CreateView": "创建一个新视图",
+  "IaActivate": "设置交互式原生 AI",
+  "aiActivatedSuccess": "✅ 原生AI已成功激活",
+  "aiInvalidOption": "无效选项。",
+  "aiNoApiKeyWarning": "⚠️警告：未输入 API 密钥。",
+  "aiSelectProvider": "选择您的人工智能提供商：",
+  "aiTryScript": "现在尝试： joss run your_script.joss",
+  "aiWizardConfig": "该向导将在您的项目中配置本机 AI。",
+  "aiWizardTitle": "🚀 Joss AI 激活向导🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API 激活并配置成功。",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API 已禁用。",
+  "brevoEmptyKeyError": "错误：API 密钥不能为空。",
+  "brevoNoEnvError": "错误：在当前目录中找不到 env.joss 和 .env 文件。",
+  "brevoTitle": "--- Brevo API 配置 ---",
+  "buildCopyFiles": "正在复制项目文件...",
+  "buildDbCopied": "数据库复制到 build/",
+  "buildDbCopiedProgram": "数据库复制到 build/Storage/",
+  "buildEncryptEnv": "生产环境加密...",
+  "buildEnvEncryptedSuccess": "环境加密并嵌入为 env.enc",
+  "buildEnvMissingError": "架构错误：缺少环境文件（“env.joss”或“.env”）",
+  "buildInjectDbPath": "正在将 DB_PATH=\"Storage/database.sqlite\" 配置注入嵌入式 env.joss...",
+  "buildNodeModulesInclude": "-\u003e 将包含node_modules。",
+  "buildNodeModulesOmit": "-\u003e node_modules 将被省略。",
+  "buildOsNotSupported": "此预编译版本仅支持 Windows。",
+  "buildPackAssets": "加密和打包资产...",
+  "buildProgramDataDir": "build/data/（暂时为空）",
+  "buildProgramDbSqlite": "  build/Storage/database.sqlite",
+  "buildProgramErrorLog": "  build/error.log",
+  "buildProgramStart": "开始 Joss PROGRAM 构建（安全模式）...",
+  "buildProgramStructure": "结构：",
+  "buildProgramSuccess": "程序构建在“build/”文件夹中成功完成。",
+  "buildSchemaError": "乔斯圣经要求有严格的结构。",
+  "buildSelectOs": "选择目标操作系统：",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "要进行部署，请将“build/”文件夹的内容上传到您的服务器。",
+  "buildWebRunTip": "您只需要在服务器上运行“joss run main.joss”即可。",
+  "buildWebStart": "开始乔斯WEB构建...",
+  "buildWebSuccess": "WEB 构建在“build/”文件夹中成功完成。",
+  "buildWindowsCompile": "为 Windows 编译...",
+  "changeDBMotor": "更改数据库引擎（mysql/sqlite）",
+  "changeDBPrefix": "更改表前缀",
+  "compileProjectDist": "构建用于分发的项目",
+  "createMigration": "创建新的迁移",
+  "createProject": "创建一个新项目",
+  "dbConnectedSourceDest": "连接到源和目的地。",
+  "dbEngineAlready": "数据库引擎已经",
+  "dbMigrateStart": "开始数据迁移...",
+  "dbPrefixAlready": "前缀已经是",
+  "dbPrepareDestSchema": "正在目标数据库中准备架构...",
+  "errAuthEncryptFailed": "身份验证错误：无法加密密码",
+  "errAuthNoDbConnection": "身份验证错误：未配置数据库连接",
+  "errFunctionNotFound": "错误：找不到函数“%s”",
+  "errLayoutNotFound": "错误：找不到布局“%s”",
+  "errPropertyNotFound": "错误：在类“%s”中找不到属性或方法“%s”",
+  "errTypeError": "类型错误：参数 %d (%s) 必须属于类型 %s...",
+  "errViewNotFound": "错误：未找到视图“%s”",
+  "exeMigrate": "运行待处理的迁移",
+  "exeMigrateFresh": "删除所有表并重新运行迁移",
+  "helpPrint": "显示此帮助",
+  "removeCRUD": "删除为表生成的 CRUD",
+  "runJossScript": "运行 joss 脚本",
+  "settingsUserStorage": "配置存储（本地|OCI|AWS|Azure）",
+  "startProgramDesktop": "以桌面模式启动应用程序",
+  "startServerWeb": "启动网络服务器",
+  "version": "显示当前版本"
 }

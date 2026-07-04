@@ -1,91 +1,143 @@
 {
   "@@locale": "cs",
-  "startServerWeb": "Spusťte webový server",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Spusťte aplikaci v režimu plochy",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Spusťte joss skript",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Sestavte projekt pro distribuci",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Vytvořte nový ovladač",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Vytvořte nový middleware",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Vytvořte nový model",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Vytvořte nový pohled",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Vytvořte MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Vytvořte kompletní CRUD na základě tabulky",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Odstraňte CRUD generovaný pro tabulku",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Vytvořte novou migraci",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Spusťte nevyřízené migrace",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Odstraňte všechny tabulky a spusťte migraci znovu",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Vytvořte nový projekt",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Změňte databázový stroj (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Změňte předponu tabulky",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Konfigurace úložiště (místní|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Nastavte interaktivní nativní umělou inteligenci",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Zobrazuje aktuální verzi",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Ukažte tuto nápovědu",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Vytvořte kompletní CRUD na základě tabulky",
+  "CreateController": "Vytvořte nový ovladač",
+  "CreateMVC": "Vytvořte MVC",
+  "CreateMiddleware": "Vytvořte nový middleware",
+  "CreateModel": "Vytvořte nový model",
+  "CreateView": "Vytvořte nový pohled",
+  "IaActivate": "Nastavte interaktivní nativní umělou inteligenci",
+  "aiActivatedSuccess": "✅ NATIVNÍ AI BYLA ÚSPĚŠNĚ AKTIVOVÁNA",
+  "aiInvalidOption": "Neplatná možnost. ",
+  "aiNoApiKeyWarning": "⚠️ Upozornění: Nebyl zadán žádný klíč API. ",
+  "aiSelectProvider": "Vyberte svého poskytovatele AI:",
+  "aiTryScript": "Zkuste nyní pomocí: joss run your_script.joss",
+  "aiWizardConfig": "Tento průvodce nakonfiguruje nativní AI ve vašem projektu.",
+  "aiWizardTitle": "🚀 Joss AI Activation Wizard 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API aktivováno a úspěšně nakonfigurováno.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API zakázáno.",
+  "brevoEmptyKeyError": "Chyba: Klíč API nemůže být prázdný.",
+  "brevoNoEnvError": "Chyba: V aktuálním adresáři nebyl nalezen soubor env.joss ani .env.",
+  "brevoTitle": "--- Konfigurace Brevo API ---",
+  "buildCopyFiles": "Kopírování souborů projektu...",
+  "buildDbCopied": "Databáze zkopírována do build/",
+  "buildDbCopiedProgram": "Databáze zkopírována do sestavení/úložiště/",
+  "buildEncryptEnv": "Šifrovací prostředí pro produkci...",
+  "buildEnvEncryptedSuccess": "Prostředí zašifrované a vložené jako env.enc",
+  "buildEnvMissingError": "Chyba architektury: Chybí soubor prostředí ('env.joss' nebo '.env')",
+  "buildInjectDbPath": "Vložení konfigurace DB_PATH=\"Storage/database.sqlite\" do embedded env.joss...",
+  "buildNodeModulesInclude": "-\u003e budou zahrnuty node_modules.",
+  "buildNodeModulesOmit": "-\u003e node_modules budou vynechány.",
+  "buildOsNotSupported": "V této předkompilované verzi je podporován pouze systém Windows.",
+  "buildPackAssets": "Šifrování a balení aktiv...",
+  "buildProgramDataDir": "build/data/ (prozatím prázdné)",
+  "buildProgramDbSqlite": "build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
+  "buildProgramStart": "Spouštění sestavování Joss PROGRAMU (ZABEZPEČENÝ REŽIM)...",
+  "buildProgramStructure": "Struktura:",
+  "buildProgramSuccess": "Sestavení PROGRAMU úspěšně dokončeno ve složce 'build/'.",
+  "buildSchemaError": "Joss Bible vyžaduje přísnou strukturu.",
+  "buildSelectOs": "Vyberte cílový operační systém:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "Chcete-li nasadit, nahrajte obsah složky 'build/' na svůj server.",
+  "buildWebRunTip": "Stačí v něm na serveru spustit 'joss run main.joss'.",
+  "buildWebStart": "Spouštění tvorby Joss WEB...",
+  "buildWebSuccess": "WEB Build úspěšně dokončen ve složce 'build/'.",
+  "buildWindowsCompile": "Kompilace pro Windows...",
+  "changeDBMotor": "Změňte databázový stroj (mysql/sqlite)",
+  "changeDBPrefix": "Změňte předponu tabulky",
+  "compileProjectDist": "Sestavte projekt pro distribuci",
+  "createMigration": "Vytvořte novou migraci",
+  "createProject": "Vytvořte nový projekt",
+  "dbConnectedSourceDest": "Připojeno ke zdroji a cíli.",
+  "dbEngineAlready": "Databázový stroj již existuje",
+  "dbMigrateStart": "Spouštění migrace dat...",
+  "dbPrefixAlready": "Předpona už je",
+  "dbPrepareDestSchema": "Příprava schématu v cílové databázi...",
+  "errAuthEncryptFailed": "Chyba ověření: Heslo se nepodařilo zašifrovat",
+  "errAuthNoDbConnection": "Chyba ověření: Není nakonfigurováno žádné připojení k databázi",
+  "errFunctionNotFound": "Chyba: Funkce '%s' nebyla nalezena",
+  "errLayoutNotFound": "Chyba: Rozložení '%s' nebylo nalezeno",
+  "errPropertyNotFound": "Chyba: Vlastnost nebo metoda '%s' nebyla nalezena ve třídě '%s'",
+  "errTypeError": "Chyba typu: Argument %d (%s) musí být typu %s...",
+  "errViewNotFound": "Chyba: Zobrazení %s nebylo nalezeno",
+  "exeMigrate": "Spusťte nevyřízené migrace",
+  "exeMigrateFresh": "Odstraňte všechny tabulky a spusťte migraci znovu",
+  "helpPrint": "Ukažte tuto nápovědu",
+  "removeCRUD": "Odstraňte CRUD generovaný pro tabulku",
+  "runJossScript": "Spusťte joss skript",
+  "settingsUserStorage": "Konfigurace úložiště (místní|OCI|AWS|Azure)",
+  "startProgramDesktop": "Spusťte aplikaci v režimu plochy",
+  "startServerWeb": "Spusťte webový server",
+  "version": "Zobrazuje aktuální verzi"
 }

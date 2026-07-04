@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"github.com/jossecurity/joss/pkg/i18n"
 )
 
 func handleBrevoConfig() {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("--- Configuración de Brevo API ---")
+	fmt.Println(i18n.Tr("brevoTitle"))
 	fmt.Print("¿Deseas activar BREVO_API? (y/n): ")
 	response, _ := reader.ReadString('\n')
 	response = strings.TrimSpace(strings.ToLower(response))
@@ -21,7 +22,7 @@ func handleBrevoConfig() {
 		if _, err := os.Stat(".env"); err == nil {
 			envPath = ".env"
 		} else {
-			fmt.Println("Error: No se encontró el archivo env.joss ni .env en el directorio actual.")
+			fmt.Println(i18n.Tr("brevoNoEnvError"))
 			return
 		}
 	}
@@ -32,17 +33,17 @@ func handleBrevoConfig() {
 		key = strings.TrimSpace(key)
 
 		if key == "" {
-			fmt.Println("Error: La API Key no puede estar vacía.")
+			fmt.Println(i18n.Tr("brevoEmptyKeyError"))
 			return
 		}
 
 		updateEnvFile(envPath, "BREVO_API", key)
-		fmt.Println("✅ BREVO_API activado y configurado exitosamente.")
+		fmt.Println(i18n.Tr("brevoActivatedSuccess"))
 
 	} else {
 		// Disable (Comment out or remove)
 		removeEnvKey(envPath, "BREVO_API")
-		fmt.Println("✅ BREVO_API desactivado.")
+		fmt.Println(i18n.Tr("brevoDisabledSuccess"))
 	}
 }
 

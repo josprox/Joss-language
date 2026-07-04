@@ -1,91 +1,143 @@
 {
   "@@locale": "el",
-  "startServerWeb": "Εκκινήστε τον διακομιστή web",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Εκκινήστε την εφαρμογή σε λειτουργία επιφάνειας εργασίας",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Εκτελέστε ένα σενάριο Joss",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Κατασκευάστε το έργο για διανομή",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Δημιουργήστε ένα νέο χειριστήριο",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Δημιουργήστε νέο ενδιάμεσο λογισμικό",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Δημιουργήστε ένα νέο μοντέλο",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Δημιουργήστε μια νέα προβολή",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Δημιουργία MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Δημιουργήστε πλήρες CRUD με βάση έναν πίνακα",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Καταργήστε το CRUD που δημιουργήθηκε για έναν πίνακα",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Δημιουργήστε μια νέα μετεγκατάσταση",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Εκτελέστε εκκρεμείς μετεγκαταστάσεις",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Διαγράψτε όλους τους πίνακες και εκτελέστε ξανά τις μετεγκαταστάσεις",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Δημιουργήστε ένα νέο έργο",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Αλλαγή της μηχανής βάσης δεδομένων (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Αλλάξτε το πρόθεμα πίνακα",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Διαμόρφωση χώρου αποθήκευσης (τοπικό|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Ρυθμίστε το διαδραστικό Native AI",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Εμφανίζει την τρέχουσα έκδοση",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Δείξτε αυτή τη βοήθεια",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Δημιουργήστε πλήρες CRUD με βάση έναν πίνακα",
+  "CreateController": "Δημιουργήστε ένα νέο χειριστήριο",
+  "CreateMVC": "Δημιουργία MVC",
+  "CreateMiddleware": "Δημιουργήστε νέο ενδιάμεσο λογισμικό",
+  "CreateModel": "Δημιουργήστε ένα νέο μοντέλο",
+  "CreateView": "Δημιουργήστε μια νέα προβολή",
+  "IaActivate": "Ρυθμίστε το διαδραστικό Native AI",
+  "aiActivatedSuccess": "✅ Η ΕΓΓΕΝΙΚΗ ΑΙ ΕΝΕΡΓΟΠΟΙΗΘΗΚΕ ΜΕ ΕΠΙΤΥΧΙΑ",
+  "aiInvalidOption": "Μη έγκυρη επιλογή. ",
+  "aiNoApiKeyWarning": "⚠️ Προειδοποίηση: Δεν έχει εισαχθεί κλειδί API. ",
+  "aiSelectProvider": "Επιλέξτε τον πάροχο AI:",
+  "aiTryScript": "Δοκιμάστε τώρα με: joss run your_script.joss",
+  "aiWizardConfig": "Αυτός ο οδηγός θα διαμορφώσει το εγγενές AI στο έργο σας.",
+  "aiWizardTitle": "🚀 Joss AI Activation Wizard 🚀",
+  "brevoActivatedSuccess": "✅ Το BREVO_API ενεργοποιήθηκε και διαμορφώθηκε με επιτυχία.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ Το BREVO_API είναι απενεργοποιημένο.",
+  "brevoEmptyKeyError": "Σφάλμα: Το κλειδί API δεν μπορεί να είναι κενό.",
+  "brevoNoEnvError": "Σφάλμα: Ούτε το αρχείο env.joss ούτε .env βρέθηκε στον τρέχοντα κατάλογο.",
+  "brevoTitle": "--- Διαμόρφωση API Brevo ---",
+  "buildCopyFiles": "Αντιγραφή αρχείων έργου...",
+  "buildDbCopied": "Η βάση δεδομένων αντιγράφηκε στην κατασκευή/",
+  "buildDbCopiedProgram": "Η βάση δεδομένων αντιγράφηκε στο build/Storage/",
+  "buildEncryptEnv": "Περιβάλλον κρυπτογράφησης για παραγωγή...",
+  "buildEnvEncryptedSuccess": "Περιβάλλον κρυπτογραφημένο και ενσωματωμένο ως env.enc",
+  "buildEnvMissingError": "Σφάλμα αρχιτεκτονικής: Λείπει αρχείο περιβάλλοντος (\"env.joss\" ή \".env\")",
+  "buildInjectDbPath": "Εισαγωγή διαμόρφωσης DB_PATH=\"Storage/database.sqlite\" στο ενσωματωμένο env.joss...",
+  "buildNodeModulesInclude": "-\u003e node_modules θα συμπεριληφθούν.",
+  "buildNodeModulesOmit": "-\u003e node_modules θα παραλειφθούν.",
+  "buildOsNotSupported": "Μόνο τα Windows υποστηρίζονται σε αυτήν την προμεταγλωττισμένη έκδοση.",
+  "buildPackAssets": "Κρυπτογράφηση και συσκευασία περιουσιακών στοιχείων...",
+  "buildProgramDataDir": "build/data/ (κενό προς το παρόν)",
+  "buildProgramDbSqlite": "build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
+  "buildProgramStart": "Έναρξη δημιουργίας ΠΡΟΓΡΑΜΜΑΤΟΣ Joss (ΑΣΦΑΛΗ ΛΕΙΤΟΥΡΓΙΑ)...",
+  "buildProgramStructure": "Δομή:",
+  "buildProgramSuccess": "Η κατασκευή ΠΡΟΓΡΑΜΜΑΤΟΣ ολοκληρώθηκε με επιτυχία στο φάκελο 'build/'.",
+  "buildSchemaError": "Η Βίβλος του Τζος απαιτεί μια αυστηρή δομή.",
+  "buildSelectOs": "Επιλέξτε το λειτουργικό σύστημα προορισμού:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "Για ανάπτυξη, ανεβάστε τα περιεχόμενα του φακέλου «build/» στον διακομιστή σας.",
+  "buildWebRunTip": "Χρειάζεται μόνο να εκτελέσετε το \"joss run main.joss\" μέσα σε αυτό στον διακομιστή.",
+  "buildWebStart": "Έναρξη δημιουργίας Joss WEB...",
+  "buildWebSuccess": "Η κατασκευή WEB ολοκληρώθηκε με επιτυχία στον φάκελο \"build/\".",
+  "buildWindowsCompile": "Μεταγλώττιση για Windows...",
+  "changeDBMotor": "Αλλαγή της μηχανής βάσης δεδομένων (mysql/sqlite)",
+  "changeDBPrefix": "Αλλάξτε το πρόθεμα πίνακα",
+  "compileProjectDist": "Κατασκευάστε το έργο για διανομή",
+  "createMigration": "Δημιουργήστε μια νέα μετεγκατάσταση",
+  "createProject": "Δημιουργήστε ένα νέο έργο",
+  "dbConnectedSourceDest": "Συνδέθηκε με την πηγή και τον προορισμό.",
+  "dbEngineAlready": "Η μηχανή βάσης δεδομένων είναι ήδη",
+  "dbMigrateStart": "Έναρξη μετεγκατάστασης δεδομένων...",
+  "dbPrefixAlready": "Το πρόθεμα είναι ήδη",
+  "dbPrepareDestSchema": "Προετοιμασία σχήματος στη βάση δεδομένων προορισμού...",
+  "errAuthEncryptFailed": "Σφάλμα ελέγχου ταυτότητας: Αποτυχία κρυπτογράφησης κωδικού πρόσβασης",
+  "errAuthNoDbConnection": "Σφάλμα ελέγχου ταυτότητας: Δεν έχει διαμορφωθεί σύνδεση βάσης δεδομένων",
+  "errFunctionNotFound": "Σφάλμα: Η συνάρτηση '%s' δεν βρέθηκε",
+  "errLayoutNotFound": "Σφάλμα: Δεν βρέθηκε η διάταξη '%s'",
+  "errPropertyNotFound": "Σφάλμα: Η ιδιότητα ή η μέθοδος \"%s\" δεν βρέθηκε στην κλάση \"%s\"",
+  "errTypeError": "Σφάλμα τύπου: Το όρισμα %d (%s) πρέπει να είναι τύπου %s...",
+  "errViewNotFound": "Σφάλμα: Η προβολή \"%s\" δεν βρέθηκε",
+  "exeMigrate": "Εκτελέστε εκκρεμείς μετεγκαταστάσεις",
+  "exeMigrateFresh": "Διαγράψτε όλους τους πίνακες και εκτελέστε ξανά τις μετεγκαταστάσεις",
+  "helpPrint": "Δείξτε αυτή τη βοήθεια",
+  "removeCRUD": "Καταργήστε το CRUD που δημιουργήθηκε για έναν πίνακα",
+  "runJossScript": "Εκτελέστε ένα σενάριο Joss",
+  "settingsUserStorage": "Διαμόρφωση χώρου αποθήκευσης (τοπικό|OCI|AWS|Azure)",
+  "startProgramDesktop": "Εκκινήστε την εφαρμογή σε λειτουργία επιφάνειας εργασίας",
+  "startServerWeb": "Εκκινήστε τον διακομιστή web",
+  "version": "Εμφανίζει την τρέχουσα έκδοση"
 }

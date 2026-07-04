@@ -1,91 +1,143 @@
 {
   "@@locale": "it",
-  "startServerWeb": "Avviare il server web",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Avvia l'applicazione in modalità desktop",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Esegui uno script joss",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Costruisci il progetto per la distribuzione",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Crea un nuovo controller",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Creare un nuovo middleware",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Crea un nuovo modello",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Crea una nuova vista",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Crea MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Crea CRUD completo basato su una tabella",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Rimuovi CRUD generato per una tabella",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Crea una nuova migrazione",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Esegui le migrazioni in sospeso",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Elimina tutte le tabelle ed esegui nuovamente le migrazioni",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Crea un nuovo progetto",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Cambiare il motore del database (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Cambia il prefisso della tabella",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Configurare l'archiviazione (locale|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Configura l'IA nativa interattiva",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Mostra la versione corrente",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Mostra questo aiuto",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Crea CRUD completo basato su una tabella",
+  "CreateController": "Crea un nuovo controller",
+  "CreateMVC": "Crea MVC",
+  "CreateMiddleware": "Creare un nuovo middleware",
+  "CreateModel": "Crea un nuovo modello",
+  "CreateView": "Crea una nuova vista",
+  "IaActivate": "Configura l'IA nativa interattiva",
+  "aiActivatedSuccess": "✅ AI NATIVA ATTIVATA CON SUCCESSO",
+  "aiInvalidOption": "Opzione non valida. ",
+  "aiNoApiKeyWarning": "⚠️ Avviso: nessuna chiave API inserita. ",
+  "aiSelectProvider": "Seleziona il tuo fornitore di IA:",
+  "aiTryScript": "Prova ora con: joss run your_script.joss",
+  "aiWizardConfig": "Questa procedura guidata configurerà l'IA nativa nel tuo progetto.",
+  "aiWizardTitle": "🚀 Procedura guidata di attivazione AI di Joss 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API attivato e configurato con successo.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API disabilitato.",
+  "brevoEmptyKeyError": "Errore: la chiave API non può essere vuota.",
+  "brevoNoEnvError": "Errore: né il file env.joss né quello .env sono stati trovati nella directory corrente.",
+  "brevoTitle": "--- Configurazione API Brevo ---",
+  "buildCopyFiles": "Copia dei file di progetto...",
+  "buildDbCopied": "Database copiato per creare/",
+  "buildDbCopiedProgram": "Database copiato in build/Storage/",
+  "buildEncryptEnv": "Crittografia dell'ambiente per la produzione...",
+  "buildEnvEncryptedSuccess": "Ambiente crittografato e incorporato come env.enc",
+  "buildEnvMissingError": "Errore di architettura: file di ambiente mancante ('env.joss' o '.env')",
+  "buildInjectDbPath": "Inserimento della configurazione DB_PATH=\"Storage/database.sqlite\" nell'env.joss incorporato...",
+  "buildNodeModulesInclude": "-\u003e node_modules sarà incluso.",
+  "buildNodeModulesOmit": "-\u003e node_modules verrà omesso.",
+  "buildOsNotSupported": "Solo Windows è supportato in questa versione precompilata.",
+  "buildPackAssets": "Crittografia e confezionamento delle risorse...",
+  "buildProgramDataDir": "build/data/ (vuoto per ora)",
+  "buildProgramDbSqlite": "  build/Storage/database.sqlite",
+  "buildProgramErrorLog": "  build/error.log",
+  "buildProgramStart": "Avvio della creazione del PROGRAMMA Joss (MODALITÀ SICURA)...",
+  "buildProgramStructure": "Struttura:",
+  "buildProgramSuccess": "PROGRAMMA Build completata con successo nella cartella 'build/'.",
+  "buildSchemaError": "La Bibbia di Joss richiede una struttura rigorosa.",
+  "buildSelectOs": "Seleziona il sistema operativo di destinazione:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "Per eseguire la distribuzione, carica il contenuto della cartella \"build/\" sul tuo server.",
+  "buildWebRunTip": "Devi solo eseguire 'joss run main.joss' al suo interno sul server.",
+  "buildWebStart": "Avvio della creazione di Joss WEB...",
+  "buildWebSuccess": "WEB Build completata con successo nella cartella 'build/'.",
+  "buildWindowsCompile": "Compilazione per Windows...",
+  "changeDBMotor": "Cambiare il motore del database (mysql/sqlite)",
+  "changeDBPrefix": "Cambia il prefisso della tabella",
+  "compileProjectDist": "Costruisci il progetto per la distribuzione",
+  "createMigration": "Crea una nuova migrazione",
+  "createProject": "Crea un nuovo progetto",
+  "dbConnectedSourceDest": "Connesso all'origine e alla destinazione.",
+  "dbEngineAlready": "Il motore di database è già",
+  "dbMigrateStart": "Avvio della migrazione dei dati...",
+  "dbPrefixAlready": "Il prefisso c'è già",
+  "dbPrepareDestSchema": "Preparazione dello schema nel database di destinazione...",
+  "errAuthEncryptFailed": "Errore di autenticazione: impossibile crittografare la password",
+  "errAuthNoDbConnection": "Errore di autenticazione: nessuna connessione al database configurata",
+  "errFunctionNotFound": "Errore: funzione '%s' non trovata",
+  "errLayoutNotFound": "Errore: layout '%s' non trovato",
+  "errPropertyNotFound": "Errore: proprietà o metodo '%s' non trovato nella classe '%s'",
+  "errTypeError": "Errore di tipo: l'argomento %d (%s) deve essere di tipo %s...",
+  "errViewNotFound": "Errore: vista '%s' non trovata",
+  "exeMigrate": "Esegui le migrazioni in sospeso",
+  "exeMigrateFresh": "Elimina tutte le tabelle ed esegui nuovamente le migrazioni",
+  "helpPrint": "Mostra questo aiuto",
+  "removeCRUD": "Rimuovi CRUD generato per una tabella",
+  "runJossScript": "Esegui uno script joss",
+  "settingsUserStorage": "Configurare l'archiviazione (locale|OCI|AWS|Azure)",
+  "startProgramDesktop": "Avvia l'applicazione in modalità desktop",
+  "startServerWeb": "Avviare il server web",
+  "version": "Mostra la versione corrente"
 }

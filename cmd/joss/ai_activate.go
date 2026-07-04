@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"github.com/jossecurity/joss/pkg/i18n"
 )
 
 func activateAI() {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Println("🚀  Joss AI Activation Wizard  🚀")
+	fmt.Println(i18n.Tr("aiWizardTitle"))
 	fmt.Println("----------------------------------------")
-	fmt.Println("Este asistente configurará la IA nativa en tu proyecto.")
+	fmt.Println(i18n.Tr("aiWizardConfig"))
 	fmt.Println("")
 
 	// 1. Selector de Proveedor
-	fmt.Println("Selecciona tu proveedor de IA:")
+	fmt.Println(i18n.Tr("aiSelectProvider"))
 	fmt.Println("1) Groq (Recomendado - Llama 3 super rápido)")
 	fmt.Println("2) OpenAI (GPT-4 / GPT-3.5)")
 	fmt.Println("3) Gemini (Google)")
@@ -41,7 +42,7 @@ func activateAI() {
 		modelDefault = "gemini-1.5-pro"
 		apiKeyKey = "GEMINI_API_KEY"
 	default:
-		fmt.Println("Opción inválida. Usando Groq por defecto.")
+		fmt.Println(i18n.Tr("aiInvalidOption"))
 		provider = "groq"
 		modelDefault = "llama3-70b-8192"
 		apiKeyKey = "GROQ_API_KEY"
@@ -64,7 +65,7 @@ func activateAI() {
 	apiKeyInput = strings.TrimSpace(apiKeyInput)
 
 	if apiKeyInput == "" {
-		fmt.Println("⚠️  Advertencia: No ingresaste API Key. Deberás ponerla manualmente en .env")
+		fmt.Println(i18n.Tr("aiNoApiKeyWarning"))
 	}
 
 	// 4. Guardar en .env o env.joss
@@ -83,10 +84,10 @@ func activateAI() {
 		updateEnvFile(envFile, apiKeyKey, apiKeyInput)
 	}
 
-	fmt.Println("\n✅  AI NATIVA ACTIVADA CORRECTAMENTE")
+	fmt.Println("\n" + i18n.Tr("aiActivatedSuccess"))
 	fmt.Println("----------------------------------------")
 	fmt.Printf("Provider: %s\n", provider)
 	fmt.Printf("Model:    %s\n", modelInput)
 	fmt.Println("----------------------------------------")
-	fmt.Println("Prueba ahora con: joss run tu_script.joss")
+	fmt.Println(i18n.Tr("aiTryScript"))
 }

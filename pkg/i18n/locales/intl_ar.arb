@@ -1,91 +1,143 @@
 {
   "@@locale": "ar",
-  "startServerWeb": "ابدأ تشغيل خادم الويب",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "ابدأ تشغيل التطبيق في وضع سطح المكتب",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "تشغيل البرنامج النصي جوس",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "بناء المشروع للتوزيع",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "إنشاء وحدة تحكم جديدة",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "إنشاء وسيطة جديدة",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "إنشاء نموذج جديد",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "إنشاء طريقة عرض جديدة",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "إنشاء MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "إنشاء CRUD كاملة بناءً على جدول",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "قم بإزالة CRUD الذي تم إنشاؤه لجدول",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "إنشاء هجرة جديدة",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "تشغيل عمليات الترحيل المعلقة",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "احذف كافة الجداول وأعد تشغيل عمليات الترحيل",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "إنشاء مشروع جديد",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "تغيير محرك قاعدة البيانات (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "تغيير بادئة الجدول",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "تكوين التخزين (محلي|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "قم بإعداد الذكاء الاصطناعي الأصلي التفاعلي",
   "@IaActivate": {
     "description": ""
   },
-  "version": "يظهر الإصدار الحالي",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "أظهر هذه المساعدة",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "إنشاء CRUD كاملة بناءً على جدول",
+  "CreateController": "إنشاء وحدة تحكم جديدة",
+  "CreateMVC": "إنشاء MVC",
+  "CreateMiddleware": "إنشاء وسيطة جديدة",
+  "CreateModel": "إنشاء نموذج جديد",
+  "CreateView": "إنشاء طريقة عرض جديدة",
+  "IaActivate": "قم بإعداد الذكاء الاصطناعي الأصلي التفاعلي",
+  "aiActivatedSuccess": "✅ تم تنشيط الذكاء الاصطناعي الأصلي بنجاح",
+  "aiInvalidOption": "خيار غير صالح. ",
+  "aiNoApiKeyWarning": "⚠️ تحذير: لم يتم إدخال مفتاح API. ",
+  "aiSelectProvider": "حدد مزود الذكاء الاصطناعي الخاص بك:",
+  "aiTryScript": "حاول الآن باستخدام: joss run your_script.joss",
+  "aiWizardConfig": "سيقوم هذا المعالج بتكوين الذكاء الاصطناعي الأصلي في مشروعك.",
+  "aiWizardTitle": "🚀 معالج تنشيط Joss AI 🚀",
+  "brevoActivatedSuccess": "✅ تم تفعيل BREVO_API وتكوينه بنجاح.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ تم تعطيل BREVO_API.",
+  "brevoEmptyKeyError": "خطأ: لا يمكن أن يكون مفتاح API فارغًا.",
+  "brevoNoEnvError": "خطأ: لم يتم العثور على ملف env.joss أو .env في الدليل الحالي.",
+  "brevoTitle": "--- تكوين Brevo API ---",
+  "buildCopyFiles": "نسخ ملفات المشروع...",
+  "buildDbCopied": "تم نسخ قاعدة البيانات للبناء/",
+  "buildDbCopiedProgram": "تم نسخ قاعدة البيانات لبناء/التخزين/",
+  "buildEncryptEnv": "بيئة التشفير للإنتاج...",
+  "buildEnvEncryptedSuccess": "البيئة مشفرة ومضمنة كـ env.enc",
+  "buildEnvMissingError": "خطأ في البنية: ملف البيئة مفقود ('env.joss' أو '.env')",
+  "buildInjectDbPath": "إدخال تكوين DB_PATH=\"Storage/database.sqlite\" في env.joss المضمن...",
+  "buildNodeModulesInclude": "-\u003e سيتم تضمين وحدات العقدة.",
+  "buildNodeModulesOmit": "-\u003e سيتم حذف وحدات العقدة.",
+  "buildOsNotSupported": "يتم دعم Windows فقط في هذا الإصدار المترجم مسبقًا.",
+  "buildPackAssets": "تشفير وتغليف الأصول...",
+  "buildProgramDataDir": "  build/data/ (فارغة في الوقت الراهن)",
+  "buildProgramDbSqlite": "  build/Storage/database.sqlite",
+  "buildProgramErrorLog": "  build/error.log",
+  "buildProgramStart": "بدء إنشاء برنامج Joss (الوضع الآمن)...",
+  "buildProgramStructure": "بناء:",
+  "buildProgramSuccess": "تم إكمال إنشاء البرنامج بنجاح في المجلد \"build/\".",
+  "buildSchemaError": "يتطلب الكتاب المقدس جوس بنية صارمة.",
+  "buildSelectOs": "حدد نظام التشغيل المستهدف:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "للنشر، قم بتحميل محتويات المجلد \"build/\" إلى الخادم الخاص بك.",
+  "buildWebRunTip": "ما عليك سوى تشغيل 'joss run main.joss' بداخله على الخادم.",
+  "buildWebStart": "بدء إنشاء Joss WEB...",
+  "buildWebSuccess": "تم إكمال WEB Build بنجاح في المجلد \"build/\".",
+  "buildWindowsCompile": "تجميع لنظام التشغيل Windows...",
+  "changeDBMotor": "تغيير محرك قاعدة البيانات (mysql/sqlite)",
+  "changeDBPrefix": "تغيير بادئة الجدول",
+  "compileProjectDist": "بناء المشروع للتوزيع",
+  "createMigration": "إنشاء هجرة جديدة",
+  "createProject": "إنشاء مشروع جديد",
+  "dbConnectedSourceDest": "متصل بالمصدر والوجهة.",
+  "dbEngineAlready": "محرك قاعدة البيانات موجود بالفعل",
+  "dbMigrateStart": "جارٍ بدء ترحيل البيانات...",
+  "dbPrefixAlready": "البادئة موجودة بالفعل",
+  "dbPrepareDestSchema": "يتم الآن تحضير المخطط في قاعدة البيانات الوجهة...",
+  "errAuthEncryptFailed": "خطأ في المصادقة: فشل تشفير كلمة المرور",
+  "errAuthNoDbConnection": "خطأ في المصادقة: لم يتم تكوين اتصال بقاعدة البيانات",
+  "errFunctionNotFound": "خطأ: لم يتم العثور على الدالة '_%s_'",
+  "errLayoutNotFound": "خطأ: لم يتم العثور على التخطيط '_%s_'",
+  "errPropertyNotFound": "خطأ: الخاصية أو الطريقة '_%s_' غير موجودة في الفئة '_%s'",
+  "errTypeError": "خطأ في النوع: الوسيطة __PH_0____ (_%s_) يجب أن تكون من النوع __PH_2___...",
+  "errViewNotFound": "خطأ: لم يتم العثور على العرض '_%s_'",
+  "exeMigrate": "تشغيل عمليات الترحيل المعلقة",
+  "exeMigrateFresh": "احذف كافة الجداول وأعد تشغيل عمليات الترحيل",
+  "helpPrint": "أظهر هذه المساعدة",
+  "removeCRUD": "قم بإزالة CRUD الذي تم إنشاؤه لجدول",
+  "runJossScript": "تشغيل البرنامج النصي جوس",
+  "settingsUserStorage": "تكوين التخزين (محلي|OCI|AWS|Azure)",
+  "startProgramDesktop": "ابدأ تشغيل التطبيق في وضع سطح المكتب",
+  "startServerWeb": "ابدأ تشغيل خادم الويب",
+  "version": "يظهر الإصدار الحالي"
 }

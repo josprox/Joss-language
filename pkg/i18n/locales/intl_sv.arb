@@ -1,91 +1,143 @@
 {
   "@@locale": "sv",
-  "startServerWeb": "Starta webbservern",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Starta programmet i skrivbordsläge",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Kör ett joss-script",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Bygg projektet för distribution",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Skapa en ny styrenhet",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Skapa ny mellanprogram",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Skapa en ny modell",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Skapa en ny vy",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Skapa MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Skapa komplett CRUD baserat på en tabell",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Ta bort CRUD som genererats för en tabell",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Skapa en ny migrering",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Kör väntande migrering",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Ta bort alla tabeller och kör om migreringarna",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Skapa ett nytt projekt",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Ändra databasmotorn (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Ändra tabellprefixet",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Konfigurera lagring (lokal|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Konfigurera interaktiv Native AI",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Visar den aktuella versionen",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Visa denna hjälp",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Skapa komplett CRUD baserat på en tabell",
+  "CreateController": "Skapa en ny styrenhet",
+  "CreateMVC": "Skapa MVC",
+  "CreateMiddleware": "Skapa ny mellanprogram",
+  "CreateModel": "Skapa en ny modell",
+  "CreateView": "Skapa en ny vy",
+  "IaActivate": "Konfigurera interaktiv Native AI",
+  "aiActivatedSuccess": "✅ NATIVE AI AKTIVERADE MED FRAMGÅNG",
+  "aiInvalidOption": "Ogiltigt alternativ. ",
+  "aiNoApiKeyWarning": "⚠️ Varning: Ingen API-nyckel har angetts. ",
+  "aiSelectProvider": "Välj din AI-leverantör:",
+  "aiTryScript": "Försök nu med: joss run ditt_script.joss",
+  "aiWizardConfig": "Den här guiden kommer att konfigurera den inbyggda AI i ditt projekt.",
+  "aiWizardTitle": "🚀 Joss AI Activation Wizard 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API har aktiverats och konfigurerats framgångsrikt.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API inaktiverad.",
+  "brevoEmptyKeyError": "Fel: API-nyckeln kan inte vara tom.",
+  "brevoNoEnvError": "Fel: Varken env.joss eller .env-fil hittades i den aktuella katalogen.",
+  "brevoTitle": "--- Brevo API-konfiguration ---",
+  "buildCopyFiles": "Kopierar projektfiler...",
+  "buildDbCopied": "Databas kopierad till build/",
+  "buildDbCopiedProgram": "Databas kopierad till build/Storage/",
+  "buildEncryptEnv": "Krypterande miljö för produktion...",
+  "buildEnvEncryptedSuccess": "Miljö krypterad och inbäddad som env.enc",
+  "buildEnvMissingError": "Arkitekturfel: Miljöfil saknas ('env.joss' eller '.env')",
+  "buildInjectDbPath": "Injicerar DB_PATH=\"Storage/database.sqlite\"-konfigurationen i inbäddad env.joss...",
+  "buildNodeModulesInclude": "-\u003e node_modules kommer att inkluderas.",
+  "buildNodeModulesOmit": "-\u003e node_modules kommer att utelämnas.",
+  "buildOsNotSupported": "Endast Windows stöds i denna förkompilerade version.",
+  "buildPackAssets": "Krypterar och paketerar tillgångar...",
+  "buildProgramDataDir": "build/data/ (tom för tillfället)",
+  "buildProgramDbSqlite": "build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
+  "buildProgramStart": "Startar Joss PROGRAM build (SÄKERT LÄGE)...",
+  "buildProgramStructure": "Strukturera:",
+  "buildProgramSuccess": "PROGRAM Bygget har slutförts framgångsrikt i mappen 'build/'.",
+  "buildSchemaError": "Joss-bibeln kräver en strikt struktur.",
+  "buildSelectOs": "Välj måloperativsystem:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "För att distribuera, ladda upp innehållet i mappen 'build/' till din server.",
+  "buildWebRunTip": "Du behöver bara köra 'joss run main.joss' inuti den på servern.",
+  "buildWebStart": "Startar Joss WEB-bygge...",
+  "buildWebSuccess": "WEB Build slutfördes framgångsrikt i mappen 'build/'.",
+  "buildWindowsCompile": "Kompilerar för Windows...",
+  "changeDBMotor": "Ändra databasmotorn (mysql/sqlite)",
+  "changeDBPrefix": "Ändra tabellprefixet",
+  "compileProjectDist": "Bygg projektet för distribution",
+  "createMigration": "Skapa en ny migrering",
+  "createProject": "Skapa ett nytt projekt",
+  "dbConnectedSourceDest": "Ansluten till källa och destination.",
+  "dbEngineAlready": "Databasmotorn finns redan",
+  "dbMigrateStart": "Startar datamigrering...",
+  "dbPrefixAlready": "Prefixet finns redan",
+  "dbPrepareDestSchema": "Förbereder schema i måldatabasen...",
+  "errAuthEncryptFailed": "Auth Error: Det gick inte att kryptera lösenordet",
+  "errAuthNoDbConnection": "Auth Error: Ingen databasanslutning konfigurerad",
+  "errFunctionNotFound": "Fel: Funktionen '%s' hittades inte",
+  "errLayoutNotFound": "Fel: Layouten '%s' hittades inte",
+  "errPropertyNotFound": "Fel: Egenskapen eller metoden '%s' hittades inte i klassen '%s'",
+  "errTypeError": "Typfel: Argument %d (%s) måste vara av typen %s...",
+  "errViewNotFound": "Fel: Vyn '__PH_0___' hittades inte",
+  "exeMigrate": "Kör väntande migrering",
+  "exeMigrateFresh": "Ta bort alla tabeller och kör om migreringarna",
+  "helpPrint": "Visa denna hjälp",
+  "removeCRUD": "Ta bort CRUD som genererats för en tabell",
+  "runJossScript": "Kör ett joss-script",
+  "settingsUserStorage": "Konfigurera lagring (lokal|OCI|AWS|Azure)",
+  "startProgramDesktop": "Starta programmet i skrivbordsläge",
+  "startServerWeb": "Starta webbservern",
+  "version": "Visar den aktuella versionen"
 }

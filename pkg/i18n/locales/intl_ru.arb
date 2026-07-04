@@ -1,91 +1,143 @@
 {
   "@@locale": "ru",
-  "startServerWeb": "Запустить веб-сервер",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Запустите приложение в режиме рабочего стола",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Запустить joss-скрипт",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Сборка проекта для распространения",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Создать новый контроллер",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Создать новое промежуточное программное обеспечение",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Создать новую модель",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Создать новое представление",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Создать MVC",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Создайте полный CRUD на основе таблицы",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Удалить CRUD, созданный для таблицы",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Создать новую миграцию",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Запуск ожидающих миграций",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Удалите все таблицы и повторите миграцию.",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Создать новый проект",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Измените ядро ​​базы данных (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Изменить префикс таблицы",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Настроить хранилище (локальное|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Настройте интерактивный Native AI",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Показывает текущую версию",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Показать эту помощь",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Создайте полный CRUD на основе таблицы",
+  "CreateController": "Создать новый контроллер",
+  "CreateMVC": "Создать MVC",
+  "CreateMiddleware": "Создать новое промежуточное программное обеспечение",
+  "CreateModel": "Создать новую модель",
+  "CreateView": "Создать новое представление",
+  "IaActivate": "Настройте интерактивный Native AI",
+  "aiActivatedSuccess": "✅ НАТИВНЫЙ ИИ УСПЕШНО АКТИВИРОВАН",
+  "aiInvalidOption": "Неверный вариант. ",
+  "aiNoApiKeyWarning": "⚠️ Внимание: ключ API не введен. ",
+  "aiSelectProvider": "Выберите поставщика ИИ:",
+  "aiTryScript": "Попробуйте сейчас: joss run your_script.joss",
+  "aiWizardConfig": "Этот мастер настроит собственный искусственный интеллект в вашем проекте.",
+  "aiWizardTitle": "🚀 Мастер активации Joss AI 🚀",
+  "brevoActivatedSuccess": "✅ BREVO_API активирован и успешно настроен.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API отключен.",
+  "brevoEmptyKeyError": "Ошибка: ключ API не может быть пустым.",
+  "brevoNoEnvError": "Ошибка: в текущем каталоге не найден ни файл env.joss, ни файл .env.",
+  "brevoTitle": "--- Конфигурация API Брево ---",
+  "buildCopyFiles": "Копирование файлов проекта...",
+  "buildDbCopied": "База данных скопирована в build/",
+  "buildDbCopiedProgram": "База данных скопирована в сборку/Хранилище/",
+  "buildEncryptEnv": "Среда шифрования для производства...",
+  "buildEnvEncryptedSuccess": "Среда зашифрована и внедрена как env.enc.",
+  "buildEnvMissingError": "Ошибка архитектуры: отсутствует файл среды («env.joss» или «.env»)",
+  "buildInjectDbPath": "Внедрение конфигурации DB_PATH=\"Storage/database.sqlite\" во встроенный env.joss...",
+  "buildNodeModulesInclude": "-\u003e node_modules будут включены.",
+  "buildNodeModulesOmit": "-\u003e node_modules будут опущены.",
+  "buildOsNotSupported": "В этой предварительно скомпилированной версии поддерживается только Windows.",
+  "buildPackAssets": "Шифрование и упаковка активов...",
+  "buildProgramDataDir": "build/data/ (пока пусто)",
+  "buildProgramDbSqlite": "  build/Storage/database.sqlite",
+  "buildProgramErrorLog": "  build/error.log",
+  "buildProgramStart": "Запускаем сборку ПРОГРАММЫ Joss (БЕЗОПАСНЫЙ РЕЖИМ)...",
+  "buildProgramStructure": "Структура:",
+  "buildProgramSuccess": "ПРОГРАММА Сборка успешно завершена в папке «build/».",
+  "buildSchemaError": "Библия Джосса требует строгой структуры.",
+  "buildSelectOs": "Выберите целевую операционную систему:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "Для развертывания загрузите содержимое папки build/ на свой сервер.",
+  "buildWebRunTip": "Вам нужно всего лишь запустить «joss run main.joss» внутри него на сервере.",
+  "buildWebStart": "Начинаем сборку Joss WEB...",
+  "buildWebSuccess": "Веб-сборка успешно завершена в папке «build/».",
+  "buildWindowsCompile": "Компиляция для Windows...",
+  "changeDBMotor": "Измените ядро ​​базы данных (mysql/sqlite)",
+  "changeDBPrefix": "Изменить префикс таблицы",
+  "compileProjectDist": "Сборка проекта для распространения",
+  "createMigration": "Создать новую миграцию",
+  "createProject": "Создать новый проект",
+  "dbConnectedSourceDest": "Подключено к источнику и назначению.",
+  "dbEngineAlready": "Ядро базы данных уже",
+  "dbMigrateStart": "Начинаем перенос данных...",
+  "dbPrefixAlready": "Префикс уже есть",
+  "dbPrepareDestSchema": "Подготовка схемы в целевой базе данных...",
+  "errAuthEncryptFailed": "Ошибка аутентификации: не удалось зашифровать пароль.",
+  "errAuthNoDbConnection": "Ошибка аутентификации: не настроено соединение с базой данных.",
+  "errFunctionNotFound": "Ошибка: функция «%s» не найдена.",
+  "errLayoutNotFound": "Ошибка: макет «%s» не найден.",
+  "errPropertyNotFound": "Ошибка: свойство или метод «%s» не найдено в классе «%s».",
+  "errTypeError": "Ошибка типа: аргумент %d (%s) должен иметь тип %s...",
+  "errViewNotFound": "Ошибка: просмотр «%s» не найден.",
+  "exeMigrate": "Запуск ожидающих миграций",
+  "exeMigrateFresh": "Удалите все таблицы и повторите миграцию.",
+  "helpPrint": "Показать эту помощь",
+  "removeCRUD": "Удалить CRUD, созданный для таблицы",
+  "runJossScript": "Запустить joss-скрипт",
+  "settingsUserStorage": "Настроить хранилище (локальное|OCI|AWS|Azure)",
+  "startProgramDesktop": "Запустите приложение в режиме рабочего стола",
+  "startServerWeb": "Запустить веб-сервер",
+  "version": "Показывает текущую версию"
 }

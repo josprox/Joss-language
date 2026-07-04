@@ -189,3 +189,37 @@ func (m *Manager) GetAvailableLocales() []string {
 	}
 	return keys
 }
+
+var CurrentLocale = "en"
+
+func init() {
+	// Detect locale from environment
+	locale := os.Getenv("JOSS_LANG")
+	if locale == "" {
+		sysLang := os.Getenv("LANG")
+		if sysLang != "" {
+			parts := strings.FieldsFunc(sysLang, func(r rune) bool {
+				return r == '_' || r == '.'
+			})
+			if len(parts) > 0 {
+				locale = parts[0]
+			}
+		}
+	}
+	if locale == "" {
+		locale = "en"
+	}
+	CurrentLocale = locale
+}
+
+// Tr translates a key based on the automatically detected current locale
+func Tr(key string, args ...map[string]interface{}) string {
+	var arg map[string]interface{}
+	if len(args) > 0 {
+		arg = args[0]
+	}
+	// Ensure loaded (Safe to call repeatedly, read lock inside)
+	_ = GlobalManager.Load(nil)
+	return GlobalManager.Get(CurrentLocale, key, arg)
+}
+

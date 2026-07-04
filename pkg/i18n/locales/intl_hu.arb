@@ -1,91 +1,143 @@
 {
   "@@locale": "hu",
-  "startServerWeb": "Indítsa el a webszervert",
-  "@startServerWeb": {
-    "description": ""
-  },
-  "startProgramDesktop": "Indítsa el az alkalmazást asztali módban",
-  "@startProgramDesktop": {
-    "description": ""
-  },
-  "runJossScript": "Futtasson egy Joss scriptet",
-  "@runJossScript": {
-    "description": ""
-  },
-  "compileProjectDist": "Építsd fel a projektet a terjesztéshez",
-  "@compileProjectDist": {
-    "description": ""
-  },
-  "CreateController": "Hozzon létre egy új vezérlőt",
-  "@CreateController": {
-    "description": ""
-  },
-  "CreateMiddleware": "Hozzon létre új köztes szoftvert",
-  "@CreateMiddleware": {
-    "description": ""
-  },
-  "CreateModel": "Hozzon létre egy új modellt",
-  "@CreateModel": {
-    "description": ""
-  },
-  "CreateView": "Hozzon létre egy új nézetet",
-  "@CreateView": {
-    "description": ""
-  },
-  "CreateMVC": "Hozzon létre MVC-t",
-  "@CreateMVC": {
-    "description": ""
-  },
-  "CreateCRUD": "Készítsen teljes CRUD-t egy táblázat alapján",
   "@CreateCRUD": {
     "description": ""
   },
-  "removeCRUD": "Távolítsa el a táblához generált CRUD-t",
-  "@removeCRUD": {
+  "@CreateController": {
     "description": ""
   },
-  "createMigration": "Hozzon létre egy új migrációt",
-  "@createMigration": {
+  "@CreateMVC": {
     "description": ""
   },
-  "exeMigrate": "Függőben lévő migrációk futtatása",
-  "@exeMigrate": {
+  "@CreateMiddleware": {
     "description": ""
   },
-  "exeMigrateFresh": "Törölje az összes táblát, és futtassa újra a migrációt",
-  "@exeMigrateFresh": {
+  "@CreateModel": {
     "description": ""
   },
-  "createProject": "Hozzon létre egy új projektet",
-  "@createProject": {
+  "@CreateView": {
     "description": ""
   },
-  "changeDBMotor": "Az adatbázismotor módosítása (mysql/sqlite)",
-  "@changeDBMotor": {
-    "description": ""
-  },
-  "changeDBPrefix": "Módosítsa a táblázat előtagját",
-  "@changeDBPrefix": {
-    "description": ""
-  },
-  "settingsUserStorage": "Tárhely konfigurálása (helyi|OCI|AWS|Azure)",
-  "@settingsUserStorage": {
-    "description": ""
-  },
-  "IaActivate": "Állítsa be az interaktív natív AI-t",
   "@IaActivate": {
     "description": ""
   },
-  "version": "Az aktuális verziót mutatja",
-  "@version": {
+  "@aiWizardTitle": {
     "description": ""
   },
-  "helpPrint": "Mutasd meg ezt a segítséget",
+  "@brevoConfig": {
+    "description": ""
+  },
+  "@changeDBMotor": {
+    "description": ""
+  },
+  "@changeDBPrefix": {
+    "description": ""
+  },
+  "@compileProjectDist": {
+    "description": ""
+  },
+  "@createMigration": {
+    "description": ""
+  },
+  "@createProject": {
+    "description": ""
+  },
+  "@exeMigrate": {
+    "description": ""
+  },
+  "@exeMigrateFresh": {
+    "description": ""
+  },
   "@helpPrint": {
     "description": ""
   },
-  "brevoConfig": "Configure interactive Brevo API (Email)",
-  "@brevoConfig": {
+  "@removeCRUD": {
     "description": ""
-  }
+  },
+  "@runJossScript": {
+    "description": ""
+  },
+  "@settingsUserStorage": {
+    "description": ""
+  },
+  "@startProgramDesktop": {
+    "description": ""
+  },
+  "@startServerWeb": {
+    "description": ""
+  },
+  "@version": {
+    "description": ""
+  },
+  "CreateCRUD": "Készítsen teljes CRUD-t egy táblázat alapján",
+  "CreateController": "Hozzon létre egy új vezérlőt",
+  "CreateMVC": "Hozzon létre MVC-t",
+  "CreateMiddleware": "Hozzon létre új köztes szoftvert",
+  "CreateModel": "Hozzon létre egy új modellt",
+  "CreateView": "Hozzon létre egy új nézetet",
+  "IaActivate": "Állítsa be az interaktív natív AI-t",
+  "aiActivatedSuccess": "✅ A NATÍV AI SIKERESEN AKTIVÁLT",
+  "aiInvalidOption": "Érvénytelen opció. ",
+  "aiNoApiKeyWarning": "⚠️ Figyelmeztetés: Nincs megadva API-kulcs. ",
+  "aiSelectProvider": "Válassza ki AI-szolgáltatóját:",
+  "aiTryScript": "Próbálja ki most a következővel: joss run a your_script.joss-t",
+  "aiWizardConfig": "Ez a varázsló konfigurálja a natív AI-t a projektben.",
+  "aiWizardTitle": "🚀 Joss AI aktiváló varázsló 🚀",
+  "brevoActivatedSuccess": "✅ A BREVO_API sikeresen aktiválva és konfigurálva.",
+  "brevoConfig": "Configure interactive Brevo API (Email)",
+  "brevoDisabledSuccess": "✅ BREVO_API letiltva.",
+  "brevoEmptyKeyError": "Hiba: Az API-kulcs nem lehet üres.",
+  "brevoNoEnvError": "Hiba: Sem env.joss, sem .env fájl nem található az aktuális könyvtárban.",
+  "brevoTitle": "--- Brevo API konfiguráció ---",
+  "buildCopyFiles": "Projektfájlok másolása...",
+  "buildDbCopied": "Adatbázis másolva build/",
+  "buildDbCopiedProgram": "Adatbázis másolva build/Storage/",
+  "buildEncryptEnv": "Környezet titkosítása a gyártáshoz...",
+  "buildEnvEncryptedSuccess": "A környezet titkosítva és env.enc-ként beágyazott",
+  "buildEnvMissingError": "Architektúra hiba: Hiányzó környezetfájl (\"env.joss\" vagy \".env\")",
+  "buildInjectDbPath": "A DB_PATH=\"Storage/database.sqlite\" konfiguráció beillesztése a beágyazott env.joss fájlba...",
+  "buildNodeModulesInclude": "-\u003e node_modules szerepelni fognak.",
+  "buildNodeModulesOmit": "-\u003e node_modules kimarad.",
+  "buildOsNotSupported": "Ebben az előre lefordított verzióban csak a Windows támogatott.",
+  "buildPackAssets": "Eszközök titkosítása és csomagolása...",
+  "buildProgramDataDir": "build/data/ (egyelőre üres)",
+  "buildProgramDbSqlite": "build/Storage/database.sqlite",
+  "buildProgramErrorLog": "build/error.log",
+  "buildProgramStart": "Joss PROGRAM build indítása (BIZTONSÁGOS MÓD)...",
+  "buildProgramStructure": "Szerkezet:",
+  "buildProgramSuccess": "PROGRAM Az összeépítés sikeresen befejeződött a 'build/' mappában.",
+  "buildSchemaError": "A Joss Biblia szigorú felépítést igényel.",
+  "buildSelectOs": "Válassza ki a cél operációs rendszert:",
+  "buildSelectOsWindows": "1. Windows",
+  "buildWebDeployTip": "A telepítéshez töltse fel a 'build/' mappa tartalmát a szerverére.",
+  "buildWebRunTip": "Csak a 'joss run main.joss'-t kell futtatnia benne a szerveren.",
+  "buildWebStart": "Joss WEB build indítása...",
+  "buildWebSuccess": "A WEB Build sikeresen befejeződött a 'build/' mappában.",
+  "buildWindowsCompile": "Fordítás Windows rendszerre...",
+  "changeDBMotor": "Az adatbázismotor módosítása (mysql/sqlite)",
+  "changeDBPrefix": "Módosítsa a táblázat előtagját",
+  "compileProjectDist": "Építsd fel a projektet a terjesztéshez",
+  "createMigration": "Hozzon létre egy új migrációt",
+  "createProject": "Hozzon létre egy új projektet",
+  "dbConnectedSourceDest": "Csatlakozva a forráshoz és a célhoz.",
+  "dbEngineAlready": "Az adatbázismotor már megvan",
+  "dbMigrateStart": "Adatmigráció indítása...",
+  "dbPrefixAlready": "Az előtag már megvan",
+  "dbPrepareDestSchema": "Séma előkészítése a céladatbázisban...",
+  "errAuthEncryptFailed": "Auth Error: Nem sikerült titkosítani a jelszót",
+  "errAuthNoDbConnection": "Auth Error: Nincs konfigurálva adatbázis-kapcsolat",
+  "errFunctionNotFound": "Hiba: A '%s' függvény nem található",
+  "errLayoutNotFound": "Hiba: A '%s' elrendezés nem található",
+  "errPropertyNotFound": "Hiba: A '%s' tulajdonság vagy metódus nem található a '%s' osztályban",
+  "errTypeError": "Típushiba: A %d (%s) argumentumnak %s típusúnak kell lennie...",
+  "errViewNotFound": "Hiba: A '%s' nézet nem található",
+  "exeMigrate": "Függőben lévő migrációk futtatása",
+  "exeMigrateFresh": "Törölje az összes táblát, és futtassa újra a migrációt",
+  "helpPrint": "Mutasd meg ezt a segítséget",
+  "removeCRUD": "Távolítsa el a táblához generált CRUD-t",
+  "runJossScript": "Futtasson egy Joss scriptet",
+  "settingsUserStorage": "Tárhely konfigurálása (helyi|OCI|AWS|Azure)",
+  "startProgramDesktop": "Indítsa el az alkalmazást asztali módban",
+  "startServerWeb": "Indítsa el a webszervert",
+  "version": "Az aktuális verziót mutatja"
 }
