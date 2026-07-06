@@ -350,6 +350,14 @@ func (r *Runtime) extractRouteParams(method, path string) []interface{} {
 
 // DispatchWebSocket handles WebSocket upgrades
 func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func() (int, []byte, error), sender func(interface{}) error) {
+	// Inject a blank session for WS context so Auth can store credentials
+	if _, ok := r.Variables["$__session"]; !ok {
+		r.Variables["$__session"] = &Instance{
+			Class:  r.Classes["Session"],
+			Fields: make(map[string]interface{}),
+		}
+	}
+
 	// Conn is passed as interface{}, expected to be *websocket.Conn
 	// Reader is a closure wrapping conn.ReadMessage()
 	// Sender is a closure wrapping conn.WriteJSON()

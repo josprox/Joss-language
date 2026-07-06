@@ -815,6 +815,7 @@ func (r *Runtime) ValidateJWT(tokenString string) (map[string]interface{}, bool)
 	})
 
 	if err != nil {
+		fmt.Printf("[ValidateJWT Error] Token Length: %d | Error: %v\n", len(tokenString), err)
 		return nil, false
 	}
 

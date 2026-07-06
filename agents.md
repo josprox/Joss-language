@@ -49,7 +49,8 @@ Este documento sirve como memoria persistente para futuros agentes que trabajen 
   - Documentación en `docs/IA_NATIVA.md`.
 - **WebSockets**:
   - Implementado `Router::ws("/path", "Controller@method")`.
-  - Manejo de conexiones crudas mediante actualización en `MainHandler`. **Critico**: Los WebSockets actualmente se ejecutan *antes* del middleware de sesión estándar en `handler.go`, por lo que `Auth::user()` puede no estar disponible automáticamente. Se recomienda enviar el token en el primer mensaje o headers y validarlo manualmente si es crítico.
+  - Manejo de conexiones crudas mediante actualización en `MainHandler`. **Crítico**: Los WebSockets se ejecutan *antes* del middleware de sesión estándar en `handler.go`. Sin embargo, ahora se inyecta una sesión `$__session` vacía a nivel de core; al validar el JWT manualmente en el controlador mediante `Auth::validateToken($token)`, se poblará automáticamente dicha sesión, haciendo que `Auth::user()` y los chequeos de rol como `Auth::hasRole(...)` funcionen correctamente dentro de los callbacks del socket.
+  - El enrutador de WebSockets (`Router::ws`) **solo soporta rutas estáticas y exactas**; no acepta parámetros dinámicos de ruta como `{id}`. Los parámetros específicos de la conexión deben pasarse mediante query params o en el mensaje de inicialización (`init`).
   - Documentación en `docs/WEBSOCKETS.md`.
 - **Flutter Integration**:
   - Usar `web_socket_channel` para chat en tiempo real.

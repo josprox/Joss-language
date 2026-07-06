@@ -81,3 +81,41 @@ proxy_set_header Connection "Upgrade";
 ```
 
 Esto es común en plantillas por defecto de paneles de control.
+
+## Consideraciones de Seguridad y Enrutamiento (CRÍTICO)
+
+### 1. Rutas Estáticas
+El enrutador de WebSockets (`Router::ws`) **solo soporta rutas estáticas y exactas** (ej. `/api/support/chat-ws`). No soporta parámetros dinámicos en la ruta como `{id}` (ej. `/api/support/ticket/{id}/chat`).
+Si necesitas asociar la conexión a un recurso o ID específico, debes enviar dicho identificador en los datos de la conexión (como parámetros en la query o en el primer mensaje de inicialización `init`).
+
+### 2. Autenticación en WebSockets
+Debido a que la negociación del WebSocket (Upgrade) ocurre antes de que se ejecuten los middlewares HTTP tradicionales, las funciones globales de sesión no están autenticadas por defecto. 
+
+Para autenticar una conexión de forma segura:
+1. Envía el token JWT en el primer mensaje del cliente tras abrir la conexión (`socket.onopen`).
+2. Valida el token en el controlador JOSS usando `Auth::validateToken($token)`.
+3. Esto inicializa automáticamente una sesión `$__session` temporal y aislada para la conexión, permitiendo que funciones como `Auth::user()` y `Auth::hasRole("admin")` funcionen perfectamente dentro de los callbacks del socket.
+
+Ejemplo en el controlador:
+```javascript
+class ChatController {
+    func handler($ws) {
+        $ws.onMessage(func($msg) {
+            $data = JSON::parse($msg)
+            
+            ($data["type"] == "init") ? {
+                // Validar y autenticar sesión
+                $isValid = Auth::validateToken($data["token"])
+                (!$isValid) ? {
+                    $ws.send(JSON::stringify({"type": "error", "message": "No autorizado"}))
+                    return null
+                } : {}
+                
+                // Ahora Auth::user() ya no es nil y es seguro acceder a sus campos
+                $u = Auth::user()
+                print("Usuario autenticado en WS: " . $u->name)
+            } : {}
+        })
+    }
+}
+```
