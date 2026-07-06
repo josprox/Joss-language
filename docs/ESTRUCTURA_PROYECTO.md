@@ -94,11 +94,11 @@ class HomeController {
 ```
 
 #### `app/models/`
-Modelos para acceso a datos (extienden GranMySQL).
+Modelos para acceso a datos (extienden GranDB).
 
 **Ejemplo**: `User.joss`
 ```joss
-class User extends GranMySQL {
+class User extends GranDB {
     Init constructor() {
         $this->tabla = "js_users"
     }
@@ -301,7 +301,7 @@ Cron::schedule("limpiar_logs", "03:00", {
 class UserController { }
 
 // Modelos
-class User extends GranMySQL { }
+class User extends GranDB { }
 
 // Servicios
 class EmailService { }

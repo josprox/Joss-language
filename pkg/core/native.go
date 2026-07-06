@@ -33,10 +33,16 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.registerNative("Queue", []string{}, (*Runtime).executeQueueMethod)
 
 	// GranDB
-	r.registerNative("GranDB", []string{}, (*Runtime).executeGranMySQLMethod)
-	// Alias for compatibility
-	r.registerNative("GranMySQL", []string{"table", "select", "where", "join", "innerJoin", "leftJoin", "rightJoin", "get", "first", "insert", "update", "delete", "deleteAll", "truncate", "query", "orderBy", "limit", "offset", "count"}, (*Runtime).executeGranMySQLMethod)
-	r.NativeHandlers["GranMySQL"] = (*Runtime).executeGranMySQLMethod
+	granDBMethods := []string{
+		"table", "select",
+		"where", "orWhere", "whereIn", "orWhereIn", "whereNotIn", "whereNull", "whereNotNull", "whereBetween", "whereNotBetween",
+		"join", "innerJoin", "leftJoin", "rightJoin",
+		"get", "first", "find", "value", "pluck", "exists", "doesntExist",
+		"count", "sum", "avg", "min", "max",
+		"insert", "insertGetId", "update", "delete", "deleteAll", "truncate",
+		"orderBy", "latest", "oldest", "inRandomOrder", "limit", "offset",
+	}
+	r.registerNative("GranDB", granDBMethods, (*Runtime).executeGranDBMethod)
 
 	// Auth
 	r.registerNative("Auth", []string{"user", "check", "guest", "id", "logout", "attempt", "create", "hasRole", "verify", "refresh", "delete", "login", "complete2FA"}, (*Runtime).executeAuthMethod)
@@ -58,7 +64,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["TwoFactor"] = &Instance{Class: r.Classes["TwoFactor"], Fields: make(map[string]interface{})}
 
 	// System
-	r.registerNative("System", []string{"env", "Run", "load_driver", "log"}, (*Runtime).executeSystemMethod)
+	r.registerNative("System", []string{"env", "Run", "load_driver", "log", "sleep", "now"}, (*Runtime).executeSystemMethod)
 	r.Variables["System"] = &Instance{Class: r.Classes["System"], Fields: make(map[string]interface{})}
 
 	// SmtpClient
@@ -129,7 +135,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["UUID"] = &Instance{Class: r.Classes["UUID"], Fields: make(map[string]interface{})}
 
 	// Str
-	r.registerNative("Str", []string{"length", "random", "startsWith", "substring"}, (*Runtime).executeStrMethod)
+	r.registerNative("Str", []string{"length", "random", "startsWith", "substring", "indexOf", "contains", "trim"}, (*Runtime).executeStrMethod)
 	r.Variables["Str"] = &Instance{Class: r.Classes["Str"], Fields: make(map[string]interface{})}
 
 	// UserStorage

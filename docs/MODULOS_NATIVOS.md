@@ -4,7 +4,7 @@ Documentación completa de todos los módulos nativos disponibles en JosSecurity
 
 ## Índice
 - [Auth](#auth) - Autenticación y autorización
-- [GranMySQL](#granmysql) - Base de datos
+- [GranDB](#grandb) - Base de datos
 - [Router](#router) - Sistema de rutas
 - [View](#view) - Motor de plantillas
 - [SmtpClient](#smtpclient) - Correo electrónico
@@ -14,6 +14,7 @@ Documentación completa de todos los módulos nativos disponibles en JosSecurity
 - [Task](#task) - Tareas hit-based
 - [Schema](#schema) - Esquemas de base de datos
 - [System](#system) - Utilidades del sistema
+- [Str](#str) - Utilidades de strings/cadenas
 - [Redis](#redis) - Cache y sesiones
 - [Queue](#queue) - Colas de trabajo
 - [WebSocket](#websocket) - Comunicación en tiempo real
@@ -213,14 +214,14 @@ Las tablas se sincronizan automáticamente con las correcciones del motor (e.g. 
 
 ---
 
-## GranMySQL
+## GranDB
 
 ORM nativo con protección contra SQL injection.
 
 ### API Fluida
 
 ```joss
-$db = new GranMySQL()
+$db = new GranDB()
 
 // Seleccionar tabla
 $db->table("users")
@@ -230,7 +231,7 @@ $db->where("edad", ">", 18)
 $db->where("activo", 1)
 
 // Obtener resultados
-$usuarios = $db->get()  // JSON string
+$usuarios = $db->get()  // Lista nativa de mapas
 ```
 
 ### Métodos
@@ -260,6 +261,17 @@ $db->where("edad", ">", 18)
 $db->where("nombre", "LIKE", "%Juan%")
 ```
 
+#### `orWhere(string $columna, mixed $valor)`
+#### `orWhere(string $columna, string $operador, mixed $valor)`
+Agrega una condicion OR al constructor fluido.
+
+```joss
+$db->table("users")
+   ->where("username", "LIKE", "%ana%")
+   ->orWhere("email", "LIKE", "%ana%")
+   ->get()
+```
+
 #### `orderBy(string $columna, string $direccion)`
 Ordena los resultados.
 ```joss
@@ -285,7 +297,7 @@ $total = $db->table("users")->where("active", 1)->count()
 ```
 
 #### `get()`
-Ejecuta la consulta y retorna resultados como JSON.
+Ejecuta la consulta y retorna una lista nativa de mapas (`[]map`), lista para iterar en Joss sin parsear JSON.
 
 ```joss
 $resultados = $db->table("users")->get()
@@ -296,6 +308,54 @@ Obtiene el primer resultado.
 
 ```joss
 $usuario = $db->table("users")->where("email", "user@example.com")->first()
+```
+
+#### Filtros avanzados
+
+```joss
+$db->table("users")->whereIn("role_id", [1, 2])->get()
+$db->table("tickets")->whereNull("closed_at")->get()
+$db->table("orders")->whereBetween("total", [100, 500])->get()
+$db->table("orders")->whereNotBetween("total", [100, 500])->get()
+$db->table("users")->whereNotNull("email_verified_at")->get()
+```
+
+#### Lecturas directas
+
+```joss
+$user = $db->table("users")->find(15)
+$email = $db->table("users")->where("id", 15)->value("email")
+$emails = $db->table("users")->pluck("email")
+$emailsById = $db->table("users")->pluck("email", "id")
+$exists = $db->table("users")->where("email", "a@b.com")->exists()
+$missing = $db->table("users")->where("email", "a@b.com")->doesntExist()
+```
+
+#### Ordenamiento rapido
+
+```joss
+$latest = $db->table("posts")->latest()->limit(5)->get()
+$oldest = $db->table("posts")->oldest("published_at")->get()
+$random = $db->table("questions")->inRandomOrder()->first()
+```
+
+#### Agregados
+
+```joss
+$total = $db->table("orders")->sum("total")
+$average = $db->table("orders")->avg("total")
+$min = $db->table("orders")->min("total")
+$max = $db->table("orders")->max("total")
+$count = $db->table("orders")->count()
+```
+
+#### Escritura
+
+```joss
+$id = $db->table("posts")->insert({"title": "Hola", "status": "draft"})
+$id = $db->table("posts")->insertGetId({"title": "Hola"})
+$db->table("posts")->where("id", $id)->update({"status": "published"})
+$db->table("posts")->where("id", $id)->delete()
 ```
 
 ---
@@ -367,7 +427,7 @@ $db->table("posts")
 ### API Legacy
 
 ```joss
-$consulta = new GranMySQL()
+$consulta = new GranDB()
 $consulta->tabla = "users"
 $consulta->comparar = "email"
 $consulta->comparable = "user@example.com"
@@ -779,6 +839,35 @@ Escribe un mensaje en la salida de registros del sistema (consola). useful para 
 System::log("Iniciando proceso...")
 ```
 
+#### `System::now(int $offsetDias = 0)`
+Devuelve la fecha y hora actual en formato `YYYY-MM-DD HH:MM:SS`. Si recibe un numero, lo interpreta como desplazamiento en dias.
+
+```joss
+$ahora = System::now()
+$hace30Dias = System::now(-30)
+```
+
+#### `System::sleep(int $segundos)`
+Suspende la ejecución del programa durante la cantidad de segundos indicada.
+
+```joss
+System::sleep(5) // Pausa de 5 segundos
+```
+
+#### `System::Run(string $comando)`
+Ejecuta un comando en el sistema operativo y retorna su salida estándar como string. Requiere `ALLOW_SYSTEM_RUN=true` en `env.joss`.
+
+```joss
+$salida = System::Run("ls -la")
+```
+
+#### `System::load_driver(string $driver)`
+Carga un controlador de base de datos o módulo del sistema de manera dinámica.
+
+```joss
+System::load_driver("sqlite")
+```
+
 #### `Server::spawn(name, command, port)`
 Genera un subproceso persistente (servicio interno).
 
@@ -786,6 +875,63 @@ Genera un subproceso persistente (servicio interno).
 > **Notas Críticas para Servicios**:
 > 1. **Networking**: Para llamadas internas (curl/fetch) use `127.0.0.1` en lugar de `localhost`. Algunos sistemas resuelven `localhost` a IPv6 (`::1`) causando fallos de conexión si su servicio escucha en IPv4.
 > 2. **Permisos (Systemd)**: Si despliega como servicio (systemctl), recuerde que el proceso corre con el usuario asignado (ej: `joss`). Scripts externos (Python/Node) que intenten escribir logs o archivos deben manejar errores de permisos (Use `try-except` o de permisos a la carpeta) o fallarán silenciosamente.
+
+---
+
+## Str
+
+Utilidades de manipulación de cadenas (strings).
+
+### Métodos
+
+#### `Str::length(string $s)`
+Retorna la longitud de la cadena en caracteres.
+
+```joss
+$longitud = Str::length("Hola") // 4
+```
+
+#### `Str::random(int $length)`
+Genera una cadena aleatoria de caracteres alfanuméricos de la longitud especificada.
+
+```joss
+$token = Str::random(32)
+```
+
+#### `Str::startsWith(string $s, string $prefix)`
+Retorna `true` si la cadena `$s` comienza con el prefijo `$prefix`.
+
+```joss
+$esValido = Str::startsWith("http://google.com", "http") // true
+```
+
+#### `Str::substring(string $s, int $start, int $end)`
+Retorna una subcadena desde el índice `$start` (inclusive) hasta el índice `$end` (exclusive).
+
+```joss
+$sub = Str::substring("JosSecurity", 0, 3) // "Jos"
+```
+
+#### `Str::indexOf(string $s, string $substr)`
+Retorna la posición de base cero de la primera ocurrencia de la subcadena `$substr` en la cadena `$s`, o `-1` si no se encuentra.
+
+```joss
+$pos = Str::indexOf("JosSecurity", "Security") // 3
+```
+
+#### `Str::contains(string $s, string $substr)`
+Retorna `true` si la subcadena `$substr` está contenida en la cadena `$s`.
+
+```joss
+$contiene = Str::contains("JosSecurity", "Sec") // true
+```
+
+#### `Str::trim(string $s)`
+Elimina los espacios en blanco al inicio y al final de la cadena `$s`.
+
+```joss
+$limpio = Str::trim("  hola mundo   ") // "hola mundo"
+```
 
 ---
 

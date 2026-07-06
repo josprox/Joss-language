@@ -64,10 +64,10 @@ func (r *Runtime) executeSmtpClientMethod(instance *Instance, method string, arg
 			host := "smtp.gmail.com"
 			port := "587"
 			if h, ok := r.Env["MAIL_HOST"]; ok {
-				host = h
+				host = strings.TrimSpace(h)
 			}
 			if p, ok := r.Env["MAIL_PORT"]; ok {
-				port = p
+				port = strings.TrimSpace(p)
 			}
 
 			user := ""
@@ -142,8 +142,15 @@ func (r *Runtime) executeSmtpClientMethod(instance *Instance, method string, arg
 				}
 			}
 
-			// 1. Dial with Timeout
-			conn, err := net.DialTimeout("tcp", host+":"+port, timeout)
+			// 1. Dial with Timeout (Implicit TLS support for port 465)
+			var conn net.Conn
+			var err error
+			dialer := &net.Dialer{Timeout: timeout}
+			if port == "465" {
+				conn, err = tls.DialWithDialer(dialer, "tcp", host+":"+port, &tls.Config{ServerName: host})
+			} else {
+				conn, err = dialer.Dial("tcp", host+":"+port)
+			}
 			if err != nil {
 				setError(fmt.Sprintf("Error connecting to %s:%s - %v", host, port, err))
 				return false

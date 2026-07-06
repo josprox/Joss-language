@@ -83,6 +83,99 @@ func quoteIdentifier(name string) string {
 	return "`" + name + "`"
 }
 
+func buildWhereClause(wheres []string) string {
+	if len(wheres) == 0 {
+		return ""
+	}
+
+	parts := []string{}
+	for i, where := range wheres {
+		trimmed := strings.TrimSpace(where)
+		upper := strings.ToUpper(trimmed)
+
+		if i == 0 {
+			if strings.HasPrefix(upper, "OR ") {
+				trimmed = strings.TrimSpace(where[3:])
+			} else if strings.HasPrefix(upper, "AND ") {
+				trimmed = strings.TrimSpace(where[4:])
+			}
+			parts = append(parts, trimmed)
+			continue
+		}
+
+		if strings.HasPrefix(upper, "OR ") || strings.HasPrefix(upper, "AND ") {
+			parts = append(parts, trimmed)
+		} else {
+			parts = append(parts, "AND "+trimmed)
+		}
+	}
+
+	return strings.Join(parts, " ")
+}
+
+func placeholders(count int) string {
+	if count <= 0 {
+		return ""
+	}
+	items := make([]string, count)
+	for i := range items {
+		items[i] = "?"
+	}
+	return strings.Join(items, ", ")
+}
+
+func toInterfaceSlice(value interface{}) []interface{} {
+	if value == nil {
+		return []interface{}{}
+	}
+	if list, ok := value.([]interface{}); ok {
+		return list
+	}
+	return []interface{}{value}
+}
+
+func resetReadState(instance *Instance) {
+	instance.Fields["_wheres"] = []string{}
+	instance.Fields["_bindings"] = []interface{}{}
+	instance.Fields["_select"] = "*"
+	instance.Fields["_joins"] = []string{}
+	delete(instance.Fields, "_order")
+	delete(instance.Fields, "_limit")
+	delete(instance.Fields, "_offset")
+}
+
+func (r *Runtime) buildSelectQuery(instance *Instance, sel string) (string, []interface{}) {
+	table := r.getTable(instance)
+	wheres := instance.Fields["_wheres"].([]string)
+	bindings := instance.Fields["_bindings"].([]interface{})
+
+	query := fmt.Sprintf("SELECT %s FROM %s", sel, table)
+
+	if joins, ok := instance.Fields["_joins"]; ok {
+		for _, j := range joins.([]string) {
+			query += " " + j
+		}
+	}
+
+	if len(wheres) > 0 {
+		query += " WHERE " + buildWhereClause(wheres)
+	}
+
+	if order, ok := instance.Fields["_order"]; ok {
+		query += " ORDER BY " + order.(string)
+	}
+
+	if limit, ok := instance.Fields["_limit"]; ok {
+		query += fmt.Sprintf(" LIMIT %d", limit.(int))
+	}
+
+	if offset, ok := instance.Fields["_offset"]; ok {
+		query += fmt.Sprintf(" OFFSET %d", offset.(int))
+	}
+
+	return query, bindings
+}
+
 // applyTablePrefix adds prefix to table names
 func (r *Runtime) applyTablePrefix(name string) string {
 	if r.Env == nil {

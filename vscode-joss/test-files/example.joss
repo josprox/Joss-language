@@ -41,7 +41,7 @@ class UserController {
 // DB::query("SELECT * FROM users WHERE id = $id")  // ❌ SQL injection
 
 // Ejemplo correcto
-$db = new GranMySQL()
+$db = new GranDB()
 $users = $db->table("users")
            ->where("active", 1)
            ->get()

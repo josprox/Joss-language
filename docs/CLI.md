@@ -196,12 +196,21 @@ Configura interactivamente la integración con Brevo API para el envío de corre
 
 ```bash
 joss brevo:config
+
+# Modo sin prompts, util para Git Bash/MINGW o scripts
+joss brevo:config --enable --api-key=tu_api_key
+joss brevo:config --disable
 ```
 
 **Proceso**:
 1. Pregunta si deseas activar la integración API.
 2. Solicita la **API Key** de Brevo.
 3. Actualiza `env.joss` automáticamente.
+
+**Opciones**:
+- `--enable` - Activa Brevo sin abrir el asistente interactivo.
+- `--api-key` o `--key` - Define el valor de `BREVO_API`.
+- `--disable` - Elimina `BREVO_API` de `env.joss` o `.env`.
 
 ### `joss change db [motor]`
 
@@ -226,6 +235,40 @@ joss change db mysql
 **Motores soportados**:
 - `mysql` - MySQL/MariaDB
 - `sqlite` - SQLite (archivo local)
+
+### `joss change db migrate`
+
+Migra la conexion actual hacia un nuevo servidor MySQL sin tocar `env.joss` hasta que la conexion destino, la base de datos y la copia de datos terminen correctamente.
+
+```bash
+joss change db migrate
+
+# Sin prompts, util para Git Bash/MINGW o automatizaciones
+joss change db migrate --host=10.0.0.118 --port=3306 --database=joss_red --user=root --password=secret
+joss change db migrate --host 10.0.0.118 --port 3306 --db joss_red --user root --pass secret
+```
+
+**Proceso**:
+1. Solicita host, puerto, base de datos, usuario y contrasena.
+2. Prueba la conexion contra el servidor MySQL destino.
+3. Crea la base de datos si la conexion funciona pero la base no existe.
+4. Ejecuta migraciones y prepara tablas del sistema en destino.
+5. Copia los datos desde la conexion actual hacia la nueva.
+6. Respalda `env.joss` y actualiza `DB`, `DB_HOST`, `DB_NAME`, `DB_USER` y `DB_PASS`.
+
+Si la conexion destino falla o la migracion no termina, se conserva la conexion actual.
+
+**Opciones**:
+- `--host` - Host o IP del servidor MySQL destino.
+- `--port` - Puerto del servidor destino. Si se omite, usa `3306`.
+- `--database` o `--db` - Base de datos destino. Si no existe y la conexion funciona, el CLI intenta crearla.
+- `--user` - Usuario MySQL destino.
+- `--password` o `--pass` - Contrasena MySQL destino. Puede omitirse si el usuario no tiene contrasena.
+
+**Notas**:
+- El comando migra hacia MySQL. Es util para pasar de una VM, servidor local o proveedor anterior a otro MySQL compatible, como MySQL HeatWave.
+- `env.joss` se actualiza solo al final. Antes de modificarlo, el CLI crea un respaldo `env.joss.bak.YYYYMMDDHHMMSS`.
+- En Git Bash/MINGW se recomienda usar el modo con flags porque algunos binarios `.exe` pueden no consumir prompts interactivos correctamente.
 
 ### `joss change db prefix [nuevo_prefijo]`
 
@@ -290,7 +333,7 @@ joss make:model User
 **Archivo generado**: `app/models/User.joss`
 
 ```joss
-class User extends GranMySQL {
+class User extends GranDB {
     Init constructor() {
         $this->tabla = "js_user"
     }
@@ -460,6 +503,10 @@ Comandos:
   build                    - Compilar para producción
   migrate                  - Ejecutar migraciones
   change db [motor]        - Cambiar base de datos
+  change db migrate        - Migrar conexion actual a un nuevo MySQL
+    --host --port --database --user --password
+  brevo:config             - Configurar Brevo API
+    --enable --api-key / --disable
   make:controller [Nombre] - Crear controlador
   make:middleware [Nombre] - Crear middleware
   make:model [Nombre]      - Crear modelo

@@ -6,7 +6,7 @@
 
 ```joss
 // app/models/Post.joss
-class Post extends GranMySQL {
+class Post extends GranDB {
     Init constructor() {
         $this->tabla = "js_posts"
     }
@@ -124,7 +124,7 @@ class AuthController {
 // app/controllers/ApiController.joss
 class ApiController {
     function getUsers() {
-        $db = new GranMySQL()
+        $db = new GranDB()
         $users = $db->table("users")->get()
         return Response::json({"users": $users}, 200)
     }
@@ -160,7 +160,7 @@ class Main {
         print("=== Procesador de Datos ===")
         
         // Conectar a BD
-        $db = new GranMySQL()
+        $db = new GranDB()
         
         // Procesar usuarios
         $usuarios = $db->table("users")->get()

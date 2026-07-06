@@ -153,7 +153,8 @@ func (r *Runtime) executeAuthMethod(instance *Instance, method string, args []in
 					// created_at / updated_at handled automatically by insertFromMap if omitted
 				}
 
-				if r.insertFromMap(usersTable, insertData) {
+				insertResult := r.insertFromMap(usersTable, insertData)
+				if insertResult != nil && insertResult != false {
 					fmt.Println("[Security] Usuario registrado exitosamente.")
 					return userToken
 				}

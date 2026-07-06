@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-// executeInsertMethod handles insert operations for GranMySQL/GranDB
+// executeInsertMethod handles insert operations for GranDB
 // Supports both array-based and map-based inserts
 func (r *Runtime) executeInsertMethod(instance *Instance, args []interface{}) interface{} {
 	if r.GetDB() == nil {
-		panic("GranMySQL Error: No hay conexión a la base de datos configurada")
+		panic("GranDB Error: No hay conexión a la base de datos configurada")
 	}
 
 	table := r.getTable(instance)
@@ -37,7 +37,7 @@ func (r *Runtime) executeInsertMethod(instance *Instance, args []interface{}) in
 }
 
 // insertFromMap performs insert using a map of column-value pairs
-func (r *Runtime) insertFromMap(table string, data map[string]interface{}) bool {
+func (r *Runtime) insertFromMap(table string, data map[string]interface{}) interface{} {
 	if len(data) == 0 {
 		return false
 	}
@@ -81,16 +81,19 @@ func (r *Runtime) insertFromMap(table string, data map[string]interface{}) bool 
 	fmt.Printf("[GranDB] Insert Query: %s\n", query)
 	fmt.Printf("[GranDB] Bindings: %v\n", bindings)
 
-	_, err := r.GetDB().Exec(query, bindings...)
+	result, err := r.GetDB().Exec(query, bindings...)
 	if err != nil {
-		panic(fmt.Sprintf("GranMySQL Error en insert: %v", err))
+		panic(fmt.Sprintf("GranDB Error en insert: %v", err))
 	}
 
+	if id, err := result.LastInsertId(); err == nil && id > 0 {
+		return id
+	}
 	return true
 }
 
 // insertFromArrays performs insert using separate arrays for columns and values
-func (r *Runtime) insertFromArrays(table string, cols []interface{}, vals []interface{}) bool {
+func (r *Runtime) insertFromArrays(table string, cols []interface{}, vals []interface{}) interface{} {
 	if len(cols) != len(vals) {
 		fmt.Println("[GranDB] Error: Column and value count mismatch")
 		return false
@@ -114,11 +117,14 @@ func (r *Runtime) insertFromArrays(table string, cols []interface{}, vals []inte
 		strings.Join(colNames, ", "),
 		strings.Join(placeholders, ", "))
 
-	_, err := r.GetDB().Exec(query, bindings...)
+	result, err := r.GetDB().Exec(query, bindings...)
 	if err != nil {
-		panic(fmt.Sprintf("GranMySQL Error en insert from arrays: %v", err))
+		panic(fmt.Sprintf("GranDB Error en insert from arrays: %v", err))
 	}
 
+	if id, err := result.LastInsertId(); err == nil && id > 0 {
+		return id
+	}
 	return true
 }
 

@@ -4,7 +4,7 @@ En JosSecurity, los modelos son clases que representan tablas en la base de dato
 
 ## Definición de un Modelo
 
-Los modelos deben heredar de la clase base `GranMySQL` (incluso si utilizas SQLite, el nombre se mantiene por compatibilidad).
+Los modelos deben heredar de la clase base `GranDB` (incluso si utilizas SQLite, el nombre se mantiene por compatibilidad).
 
 **Ubicación**: `app/models/`
 
@@ -13,7 +13,7 @@ Los modelos deben heredar de la clase base `GranMySQL` (incluso si utilizas SQLi
 Lo único obligatorio es definir el constructor `Init` y asignar la propiedad `tabla`.
 
 ```javascript
-class Product extends GranMySQL {
+class Product extends GranDB {
     
     Init constructor() {
         // Define el nombre de la tabla (sin prefijo js_ si está configurado globalmente)
@@ -24,7 +24,7 @@ class Product extends GranMySQL {
 
 ## Uso Básico
 
-Una vez instanciado, el modelo hereda todos los métodos del ORM GranMySQL.
+Una vez instanciado, el modelo hereda todos los métodos del ORM GranDB.
 
 ```javascript
 $product = new Product()
@@ -80,7 +80,7 @@ $product.innerJoin("categories", "products.category_id", "=", "categories.id")
 Puedes encapsular lógica de negocio compleja dentro de tus modelos.
 
 ```javascript
-class Product extends GranMySQL {
+class Product extends GranDB {
     Init constructor() {
         $this->tabla = "products"
     }
@@ -97,4 +97,4 @@ $alerts = $model.getLowStock()
 ```
 
 > [!NOTE]
-> Para información detallada sobre todos los métodos disponibles en el constructor de consultas, revisa la documentación de [`GranMySQL`](MODULOS_NATIVOS.md#granmysql).
+> Para información detallada sobre todos los métodos disponibles en el constructor de consultas, revisa la documentación de [`GranDB`](MODULOS_NATIVOS.md#grandb).

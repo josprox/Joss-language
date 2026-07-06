@@ -7,7 +7,7 @@ Este documento sirve como memoria persistente para futuros agentes que trabajen 
 ### 1. Intérprete JosSecurity - Comportamientos Clave
 - **Retornos Estrictos**: El intérprete detiene la ejecución inmediatamente al encontrar un `ReturnStatement`, incluso dentro de bloques anidados, ternarios o bucles. Esto permite el uso de *Guard Clauses*.
 - **JSON Parsing**: `JSON::parse()` requiere estrictamente un `string`. Si pasas un objeto (como una lista de BD), retornará `nil` o fallará.
-- **Base de Datos**: `GranMySQL::get()` retorna un `[]map[string]interface{}` (Lista Nativa), NO un string JSON. No es necesario parsearlo.
+- **Base de Datos**: `GranDB::get()` retorna un `[]map[string]interface{}` (Lista Nativa), NO un string JSON. No es necesario parsearlo.
 - **Concurrencia Aislada**: Las operaciones `async` y WebSockets usan `r.Fork()`, lo que garantiza que tengan su propia copia del mapa de variables, evitando condiciones de carrera.
 
 ### 2. Manejo de Archivos y Descargas

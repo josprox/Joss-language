@@ -206,20 +206,20 @@
     ],
     "description": "Create user with Auth"
   },
-  "GranMySQL Query": {
+  "GranDB Query": {
     "prefix": "dbquery",
     "body": [
-      "\\$db = new GranMySQL()",
+      "\\$db = new GranDB()",
       "\\$db.table(\"${1:tableName}\")",
       "\\$db.where(\"${2:column}\", ${3:value})",
       "\\$result = \\$db.get()"
     ],
-    "description": "Query database with GranMySQL"
+    "description": "Query database with GranDB"
   },
-  "GranMySQL Pagination": {
+  "GranDB Pagination": {
     "prefix": "dbpaginate",
     "body": [
-      "\\$db = new GranMySQL()",
+      "\\$db = new GranDB()",
       "\\$page = Request::input(\"page\")",
       "\\$perPage = ${1:10}",
       "\\$offset = (Math.abs(\\$page) - 1) * \\$perPage",
@@ -228,10 +228,10 @@
     ],
     "description": "Paginate database results"
   },
-  "GranMySQL Insert": {
+  "GranDB Insert": {
     "prefix": "dbinsert",
     "body": [
-      "\\$db = new GranMySQL()",
+      "\\$db = new GranDB()",
       "\\$db.table(\"${1:tableName}\")",
       "\\$db.insert([${2:columns}], [${3:values}])"
     ],

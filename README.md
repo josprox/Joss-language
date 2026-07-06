@@ -25,7 +25,7 @@
 
 ### 🔐 Seguridad y Criptografía Integradas de Fábrica
 * **Módulo Auth JWT Nativo**: Autenticación stateless integrada directamente en el core usando JSON Web Tokens y cookies HTTP-only de alta seguridad.
-* **ORM GranMySQL**: Constructor de consultas fluido y seguro con protección nativa contra inyecciones SQL.
+* **ORM GranDB**: Constructor de consultas fluido y seguro con protección nativa contra inyecciones SQL.
 * **AES-256 Environment Encryption**: Encriptación automática del archivo de configuración `env.joss` para despliegues seguros en producción.
 * **Seguridad Web Integrada**: Protección automática contra ataques CSRF, cabeceras de seguridad automatizadas y rate limiting por IP de origen.
 
@@ -77,7 +77,7 @@ int $edad = 25
 // Control de flujo limpio usando ternarios (No if/else)
 ($edad >= 18) ? {
     print("Acceso concedido a: " . $nombre)
-    $db = new GranMySQL()
+    $db = new GranDB()
     $db->table("logs")->insert(["event"], ["login_success"])
 } : {
     print("Acceso denegado.")
@@ -96,9 +96,9 @@ print("Haciendo cálculos intermedios...")
 $resultado = await($future)
 ```
 
-### ORM Fluido (GranMySQL)
+### ORM Fluido (GranDB)
 ```joss
-$db = new GranMySQL()
+$db = new GranDB()
 
 // Consultas complejas y uniones encadenadas en una sola línea
 $productos = $db->table("products")
@@ -133,7 +133,7 @@ joss build                    # Compila la aplicación y recursos para producci�
 
 # Andamiaje de Código (Scaffolding)
 joss make:controller [Name]   # Genera un nuevo controlador con código limpio
-joss make:model [Name]        # Genera un modelo extendiendo GranMySQL
+joss make:model [Name]        # Genera un modelo extendiendo GranDB
 joss make:view [Name]         # Genera una vista HTML extendiendo layouts.master
 joss make:crud [Table]        # Genera la estructura MVC completa (CRUD) para una tabla
 
@@ -141,6 +141,8 @@ joss make:crud [Table]        # Genera la estructura MVC completa (CRUD) para un
 joss migrate                  # Ejecuta las migraciones de base de datos pendientes
 joss db:seed                  # Puebla la base de datos con tus seeders iniciales
 joss change db [mysql|sqlite] # Cambia dinámicamente el driver de conexión de datos
+joss change db migrate        # Migra la conexion actual a un nuevo MySQL
+joss brevo:config --enable --api-key=KEY # Configura Brevo sin prompts interactivos
 ```
 
 ---
@@ -151,7 +153,7 @@ Explora las guías oficiales para dominar todas las características del ecosist
 
 * 📖 [Guía de Sintaxis del Lenguaje](./docs/SINTAXIS.md) — Variables, Tipado, Bucles y Programación Orientada a Objetos.
 * 🛠️ [Manual de la Interfaz CLI](./docs/CLI.md) — Comandos detallados y opciones del compilador.
-* 📦 [Módulos Nativos de Joss](./docs/MODULOS_NATIVOS.md) — Documentación de APIs (Auth, GranMySQL, SmtpClient, etc.).
+* 📦 [Módulos Nativos de Joss](./docs/MODULOS_NATIVOS.md) — Documentación de APIs (Auth, GranDB, SmtpClient, etc.).
 * 📁 [Estructura del Proyecto](./docs/ESTRUCTURA_PROYECTO.md) — Entendiendo el esqueleto de directorios Web y Consola.
 * 🔑 [Configuración y Variables de Entorno](./docs/CONFIGURACION.md) — Gestión del archivo `env.joss` y llaves criptográficas.
 * 💾 [Manejo de Migraciones](./docs/MIGRACIONES.md) — Diseño de tablas e interacción con bases de datos relacionales.

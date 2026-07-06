@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// GranMySQL Implementation
-func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args []interface{}) interface{} {
+// GranDB Implementation
+func (r *Runtime) executeGranDBMethod(instance *Instance, method string, args []interface{}) interface{} {
 	if instance == nil {
 		panic("Internal Error: Native method called with nil instance")
 	}
@@ -27,7 +27,7 @@ func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args
 		if len(args) > 0 {
 			tableName, ok := args[0].(string)
 			if !ok {
-				panic(fmt.Sprintf("GranMySQL Error: table() expects string, got %T", args[0]))
+				panic(fmt.Sprintf("GranDB Error: table() expects string, got %T", args[0]))
 			}
 			instance.Fields["_table"] = quoteIdentifier(r.applyTablePrefix(tableName))
 		}
@@ -84,7 +84,7 @@ func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args
 			query := fmt.Sprintf("SELECT * FROM %v WHERE %v = ?", table, col)
 			rows, err := r.GetDB().Query(query, val)
 			if err != nil {
-				fmt.Printf("[GranMySQL] Error en where: %v\n", err)
+				fmt.Printf("[GranDB] Error en where: %v\n", err)
 				return "[]"
 			}
 			defer rows.Close()
@@ -115,6 +115,88 @@ func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args
 
 		instance.Fields["_wheres"] = wheres
 		instance.Fields["_bindings"] = bindings
+		return instance
+
+	case "orWhere":
+		wheres := instance.Fields["_wheres"].([]string)
+		bindings := instance.Fields["_bindings"].([]interface{})
+
+		if len(args) == 2 {
+			col := quoteIdentifier(r.applyColumnPrefix(args[0].(string)))
+			val := args[1]
+			wheres = append(wheres, fmt.Sprintf("OR %s = ?", col))
+			bindings = append(bindings, val)
+		} else if len(args) == 3 {
+			col := quoteIdentifier(r.applyColumnPrefix(args[0].(string)))
+			op := args[1].(string)
+			val := args[2]
+			wheres = append(wheres, fmt.Sprintf("OR %s %s ?", col, op))
+			bindings = append(bindings, val)
+		}
+
+		instance.Fields["_wheres"] = wheres
+		instance.Fields["_bindings"] = bindings
+		return instance
+
+	case "whereIn", "orWhereIn", "whereNotIn":
+		if len(args) >= 2 {
+			col := quoteIdentifier(r.applyColumnPrefix(args[0].(string)))
+			values := toInterfaceSlice(args[1])
+			wheres := instance.Fields["_wheres"].([]string)
+			bindings := instance.Fields["_bindings"].([]interface{})
+			operator := "IN"
+			prefix := ""
+			if method == "orWhereIn" {
+				prefix = "OR "
+			}
+			if method == "whereNotIn" {
+				operator = "NOT IN"
+			}
+			if len(values) == 0 {
+				emptyClause := "1 = 0"
+				if operator == "NOT IN" {
+					emptyClause = "1 = 1"
+				}
+				wheres = append(wheres, prefix+emptyClause)
+			} else {
+				wheres = append(wheres, fmt.Sprintf("%s%s %s (%s)", prefix, col, operator, placeholders(len(values))))
+				bindings = append(bindings, values...)
+			}
+			instance.Fields["_wheres"] = wheres
+			instance.Fields["_bindings"] = bindings
+		}
+		return instance
+
+	case "whereNull", "whereNotNull":
+		if len(args) >= 1 {
+			col := quoteIdentifier(r.applyColumnPrefix(args[0].(string)))
+			op := "IS NULL"
+			if method == "whereNotNull" {
+				op = "IS NOT NULL"
+			}
+			wheres := instance.Fields["_wheres"].([]string)
+			wheres = append(wheres, fmt.Sprintf("%s %s", col, op))
+			instance.Fields["_wheres"] = wheres
+		}
+		return instance
+
+	case "whereBetween", "whereNotBetween":
+		if len(args) >= 2 {
+			values := toInterfaceSlice(args[1])
+			if len(values) >= 2 {
+				col := quoteIdentifier(r.applyColumnPrefix(args[0].(string)))
+				op := "BETWEEN"
+				if method == "whereNotBetween" {
+					op = "NOT BETWEEN"
+				}
+				wheres := instance.Fields["_wheres"].([]string)
+				bindings := instance.Fields["_bindings"].([]interface{})
+				wheres = append(wheres, fmt.Sprintf("%s %s ? AND ?", col, op))
+				bindings = append(bindings, values[0], values[1])
+				instance.Fields["_wheres"] = wheres
+				instance.Fields["_bindings"] = bindings
+			}
+		}
 		return instance
 
 	case "join", "innerJoin":
@@ -170,6 +252,26 @@ func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args
 		}
 		return instance
 
+	case "latest", "oldest":
+		col := "created_at"
+		if len(args) >= 1 {
+			col = args[0].(string)
+		}
+		dir := "DESC"
+		if method == "oldest" {
+			dir = "ASC"
+		}
+		instance.Fields["_order"] = fmt.Sprintf("%s %s", quoteIdentifier(r.applyColumnPrefix(col)), dir)
+		return instance
+
+	case "inRandomOrder":
+		if r.Env != nil && strings.ToLower(r.Env["DB"]) == "sqlite" {
+			instance.Fields["_order"] = "RANDOM()"
+		} else {
+			instance.Fields["_order"] = "RAND()"
+		}
+		return instance
+
 	case "limit":
 		if len(args) >= 1 {
 			if limit, ok := args[0].(int); ok {
@@ -200,10 +302,31 @@ func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args
 	case "count":
 		return r.executeCountMethod(instance, args)
 
+	case "sum", "avg", "min", "max":
+		return r.executeAggregateMethod(instance, method, args)
+
 	case "first":
 		return r.executeFirstMethod(instance, args)
 
+	case "find":
+		return r.executeFindMethod(instance, args)
+
+	case "value":
+		return r.executeValueMethod(instance, args)
+
+	case "pluck":
+		return r.executePluckMethod(instance, args)
+
+	case "exists":
+		return r.executeExistsMethod(instance, false)
+
+	case "doesntExist":
+		return r.executeExistsMethod(instance, true)
+
 	case "insert":
+		return r.executeInsertMethod(instance, args)
+
+	case "insertGetId":
 		return r.executeInsertMethod(instance, args)
 
 	case "update":
@@ -218,40 +341,6 @@ func (r *Runtime) executeGranMySQLMethod(instance *Instance, method string, args
 	case "truncate":
 		return r.executeTruncateMethod(instance)
 
-	case "query":
-		if len(args) > 0 {
-			if sqlStr, ok := args[0].(string); ok {
-				if r.GetDB() == nil {
-					return nil
-				}
-
-				// Check if it is a SELECT query
-				trimmed := strings.ToUpper(strings.TrimSpace(sqlStr))
-				if strings.HasPrefix(trimmed, "SELECT") || strings.HasPrefix(trimmed, "SHOW") || strings.HasPrefix(trimmed, "DESCRIBE") {
-					rows, err := r.GetDB().Query(sqlStr)
-					if err != nil {
-						fmt.Printf("[GranMySQL] Error query SELECT: %v\n", err)
-						return nil
-					}
-					defer rows.Close()
-					rowsMap := rowsToMap(rows)
-					// Convert to []interface{} for runtime compatibility
-					var result []interface{}
-					for _, r := range rowsMap {
-						result = append(result, r)
-					}
-					return result
-				}
-
-				// Otherwise Exec (INSERT, UPDATE, DELETE, ALTER...)
-				_, err := r.GetDB().Exec(sqlStr)
-				if err != nil {
-					fmt.Printf("[GranMySQL] Error query EXEC: %v\n", err)
-					return false
-				}
-				return true
-			}
-		}
 	}
 	return nil
 }

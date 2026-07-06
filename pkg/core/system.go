@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 )
 
 // System Implementation
@@ -68,6 +69,18 @@ func (r *Runtime) executeSystemMethod(instance *Instance, method string, args []
 			fmt.Println("[System Log] " + msg)
 			return nil
 		}
+	case "sleep":
+		if len(args) > 0 {
+			seconds := toInt(args[0])
+			time.Sleep(time.Duration(seconds) * time.Second)
+			return true
+		}
+	case "now":
+		current := time.Now()
+		if len(args) > 0 {
+			current = current.AddDate(0, 0, toInt(args[0]))
+		}
+		return current.Format("2006-01-02 15:04:05")
 	}
 	return nil
 }

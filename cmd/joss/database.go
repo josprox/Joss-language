@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jossecurity/joss/pkg/core"
@@ -163,9 +166,370 @@ func connectToDB(driver string, env map[string]string) (*sql.DB, error) {
 		}
 		return sql.Open("sqlite", path)
 	} else {
-		dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", env["DB_USER"], env["DB_PASS"], env["DB_HOST"], env["DB_NAME"])
+		dsn := mysqlDatabaseDSN(env["DB_USER"], env["DB_PASS"], normalizeMySQLHost(env["DB_HOST"]), env["DB_NAME"])
 		return sql.Open("mysql", dsn)
 	}
+}
+
+func changeDatabaseMigrate() {
+	fmt.Println("Migrar conexion actual a un nuevo MySQL")
+	fmt.Println("El archivo de entorno solo se actualizara si la conexion y la migracion terminan correctamente.")
+
+	envFile := GetEnvFile()
+	envMap := readEnvFile(envFile)
+	currentDB := envMap["DB"]
+	if currentDB == "" {
+		currentDB = "mysql"
+	}
+
+	host, port, dbName, user, pass, ok := readMigrateDBInput()
+	if !ok {
+		return
+	}
+
+	if !isSafeMySQLIdentifier(dbName) {
+		fmt.Println("Nombre de base de datos invalido. Usa letras, numeros, guion bajo o guion.")
+		return
+	}
+
+	targetHost := joinHostPort(host, port)
+	fmt.Printf("Probando conexion a MySQL en %s...\n", targetHost)
+	serverDB, err := sql.Open("mysql", mysqlServerDSN(user, pass, targetHost))
+	if err != nil {
+		fmt.Printf("No se pudo preparar la conexion nueva: %v\n", err)
+		return
+	}
+	defer serverDB.Close()
+
+	if err := serverDB.Ping(); err != nil {
+		fmt.Printf("No hay conexion con el nuevo servidor. Se conserva la conexion actual. Error: %v\n", err)
+		return
+	}
+
+	if err := ensureMySQLDatabase(serverDB, dbName); err != nil {
+		fmt.Printf("No se pudo preparar la base de datos destino. Se conserva la conexion actual. Error: %v\n", err)
+		return
+	}
+
+	targetEnv := cloneEnvMap(envMap)
+	targetEnv["DB"] = "mysql"
+	targetEnv["DB_HOST"] = targetHost
+	targetEnv["DB_NAME"] = dbName
+	targetEnv["DB_USER"] = user
+	targetEnv["DB_PASS"] = pass
+
+	srcDB, err := connectToDB(currentDB, envMap)
+	if err != nil {
+		fmt.Printf("No se pudo conectar a la base actual (%s): %v\n", currentDB, err)
+		return
+	}
+	defer srcDB.Close()
+	if err := srcDB.Ping(); err != nil {
+		fmt.Printf("La conexion actual no responde. No se migro nada: %v\n", err)
+		return
+	}
+
+	destDB, err := connectToDB("mysql", targetEnv)
+	if err != nil {
+		fmt.Printf("No se pudo abrir la base destino. Se conserva la conexion actual. Error: %v\n", err)
+		return
+	}
+	defer destDB.Close()
+	if err := destDB.Ping(); err != nil {
+		fmt.Printf("La base destino no responde. Se conserva la conexion actual. Error: %v\n", err)
+		return
+	}
+
+	fmt.Println("Preparando esquema en base de datos destino...")
+	destRt := core.NewRuntime()
+	destRt.DB = destDB
+	destRt.Env = cloneEnvMap(targetEnv)
+	destRt.EnsureMigrationTable()
+	destRt.EnsureAuthTables()
+	destRt.EnsureCronTable()
+	performMigrations(destRt)
+
+	if err := migrateTablesToDatabase(srcDB, destDB, currentDB, "mysql", envMap); err != nil {
+		fmt.Printf("Error migrando datos. Se conserva la conexion actual: %v\n", err)
+		return
+	}
+
+	if err := backupEnvFile(envFile); err != nil {
+		fmt.Printf("Migracion completada, pero no se pudo respaldar %s: %v\n", envFile, err)
+		return
+	}
+	updateEnvFile(envFile, "DB", "mysql")
+	updateEnvFile(envFile, "DB_HOST", targetHost)
+	updateEnvFile(envFile, "DB_NAME", dbName)
+	updateEnvFile(envFile, "DB_USER", user)
+	updateEnvFile(envFile, "DB_PASS", pass)
+	fmt.Printf("Migracion completada. %s actualizado y respaldo creado.\n", envFile)
+}
+
+func migrateTablesToDatabase(srcDB, destDB *sql.DB, srcDriver, destDriver string, envMap map[string]string) error {
+	fmt.Println("Iniciando migracion de datos...")
+
+	tables, err := getTables(srcDB, srcDriver)
+	if err != nil {
+		return fmt.Errorf("error obteniendo tablas: %w", err)
+	}
+
+	for _, table := range tables {
+		prefix := "js_"
+		if val, ok := envMap["PREFIX"]; ok {
+			prefix = val
+		} else if val, ok := envMap["DB_PREFIX"]; ok {
+			prefix = val
+		}
+
+		if table == "sqlite_sequence" || table == prefix+"migration" || table == prefix+"cron" {
+			continue
+		}
+
+		fmt.Printf("Migrando tabla: %s... ", table)
+		rows, err := srcDB.Query(fmt.Sprintf("SELECT * FROM %s", quoteSQLName(srcDriver, table)))
+		if err != nil {
+			fmt.Printf("Error leyendo tabla %s: %v\n", table, err)
+			continue
+		}
+
+		if err := ensureTableSchema(destDB, destDriver, table, rows); err != nil {
+			fmt.Printf("Error sincronizando esquema para tabla %s: %v\n", table, err)
+			rows.Close()
+			continue
+		}
+
+		cols, _ := rows.Columns()
+		vals := make([]interface{}, len(cols))
+		valPtrs := make([]interface{}, len(cols))
+		placeholders := make([]string, len(cols))
+		quotedCols := make([]string, len(cols))
+		for i, col := range cols {
+			valPtrs[i] = &vals[i]
+			placeholders[i] = "?"
+			quotedCols[i] = quoteSQLName(destDriver, col)
+		}
+
+		insertCmd := "INSERT INTO"
+		if destDriver == "mysql" {
+			insertCmd = "INSERT IGNORE INTO"
+		} else if destDriver == "sqlite" {
+			insertCmd = "INSERT OR IGNORE INTO"
+		}
+		query := fmt.Sprintf("%s %s (%s) VALUES (%s)", insertCmd, quoteSQLName(destDriver, table), strings.Join(quotedCols, ", "), strings.Join(placeholders, ", "))
+
+		tx, err := destDB.Begin()
+		if err != nil {
+			rows.Close()
+			return fmt.Errorf("error iniciando transaccion para %s: %w", table, err)
+		}
+		stmt, err := tx.Prepare(query)
+		if err != nil {
+			fmt.Printf("Error preparando insert: %v\n", err)
+			tx.Rollback()
+			rows.Close()
+			continue
+		}
+
+		count := 0
+		for rows.Next() {
+			if err := rows.Scan(valPtrs...); err != nil {
+				fmt.Printf("Error leyendo fila: %v\n", err)
+				continue
+			}
+			if _, err = stmt.Exec(vals...); err != nil {
+				fmt.Printf("Error insertando fila: %v\n", err)
+			} else {
+				count++
+			}
+		}
+		stmt.Close()
+		if err := tx.Commit(); err != nil {
+			rows.Close()
+			return fmt.Errorf("error confirmando tabla %s: %w", table, err)
+		}
+		rows.Close()
+		fmt.Printf("OK (%d filas)\n", count)
+	}
+
+	return nil
+}
+
+func readMigrateDBInput() (string, string, string, string, string, bool) {
+	host := getCLIOption("host")
+	port := getCLIOption("port")
+	dbName := getCLIOption("database")
+	if dbName == "" {
+		dbName = getCLIOption("db")
+	}
+	user := getCLIOption("user")
+	pass := getCLIOption("password")
+	if pass == "" {
+		pass = getCLIOption("pass")
+	}
+
+	if host != "" && dbName != "" && user != "" {
+		if port == "" {
+			port = "3306"
+		}
+		return host, port, dbName, user, pass, true
+	}
+
+	if host != "" || port != "" || dbName != "" || user != "" || pass != "" {
+		fmt.Println("Faltan parametros. Uso:")
+		fmt.Println("joss change db migrate --host=HOST --port=3306 --database=DB --user=USER --password=PASS")
+		return "", "", "", "", "", false
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	var ok bool
+	host, ok = promptRequired(reader, "Host nuevo")
+	if !ok {
+		return "", "", "", "", "", false
+	}
+	port, ok = promptWithDefault(reader, "Puerto nuevo", "3306")
+	if !ok {
+		return "", "", "", "", "", false
+	}
+	dbName, ok = promptRequired(reader, "Base de datos nueva")
+	if !ok {
+		return "", "", "", "", "", false
+	}
+	user, ok = promptRequired(reader, "Usuario nuevo")
+	if !ok {
+		return "", "", "", "", "", false
+	}
+	pass, ok = promptOptional(reader, "Contrasena nueva")
+	if !ok {
+		return "", "", "", "", "", false
+	}
+	return host, port, dbName, user, pass, true
+}
+
+func getCLIOption(name string) string {
+	long := "--" + name + "="
+	for i, arg := range os.Args {
+		if strings.HasPrefix(arg, long) {
+			return strings.TrimSpace(strings.TrimPrefix(arg, long))
+		}
+		if arg == "--"+name && i+1 < len(os.Args) {
+			return strings.TrimSpace(os.Args[i+1])
+		}
+	}
+	return ""
+}
+
+func promptRequired(reader *bufio.Reader, label string) (string, bool) {
+	for {
+		value, ok := promptOptional(reader, label)
+		if !ok {
+			fmt.Println("\nEntrada cancelada. Se conserva la conexion actual.")
+			return "", false
+		}
+		if value != "" {
+			return value, true
+		}
+		fmt.Println("Este valor es obligatorio.")
+	}
+}
+
+func promptWithDefault(reader *bufio.Reader, label, fallback string) (string, bool) {
+	fmt.Printf("%s [%s]: ", label, fallback)
+	value, err := reader.ReadString('\n')
+	if err != nil && value == "" {
+		fmt.Println("\nEntrada cancelada. Se conserva la conexion actual.")
+		return "", false
+	}
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return fallback, true
+	}
+	return value, true
+}
+
+func promptOptional(reader *bufio.Reader, label string) (string, bool) {
+	fmt.Printf("%s: ", label)
+	value, err := reader.ReadString('\n')
+	if err != nil && value == "" {
+		return "", false
+	}
+	return strings.TrimSpace(value), true
+}
+
+func normalizeMySQLHost(host string) string {
+	host = strings.TrimSpace(host)
+	if host == "" {
+		return "127.0.0.1:3306"
+	}
+	if strings.Contains(host, ":") {
+		return host
+	}
+	return host + ":3306"
+}
+
+func joinHostPort(host, port string) string {
+	host = strings.TrimSpace(host)
+	port = strings.TrimSpace(port)
+	if strings.Contains(host, ":") {
+		return host
+	}
+	if port == "" {
+		port = "3306"
+	}
+	return host + ":" + port
+}
+
+func mysqlServerDSN(user, pass, host string) string {
+	return fmt.Sprintf("%s:%s@tcp(%s)/?parseTime=true&multiStatements=true", user, pass, normalizeMySQLHost(host))
+}
+
+func mysqlDatabaseDSN(user, pass, host, dbName string) string {
+	return fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&multiStatements=true", user, pass, normalizeMySQLHost(host), dbName)
+}
+
+func ensureMySQLDatabase(db *sql.DB, dbName string) error {
+	var existing string
+	err := db.QueryRow("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", dbName).Scan(&existing)
+	if err == nil {
+		fmt.Printf("Base de datos %s encontrada.\n", dbName)
+		return nil
+	}
+	if err != sql.ErrNoRows {
+		return err
+	}
+
+	fmt.Printf("Base de datos %s no existe. Creandola...\n", dbName)
+	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", quoteSQLName("mysql", dbName)))
+	return err
+}
+
+func isSafeMySQLIdentifier(value string) bool {
+	ok, _ := regexp.MatchString(`^[A-Za-z0-9_-]+$`, value)
+	return ok
+}
+
+func quoteSQLName(driver, name string) string {
+	if driver == "mysql" {
+		return "`" + strings.ReplaceAll(name, "`", "``") + "`"
+	}
+	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
+}
+
+func cloneEnvMap(env map[string]string) map[string]string {
+	copyMap := make(map[string]string)
+	for k, v := range env {
+		copyMap[k] = v
+	}
+	return copyMap
+}
+
+func backupEnvFile(path string) error {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	backupPath := fmt.Sprintf("%s.bak.%s", path, time.Now().Format("20060102150405"))
+	return ioutil.WriteFile(backupPath, content, 0644)
 }
 
 func getTables(db *sql.DB, driver string) ([]string, error) {
@@ -330,7 +694,7 @@ func ensureTableSchema(destDB *sql.DB, driver string, table string, rows *sql.Ro
 		// Build CREATE TABLE
 		var colsDef []string
 		for _, ct := range colTypes {
-			sqlType := mapTypeToSQL(ct.DatabaseTypeName(), driver)
+			sqlType := mapTypeToSQL(ct, driver)
 			colDef := fmt.Sprintf("%s %s", ct.Name(), sqlType)
 			// Simple Primary Key heuristic: if name is 'id', make it PK
 			if strings.ToLower(ct.Name()) == "id" {
@@ -359,7 +723,7 @@ func ensureTableSchema(destDB *sql.DB, driver string, table string, rows *sql.Ro
 			for _, ct := range colTypes {
 				if !destColMap[ct.Name()] {
 					fmt.Printf("Columna %s no existe en %s. Agregándola...\n", ct.Name(), table)
-					sqlType := mapTypeToSQL(ct.DatabaseTypeName(), driver)
+					sqlType := mapTypeToSQL(ct, driver)
 					query := fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s", table, ct.Name(), sqlType)
 					if _, err := destDB.Exec(query); err != nil {
 						fmt.Printf("Advertencia: No se pudo agregar columna %s: %v\n", ct.Name(), err)
@@ -372,41 +736,105 @@ func ensureTableSchema(destDB *sql.DB, driver string, table string, rows *sql.Ro
 	return nil
 }
 
-func mapTypeToSQL(srcType string, driver string) string {
-	srcType = strings.ToUpper(srcType)
-	// General simplification
-	if strings.Contains(srcType, "INT") {
-		if driver == "sqlite" {
+func mapTypeToSQL(ct *sql.ColumnType, driver string) string {
+	srcType := strings.ToUpper(ct.DatabaseTypeName())
+	if driver == "sqlite" {
+		if strings.Contains(srcType, "INT") {
 			return "INTEGER"
 		}
-		return "BIGINT"
-	}
-	if strings.Contains(srcType, "CHAR") || strings.Contains(srcType, "TEXT") || srcType == "BLOB" {
-		if driver == "sqlite" {
+		if strings.Contains(srcType, "CHAR") || strings.Contains(srcType, "TEXT") || srcType == "BLOB" {
 			return "TEXT"
 		}
-		return "VARCHAR(255)" // Safe default
-	}
-	if strings.Contains(srcType, "TIME") || strings.Contains(srcType, "DATE") {
-		if driver == "sqlite" {
-			return "TEXT" // SQLite stores timestamps as strings/ints
+		if strings.Contains(srcType, "TIME") || strings.Contains(srcType, "DATE") {
+			return "TEXT"
 		}
-		return "TIMESTAMP NULL"
-	}
-	if strings.Contains(srcType, "BOOL") {
-		return "INT"
-	}
-	if strings.Contains(srcType, "FLOAT") || strings.Contains(srcType, "DOUBLE") || strings.Contains(srcType, "REAL") {
-		if driver == "sqlite" {
+		if strings.Contains(srcType, "FLOAT") || strings.Contains(srcType, "DOUBLE") || strings.Contains(srcType, "REAL") {
 			return "REAL"
 		}
-		return "DOUBLE"
-	}
-
-	// Fallback
-	if driver == "sqlite" {
 		return "TEXT"
 	}
+
+	// MySQL
+	if strings.Contains(srcType, "INT") {
+		if strings.Contains(srcType, "UNSIGNED") {
+			if strings.Contains(srcType, "TINYINT") {
+				return "TINYINT UNSIGNED"
+			}
+			if strings.Contains(srcType, "SMALLINT") {
+				return "SMALLINT UNSIGNED"
+			}
+			if strings.Contains(srcType, "MEDIUMINT") {
+				return "MEDIUMINT UNSIGNED"
+			}
+			if strings.Contains(srcType, "BIGINT") {
+				return "BIGINT UNSIGNED"
+			}
+			return "INT UNSIGNED"
+		}
+		if strings.Contains(srcType, "TINYINT") {
+			return "TINYINT"
+		}
+		if strings.Contains(srcType, "SMALLINT") {
+			return "SMALLINT"
+		}
+		if strings.Contains(srcType, "MEDIUMINT") {
+			return "MEDIUMINT"
+		}
+		if strings.Contains(srcType, "BIGINT") {
+			return "BIGINT"
+		}
+		return "INT"
+	}
+
+	if strings.Contains(srcType, "TEXT") {
+		if srcType == "LONGTEXT" {
+			return "LONGTEXT"
+		}
+		if srcType == "MEDIUMTEXT" {
+			return "MEDIUMTEXT"
+		}
+		if srcType == "TINYTEXT" {
+			return "TINYTEXT"
+		}
+		return "TEXT"
+	}
+
+	if strings.Contains(srcType, "BLOB") {
+		if srcType == "LONGBLOB" {
+			return "LONGBLOB"
+		}
+		if srcType == "MEDIUMBLOB" {
+			return "MEDIUMBLOB"
+		}
+		if srcType == "TINYBLOB" {
+			return "TINYBLOB"
+		}
+		return "BLOB"
+	}
+
+	if strings.Contains(srcType, "CHAR") {
+		length, ok := ct.Length()
+		if ok && length > 0 {
+			if strings.Contains(srcType, "VARCHAR") {
+				return fmt.Sprintf("VARCHAR(%d)", length)
+			}
+			return fmt.Sprintf("CHAR(%d)", length)
+		}
+		return "VARCHAR(255)"
+	}
+
+	if strings.Contains(srcType, "TIME") || strings.Contains(srcType, "DATE") {
+		return "TIMESTAMP NULL"
+	}
+
+	if strings.Contains(srcType, "BOOL") {
+		return "TINYINT(1)"
+	}
+
+	if strings.Contains(srcType, "FLOAT") || strings.Contains(srcType, "DOUBLE") || strings.Contains(srcType, "DECIMAL") {
+		return srcType
+	}
+
 	return "VARCHAR(255)"
 }
 

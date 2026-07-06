@@ -266,7 +266,7 @@ Manejo de errores robusto.
 
 ```joss
 try {
-    $db = new GranMySQL()
+    $db = new GranDB()
     $db->connect()
 } catch ($error) {
     print("Error crítico: " . $error)

@@ -201,6 +201,9 @@ func (r *Runtime) callBuiltin(name string, args []interface{}) (interface{}, boo
 	switch name {
 	case "html_escape":
 		if len(args) > 0 {
+			if args[0] == nil {
+				return "", true
+			}
 			return html.EscapeString(fmt.Sprintf("%v", args[0])), true
 		}
 		return "", true

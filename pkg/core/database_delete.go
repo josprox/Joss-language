@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-// executeDeleteMethod handles delete operations for GranMySQL/GranDB
+// executeDeleteMethod handles delete operations for GranDB
 // Usage: $model.where("id", 1).delete()
 func (r *Runtime) executeDeleteMethod(instance *Instance) interface{} {
 	if r.GetDB() == nil {
-		panic("GranMySQL Error: No hay conexión a la base de datos configurada")
+		panic("GranDB Error: No hay conexión a la base de datos configurada")
 	}
 
 	// Get table and where conditions
@@ -22,7 +22,7 @@ func (r *Runtime) executeDeleteMethod(instance *Instance) interface{} {
 
 	// Add WHERE clause if present
 	if len(wheres) > 0 {
-		query += " WHERE " + strings.Join(wheres, " AND ")
+		query += " WHERE " + buildWhereClause(wheres)
 	} else {
 		fmt.Println("[GranDB] Warning: delete() without WHERE clause will delete all rows")
 		fmt.Println("[GranDB] Aborting delete for safety. Use deleteAll() to delete all rows.")
@@ -39,7 +39,7 @@ func (r *Runtime) executeDeleteMethod(instance *Instance) interface{} {
 	// Execute query
 	result, err := r.GetDB().Exec(query, bindings...)
 	if err != nil {
-		panic(fmt.Sprintf("GranMySQL Error en delete: %v", err))
+		panic(fmt.Sprintf("GranDB Error en delete: %v", err))
 	}
 
 	// Get affected rows
@@ -53,7 +53,7 @@ func (r *Runtime) executeDeleteMethod(instance *Instance) interface{} {
 // Usage: $model.deleteAll()
 func (r *Runtime) executeDeleteAllMethod(instance *Instance) interface{} {
 	if r.GetDB() == nil {
-		panic("GranMySQL Error: No hay conexión a la base de datos configurada")
+		panic("GranDB Error: No hay conexión a la base de datos configurada")
 	}
 
 	table := r.getTable(instance)
@@ -69,7 +69,7 @@ func (r *Runtime) executeDeleteAllMethod(instance *Instance) interface{} {
 	// Execute query
 	result, err := r.GetDB().Exec(query)
 	if err != nil {
-		panic(fmt.Sprintf("GranMySQL Error en deleteAll: %v", err))
+		panic(fmt.Sprintf("GranDB Error en deleteAll: %v", err))
 	}
 
 	// Get affected rows

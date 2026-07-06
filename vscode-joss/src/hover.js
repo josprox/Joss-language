@@ -13,7 +13,7 @@ function getHoverProvider() {
             if (word === 'Response') return new vscode.Hover('**Response Class**\n\nHandles HTTP responses (JSON, redirects).');
             if (word === 'View') return new vscode.Hover('**View Class**\n\nRenders HTML templates with inheritance support.');
             if (word === 'System') return new vscode.Hover('**System Class**\n\nProvides access to system commands and environment variables.');
-            if (word === 'GranMySQL') return new vscode.Hover('**GranMySQL Class**\n\nActive Record ORM for database interactions.');
+            if (word === 'GranDB') return new vscode.Hover('**GranDB Class**\n\nActive Record ORM for database interactions.');
 
             // Keywords
             if (word === 'async') return new vscode.Hover('**async**\n\nMarks a function as asynchronous, allowing use of `await`.');

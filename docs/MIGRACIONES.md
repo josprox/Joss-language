@@ -189,6 +189,7 @@ joss make:crud js_products
 3. **Nombra las migraciones descriptivamente** - `create_products`, no `migration1`
 4. **Usa `migrate:fresh` solo en desarrollo** - Elimina todos los datos
 5. **Prefija tablas con `js_`** - O usa `joss change db prefix` para personalizarlo.
+6. **Para mover datos a otro MySQL**, usa `joss change db migrate`. El comando prepara el esquema destino, copia datos y solo actualiza `env.joss` cuando la migracion termina correctamente.
 
 ---
 

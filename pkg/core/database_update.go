@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-// executeUpdateMethod handles update operations for GranMySQL/GranDB
+// executeUpdateMethod handles update operations for GranDB
 // Usage: $model.where("id", 1).update({"name": "Jane", "email": "jane@example.com"})
 func (r *Runtime) executeUpdateMethod(instance *Instance, args []interface{}) interface{} {
 	if r.GetDB() == nil {
-		panic("GranMySQL Error: No hay conexión a la base de datos configurada")
+		panic("GranDB Error: No hay conexión a la base de datos configurada")
 	}
 
 	// Get table and where conditions
@@ -59,7 +59,7 @@ func (r *Runtime) executeUpdateMethod(instance *Instance, args []interface{}) in
 
 	// Add WHERE clause if present
 	if len(wheres) > 0 {
-		query += " WHERE " + strings.Join(wheres, " AND ")
+		query += " WHERE " + buildWhereClause(wheres)
 		// Append where bindings after update bindings
 		updateBindings = append(updateBindings, bindings...)
 	} else {
@@ -76,7 +76,7 @@ func (r *Runtime) executeUpdateMethod(instance *Instance, args []interface{}) in
 	// Execute query
 	result, err := r.GetDB().Exec(query, updateBindings...)
 	if err != nil {
-		panic(fmt.Sprintf("GranMySQL Error en update: %v", err))
+		panic(fmt.Sprintf("GranDB Error en update: %v", err))
 	}
 
 	// Get affected rows

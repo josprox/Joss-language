@@ -29,7 +29,7 @@ Guía completa de JosSecurity v3.0 (Gold Master)
 ### Módulos
 - [MODULOS_NATIVOS.md](./MODULOS_NATIVOS.md) - Módulos nativos del lenguaje
   - Auth - Autenticación y JWT
-  - GranMySQL - ORM de base de datos
+  - GranDB - ORM de base de datos
   - Router - Sistema de rutas
   - View - Motor de plantillas
   - SmtpClient - Correo electrónico
@@ -131,13 +131,13 @@ joss run main.joss
 
 ### Para Backend/Consola
 1. [CLI.md](./CLI.md#joss-new-console-ruta) - Crear proyecto de consola
-2. [MODULOS_NATIVOS.md](./MODULOS_NATIVOS.md#granmysql) - Base de datos
+2. [MODULOS_NATIVOS.md](./MODULOS_NATIVOS.md#grandb) - Base de datos
 3. [MODULOS_NATIVOS.md](./MODULOS_NATIVOS.md#cron) - Tareas programadas
 
 ### Para Base de Datos
 1. [CONFIGURACION.md](./CONFIGURACION.md#configuración-de-base-de-datos) - Configurar BD
 2. [MIGRACIONES.md](./MIGRACIONES.md) - Sistema de migraciones
-3. [MODULOS_NATIVOS.md](./MODULOS_NATIVOS.md#granmysql) - ORM GranMySQL
+3. [MODULOS_NATIVOS.md](./MODULOS_NATIVOS.md#grandb) - ORM GranDB
 
 ---
 
@@ -151,9 +151,11 @@ joss run main.joss
 - Proteger rutas → [MODULOS_NATIVOS.md#routermiddlewarestringnombre](./MODULOS_NATIVOS.md#routermiddlewarestringnombre)
 
 **Base de Datos**
-- Consultar datos → [MODULOS_NATIVOS.md#granmysql](./MODULOS_NATIVOS.md#granmysql)
+- Consultar datos → [MODULOS_NATIVOS.md#grandb](./MODULOS_NATIVOS.md#grandb)
 - Crear migración → [MIGRACIONES.md](./MIGRACIONES.md)
 - Cambiar motor → [CLI.md#joss-change-db-motor](./CLI.md#joss-change-db-motor)
+
+- Migrar a otro MySQL â†’ [CLI.md#joss-change-db-migrate](./CLI.md#joss-change-db-migrate)
 
 **Vistas**
 - Renderizar HTML → [MODULOS_NATIVOS.md#view](./MODULOS_NATIVOS.md#view)

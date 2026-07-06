@@ -103,10 +103,13 @@ func printHelp() {
 	fmt.Printf("  migrate:fresh           - %s\n", tr("exeMigrateFresh"))
 	fmt.Printf("  new [web|console] [path]- %s\n", tr("createProject"))
 	fmt.Printf("  change db [motor]       - %s\n", tr("changeDBMotor"))
+	fmt.Printf("  change db migrate       - Migrar conexion actual a un nuevo MySQL\n")
+	fmt.Printf("    --host --port --database --user --password\n")
 	fmt.Printf("  change db prefix [pref] - %s\n", tr("changeDBPrefix"))
 	fmt.Printf("  userstorage [provider]  - %s\n", tr("settingsUserStorage"))
 	fmt.Printf("  ai:activate             - %s\n", tr("IaActivate"))
 	fmt.Printf("  brevo:config            - %s\n", tr("brevoConfig"))
+	fmt.Printf("    --enable --api-key / --disable\n")
 	fmt.Printf("  version                 - %s\n", tr("version"))
 	fmt.Printf("  help                    - %s\n", tr("helpPrint"))
 }

@@ -606,7 +606,7 @@ func (r *Runtime) evaluateMember(me *parser.MemberExpression) interface{} {
 			isNative = true
 			break
 		}
-		if className == "Stack" || className == "Queue" || className == "GranMySQL" || className == "GranDB" || className == "Auth" ||
+		if className == "Stack" || className == "Queue" || className == "GranDB" || className == "Auth" ||
 			className == "System" || className == "SmtpClient" || className == "Cron" || className == "Task" || className == "View" || className == "Router" ||
 			className == "Request" || className == "Response" || className == "RedirectResponse" || className == "Session" || className == "Redirect" || className == "Security" || className == "Server" || className == "Log" ||
 			className == "WebSocket" || className == "Redis" || className == "Math" {
@@ -711,7 +711,7 @@ func (r *Runtime) evaluatePostfix(pe *parser.PostfixExpression) interface{} {
 
 func isNativeClass(name string) bool {
 	switch name {
-	case "Session", "Math", "Auth", "View", "Request", "Response", "Redirect", "Log", "System", "Router", "Security", "Server", "GranDB", "GranMySQL", "Stack", "Queue", "SmtpClient", "Cron", "Task", "WebSocket", "Redis":
+	case "Session", "Math", "Auth", "View", "Request", "Response", "Redirect", "Log", "System", "Router", "Security", "Server", "GranDB", "Stack", "Queue", "SmtpClient", "Cron", "Task", "WebSocket", "Redis":
 		return true
 	}
 	return false

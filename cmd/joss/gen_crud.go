@@ -189,7 +189,7 @@ func createCRUDController(modelName, tableName string, cols []ColumnSchema, rela
     }
 
     func store() {
-        $db = new GranMySQL()
+        $db = new GranDB()
         $data = Request::except(["_token", "_referer", "_method"])
         $db->table("%s")->insert($data)
         return Response::redirect("/%s")->with("success", "%s creado correctamente.")
@@ -206,7 +206,7 @@ func createCRUDController(modelName, tableName string, cols []ColumnSchema, rela
     }
 
     func update($id) {
-        $db = new GranMySQL()
+        $db = new GranDB()
         $data = Request::except(["_token", "_referer", "_method"])
         $db->table("%s")->where("id", $id)->update($data)
         return Response::redirect("/%s")->with("success", "%s actualizado correctamente.")

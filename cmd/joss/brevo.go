@@ -5,19 +5,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
 	"github.com/jossecurity/joss/pkg/i18n"
 )
 
 func handleBrevoConfig() {
-	reader := bufio.NewReader(os.Stdin)
-
 	fmt.Println(i18n.Tr("brevoTitle"))
-	fmt.Print("¿Deseas activar BREVO_API? (y/n): ")
-	response, _ := reader.ReadString('\n')
-	response = strings.TrimSpace(strings.ToLower(response))
 
 	envPath := "env.joss"
-	// Check if env.joss exists, if not check .env
 	if _, err := os.Stat(envPath); os.IsNotExist(err) {
 		if _, err := os.Stat(".env"); err == nil {
 			envPath = ".env"
@@ -26,6 +21,32 @@ func handleBrevoConfig() {
 			return
 		}
 	}
+
+	if hasArg("--enable") {
+		key := getCLIOption("api-key")
+		if key == "" {
+			key = getCLIOption("key")
+		}
+		if key == "" {
+			fmt.Println(i18n.Tr("brevoEmptyKeyError"))
+			return
+		}
+
+		updateEnvFile(envPath, "BREVO_API", key)
+		fmt.Println(i18n.Tr("brevoActivatedSuccess"))
+		return
+	}
+
+	if hasArg("--disable") {
+		removeEnvKey(envPath, "BREVO_API")
+		fmt.Println(i18n.Tr("brevoDisabledSuccess"))
+		return
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Deseas activar BREVO_API? (y/n): ")
+	response, _ := reader.ReadString('\n')
+	response = strings.TrimSpace(strings.ToLower(response))
 
 	if response == "y" || response == "yes" || response == "s" || response == "si" {
 		fmt.Print("Introduce tu Brevo API Key: ")
@@ -39,15 +60,12 @@ func handleBrevoConfig() {
 
 		updateEnvFile(envPath, "BREVO_API", key)
 		fmt.Println(i18n.Tr("brevoActivatedSuccess"))
-
 	} else {
-		// Disable (Comment out or remove)
 		removeEnvKey(envPath, "BREVO_API")
 		fmt.Println(i18n.Tr("brevoDisabledSuccess"))
 	}
 }
 
-// Helper to remove or comment out a key
 func removeEnvKey(path, key string) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -58,7 +76,6 @@ func removeEnvKey(path, key string) {
 	lines := strings.Split(string(content), "\n")
 	var newLines []string
 	for _, line := range lines {
-		// Remove lines starting with key=
 		if strings.HasPrefix(strings.TrimSpace(line), key+"=") {
 			continue
 		}

@@ -175,7 +175,9 @@ func main() {
 			return
 		}
 
-		if os.Args[3] == "prefix" {
+		if os.Args[3] == "migrate" {
+			changeDatabaseMigrate()
+		} else if os.Args[3] == "prefix" {
 			if len(os.Args) < 5 {
 				fmt.Println("Uso: joss change db prefix [nuevo_prefijo]")
 				return

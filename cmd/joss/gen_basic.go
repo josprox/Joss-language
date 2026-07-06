@@ -37,7 +37,7 @@ func createModel(name string) {
 	// Fix: singularize first to avoid double pluralization
 	tableName := prefix + strings.ToLower(pluralize(singularize(name)))
 
-	content := fmt.Sprintf(`class %s extends GranMySQL {
+	content := fmt.Sprintf(`class %s extends GranDB {
     $tabla = "%s"
 }`, name, tableName)
 

@@ -26,6 +26,14 @@ func (p *Parser) parseExpression(precedence int) Expression {
 			continue
 		}
 
+		if p.curToken.Type == NEWLINE {
+			if !isExpressionContinuation(p.peekToken.Type) {
+				return leftExp
+			}
+			p.nextToken()
+			continue
+		}
+
 		if precedence >= p.peekPrecedence() {
 			return leftExp
 		}
@@ -45,7 +53,7 @@ func (p *Parser) parseExpression(precedence int) Expression {
 
 func isExpressionContinuation(t TokenType) bool {
 	switch t {
-	case ARROW, DOUBLE_COLON, DOT, LPAREN, LBRACKET, QUESTION, NULL_COALESCE,
+	case ARROW, DOUBLE_COLON, DOT, LBRACKET, QUESTION, NULL_COALESCE,
 		PLUS, MINUS, SLASH, ASTERISK, PERCENT, AND, OR, EQ, NOT_EQ, LT, GT, LTE, GTE,
 		SHIFT_LEFT, SHIFT_RIGHT, PIPE:
 		return true

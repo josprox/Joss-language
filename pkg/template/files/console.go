@@ -99,20 +99,20 @@ class ExampleController {
 
 		// Example model
 		filepath.Join(path, "app", "models", "ExampleModel.joss"): `// Modelo de Ejemplo
-class ExampleModel extends GranMySQL {
+class ExampleModel extends GranDB {
     
     Init constructor() {
         $this->tabla = "js_example"
     }
     
     function obtenerTodos() {
-        $db = new GranMySQL()
+        $db = new GranDB()
         $db->tabla = $this->tabla
         return $db->clasic("json")
     }
     
     function buscarPorId($id) {
-        $db = new GranMySQL()
+        $db = new GranDB()
         $db->tabla = $this->tabla
         $db->comparar = "id"
         $db->comparable = $id

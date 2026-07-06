@@ -210,6 +210,39 @@ func (r *Runtime) executeStrMethod(instance *Instance, method string, args []int
 			}
 		}
 		return string(runes[start:end])
+	case "indexOf":
+		if len(args) != 2 {
+			return int64(-1)
+		}
+		s, ok1 := args[0].(string)
+		substr, ok2 := args[1].(string)
+		if !ok1 || !ok2 {
+			return int64(-1)
+		}
+		byteIdx := strings.Index(s, substr)
+		if byteIdx == -1 {
+			return int64(-1)
+		}
+		return int64(len([]rune(s[:byteIdx])))
+	case "contains":
+		if len(args) != 2 {
+			return false
+		}
+		s, ok1 := args[0].(string)
+		substr, ok2 := args[1].(string)
+		if !ok1 || !ok2 {
+			return false
+		}
+		return strings.Contains(s, substr)
+	case "trim":
+		if len(args) != 1 {
+			return ""
+		}
+		s, ok := args[0].(string)
+		if !ok {
+			return ""
+		}
+		return strings.TrimSpace(s)
 	}
 	return nil
 }

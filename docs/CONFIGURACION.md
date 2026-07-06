@@ -183,7 +183,7 @@ Cron::schedule("backup_diario", "00:00", {
 
 // Limpiar logs antiguos
 Cron::schedule("limpiar_logs", "03:00", {
-    $db = new GranMySQL()
+    $db = new GranDB()
     $db->table("logs")
        ->where("created_at", "<", "30 days ago")
        ->delete()
@@ -253,6 +253,28 @@ joss change db sqlite # MySQL → SQLite
 ---
 
 ## Configuración de Correo
+
+### Migrar a Otro Servidor MySQL
+
+Para mover una aplicacion Joss desde la conexion actual hacia otro servidor MySQL compatible, usa:
+
+```bash
+joss change db migrate
+```
+
+El asistente solicita host, puerto, base de datos, usuario y contrasena. Si trabajas desde Git Bash/MINGW, CI o un entorno donde los prompts no consumen `Enter` correctamente, usa flags:
+
+```bash
+joss change db migrate --host=10.0.0.118 --port=3306 --database=mi_aplicacion --user=usuario --password=contrasena_segura
+```
+
+El comando prueba primero la conexion destino. Si la base de datos no existe y el usuario tiene permisos, la crea con `utf8mb4`. `env.joss` solo se actualiza cuando la migracion termina correctamente; antes de modificarlo, se crea un respaldo `env.joss.bak.YYYYMMDDHHMMSS`.
+
+`DB_HOST` puede guardar host y puerto juntos cuando sea necesario:
+
+```env
+DB_HOST="10.0.0.118:3306"
+```
 
 ### Gmail
 

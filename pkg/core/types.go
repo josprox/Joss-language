@@ -2,6 +2,7 @@ package core
 
 import (
 	"database/sql"
+	"encoding/json"
 
 	"github.com/jossecurity/joss/pkg/parser"
 )
@@ -51,6 +52,13 @@ type Runtime struct {
 type Instance struct {
 	Class  *parser.ClassStatement
 	Fields map[string]interface{}
+}
+
+func (i *Instance) MarshalJSON() ([]byte, error) {
+	if i == nil {
+		return []byte("null"), nil
+	}
+	return json.Marshal(i.Fields)
 }
 
 // BoundMethod represents a method bound to an instance
