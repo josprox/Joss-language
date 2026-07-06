@@ -396,8 +396,13 @@ func (r *Runtime) GetDB() *sql.DB {
 	} else {
 		// Default to MySQL
 		if host, ok := r.Env["DB_HOST"]; ok {
-			dsn = fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", r.Env["DB_USER"], r.Env["DB_PASS"], host, r.Env["DB_NAME"])
-			fmt.Printf("[Security] Conectando a MySQL: %s\n", host)
+			host = strings.TrimSpace(host)
+			targetHost := host
+			if !strings.Contains(host, ":") {
+				targetHost = host + ":3306"
+			}
+			dsn = fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true&multiStatements=true", r.Env["DB_USER"], r.Env["DB_PASS"], targetHost, r.Env["DB_NAME"])
+			fmt.Printf("[Security] Conectando a MySQL: %s\n", targetHost)
 		} else {
 			// No DB config found
 			return nil

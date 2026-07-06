@@ -154,6 +154,32 @@ func (r *Runtime) Dispatch(method, path string, reqData, sessData map[string]int
 			// Simple Bearer check
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenString == "" {
+				// Fallback to cookie joss_token from request cookies
+				if reqInst, ok := r.Variables["$__request"].(*Instance); ok {
+					if c, ok := reqInst.Fields["_cookies"].(map[string]interface{}); ok {
+						if val, k := c["joss_token"].(string); k && val != "" {
+							tokenString = val
+						}
+					}
+				}
+				if tokenString == "" {
+					if c, ok := reqData["_cookies"].(map[string]interface{}); ok {
+						if val, k := c["joss_token"].(string); k && val != "" {
+							tokenString = val
+						}
+					}
+				}
+				if tokenString == "" {
+					// Fallback to session user_token
+					if sessInst, ok := r.Variables["$__session"].(*Instance); ok {
+						if ut, ok := sessInst.Fields["user_token"].(string); ok && ut != "" {
+							tokenString = ut
+						}
+					}
+				}
+			}
+
+			if tokenString == "" {
 				return &Instance{Fields: map[string]interface{}{
 					"_type":  "JSON",
 					"status": 401,
@@ -193,6 +219,9 @@ func (r *Runtime) Dispatch(method, path string, reqData, sessData map[string]int
 					}
 					sessInst.Fields["user_email"] = claims["email"]
 					sessInst.Fields["user_name"] = claims["name"]
+					if role, ok := claims["role"].(string); ok {
+						sessInst.Fields["user_role"] = role
+					}
 				}
 			}
 
