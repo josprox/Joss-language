@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -43,15 +42,12 @@ func handleBrevoConfig() {
 		return
 	}
 
-	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Deseas activar BREVO_API? (y/n): ")
-	response, _ := reader.ReadString('\n')
-	response = strings.TrimSpace(strings.ToLower(response))
+	response := strings.ToLower(readLine())
 
 	if response == "y" || response == "yes" || response == "s" || response == "si" {
 		fmt.Print("Introduce tu Brevo API Key: ")
-		key, _ := reader.ReadString('\n')
-		key = strings.TrimSpace(key)
+		key := readLine()
 
 		if key == "" {
 			fmt.Println(i18n.Tr("brevoEmptyKeyError"))

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -110,6 +111,39 @@ func printHelp() {
 	fmt.Printf("  ai:activate             - %s\n", tr("IaActivate"))
 	fmt.Printf("  brevo:config            - %s\n", tr("brevoConfig"))
 	fmt.Printf("    --enable --api-key / --disable\n")
+	fmt.Printf("  backup                  - Realiza un backup (completo/parcial, cifrado, incremental)\n")
+	fmt.Printf("  backup:list             - Listar backups disponibles\n")
+	fmt.Printf("  backup:restore          - Restaurar un backup por ID\n")
+	fmt.Printf("  backup:verify           - Verificar integridad SHA-256 de un backup\n")
+	fmt.Printf("  backup:delete           - Eliminar permanentemente un backup\n")
+	fmt.Printf("  backup:providers        - Mostrar proveedores configurados\n")
+	fmt.Printf("  backup:test-provider    - Probar conexión a proveedor\n")
+	fmt.Printf("  backup:migrate          - Migración de base de datos y archivos a otro servidor\n")
+	fmt.Printf("  backup:config           - Configura de manera interactiva opciones generales o proveedores (local/gdrive/s3/webdav)\n")
 	fmt.Printf("  version                 - %s\n", tr("version"))
 	fmt.Printf("  help                    - %s\n", tr("helpPrint"))
+}
+
+// readLine reads a line of input from stdin in a platform-independent way, handling \r, \r\n and \n.
+func readLine() string {
+	reader := bufio.NewReader(os.Stdin)
+	var line []byte
+	for {
+		b, err := reader.ReadByte()
+		if err != nil {
+			break
+		}
+		if b == '\n' {
+			break
+		}
+		if b == '\r' {
+			next, err := reader.Peek(1)
+			if err == nil && next[0] == '\n' {
+				_, _ = reader.ReadByte()
+			}
+			break
+		}
+		line = append(line, b)
+	}
+	return strings.TrimSpace(string(line))
 }

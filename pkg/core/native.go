@@ -189,6 +189,13 @@ func (r *Runtime) RegisterNativeClasses() {
 	// Sitemap
 	r.registerNative("Sitemap", []string{"add", "generate"}, (*Runtime).executeSitemapMethod)
 	r.Variables["Sitemap"] = &Instance{Class: r.Classes["Sitemap"], Fields: make(map[string]interface{})}
+
+	// Backup
+	r.registerNative("Backup", []string{"create", "restore", "schedule", "list", "delete", "verify", "testProvider", "migrate"}, (*Runtime).executeBackupMethod)
+	r.Variables["Backup"] = &Instance{Class: r.Classes["Backup"], Fields: make(map[string]interface{})}
+
+	// BackupBuilder
+	r.registerNative("BackupBuilder", []string{"full", "files", "database", "differential", "incremental", "provider", "encrypt", "password", "at", "daily", "keep", "save", "run"}, (*Runtime).executeBackupBuilderMethod)
 }
 
 func (r *Runtime) executeNativeMethod(instance *Instance, method string, args []interface{}) interface{} {

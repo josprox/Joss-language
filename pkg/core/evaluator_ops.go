@@ -711,7 +711,7 @@ func (r *Runtime) evaluatePostfix(pe *parser.PostfixExpression) interface{} {
 
 func isNativeClass(name string) bool {
 	switch name {
-	case "Session", "Math", "Auth", "View", "Request", "Response", "Redirect", "Log", "System", "Router", "Security", "Server", "GranDB", "Stack", "Queue", "SmtpClient", "Cron", "Task", "WebSocket", "Redis":
+	case "Session", "Math", "Auth", "View", "Request", "Response", "Redirect", "Log", "System", "Router", "Security", "Server", "GranDB", "Stack", "Queue", "SmtpClient", "Cron", "Task", "WebSocket", "Redis", "Backup", "BackupBuilder":
 		return true
 	}
 	return false

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/rand"
 	"encoding/binary"
@@ -77,8 +78,8 @@ func buildWeb() {
 	includeNodeModules := false
 	if _, err := os.Stat("node_modules"); err == nil {
 		fmt.Print("¿Desea incluir 'node_modules' en el build? (y/n): ")
-		var response string
-		fmt.Scanln(&response)
+		reader := bufio.NewReader(os.Stdin)
+		response, _ := reader.ReadString('\n')
 		response = strings.ToLower(strings.TrimSpace(response))
 
 		if response == "y" || response == "s" || response == "si" || response == "yes" {
@@ -171,8 +172,9 @@ func buildProgram() {
 	fmt.Println("1. Windows")
 	fmt.Print("Opción: ")
 
-	var option string
-	fmt.Scanln(&option)
+	reader := bufio.NewReader(os.Stdin)
+	option, _ := reader.ReadString('\n')
+	option = strings.TrimSpace(option)
 
 	if option != "1" && option != "windows" {
 		fmt.Println("Solo Windows es soportado en esta versión pre-compilada.")

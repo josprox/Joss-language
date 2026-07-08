@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -9,7 +8,6 @@ import (
 )
 
 func activateAI() {
-	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Println(i18n.Tr("aiWizardTitle"))
 	fmt.Println("----------------------------------------")
@@ -23,8 +21,7 @@ func activateAI() {
 	fmt.Println(i18n.Tr("aiProviderGemini"))
 	fmt.Print(i18n.Tr("aiChooseOption"))
 
-	providerOption, _ := reader.ReadString('\n')
-	providerOption = strings.TrimSpace(providerOption)
+	providerOption := readLine()
 
 	var provider, modelDefault, apiKeyKey string
 
@@ -53,16 +50,14 @@ func activateAI() {
 
 	// 2. Selector de Modelo
 	fmt.Print(i18n.Tr("aiModelToUse", map[string]interface{}{"model": modelDefault}))
-	modelInput, _ := reader.ReadString('\n')
-	modelInput = strings.TrimSpace(modelInput)
+	modelInput := readLine()
 	if modelInput == "" {
 		modelInput = modelDefault
 	}
 
 	// 3. API Key
 	fmt.Print("\n" + i18n.Tr("aiEnterApiKey", map[string]interface{}{"provider": strings.ToUpper(provider), "key": apiKeyKey}))
-	apiKeyInput, _ := reader.ReadString('\n')
-	apiKeyInput = strings.TrimSpace(apiKeyInput)
+	apiKeyInput := readLine()
 
 	if apiKeyInput == "" {
 		fmt.Println(i18n.Tr("aiNoApiKeyWarning"))

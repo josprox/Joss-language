@@ -356,6 +356,13 @@ func reloadApp(changedFile string) {
 			loadFile(apiRoutesPath)
 		}
 
+		// Load Cron Configuration (config/cron.joss)
+		cronPath := filepath.Join("config", "cron.joss")
+		if existsFile(cronPath) {
+			currentRuntime.CurrentSource = "cron"
+			loadFile(cronPath)
+		}
+
 		notifyClients()
 	}
 }

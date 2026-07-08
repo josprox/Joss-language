@@ -16,20 +16,25 @@ import (
 )
 
 func main() {
-	// Listener global en background para terminar con la tecla "q"
-	go func() {
-		reader := bufio.NewReader(os.Stdin)
-		for {
-			text, err := reader.ReadString('\n')
-			if err != nil {
-				return
-			}
-			if strings.TrimSpace(text) == "q" {
-				fmt.Println("\n[Joss] Terminando ejecucion por peticion del usuario (tecla 'q')...")
-				os.Exit(0)
-			}
+	if len(os.Args) >= 2 {
+		cmd := os.Args[1]
+		if cmd == "server" || cmd == "run" || cmd == "program" {
+			// Listener global en background para terminar con la tecla "q"
+			go func() {
+				reader := bufio.NewReader(os.Stdin)
+				for {
+					text, err := reader.ReadString('\n')
+					if err != nil {
+						return
+					}
+					if strings.TrimSpace(text) == "q" {
+						fmt.Println("\n[Joss] Terminando ejecucion por peticion del usuario (tecla 'q')...")
+						os.Exit(0)
+					}
+				}
+			}()
 		}
-	}()
+	}
 
 	if len(os.Args) < 2 {
 		printHelp()
@@ -188,6 +193,8 @@ func main() {
 			targetEngine := os.Args[3]
 			changeDatabaseEngine(targetEngine)
 		}
+	case "backup", "backup:list", "backup:restore", "backup:verify", "backup:delete", "backup:schedule", "backup:providers", "backup:test-provider", "backup:migrate", "backup:config":
+		handleBackupCli(os.Args[1:])
 	case "help":
 		printHelp()
 	default:
