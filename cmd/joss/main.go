@@ -13,14 +13,43 @@ import (
 	"github.com/jossecurity/joss/pkg/parser"
 	"github.com/jossecurity/joss/pkg/template"
 	"github.com/jossecurity/joss/pkg/version"
+	"golang.org/x/term"
 )
 
 func main() {
 	if len(os.Args) >= 2 {
 		cmd := os.Args[1]
 		if cmd == "server" || cmd == "run" || cmd == "program" {
-			// Listener global en background para terminar con la tecla "q"
+			// Listener global en background para terminar con la tecla "q" sin requerir Enter
 			go func() {
+				fd := int(os.Stdin.Fd())
+				if term.IsTerminal(fd) {
+					state, err := term.MakeRaw(fd)
+					if err == nil {
+						defer term.Restore(fd, state)
+						var buf [1]byte
+						for {
+							n, err := os.Stdin.Read(buf[:])
+							if err != nil || n == 0 {
+								break
+							}
+							char := buf[0]
+							// Si se presiona 'q' o 'Q', salimos
+							if char == 'q' || char == 'Q' {
+								term.Restore(fd, state)
+								fmt.Println("\n[Joss] Terminando ejecución por petición del usuario (tecla 'q')...")
+								os.Exit(0)
+							}
+							// Soportar Ctrl+C (ASCII 3) para interrupción estándar
+							if char == 3 {
+								term.Restore(fd, state)
+								os.Exit(0)
+							}
+						}
+					}
+				}
+
+				// Fallback si no es una terminal o falla MakeRaw
 				reader := bufio.NewReader(os.Stdin)
 				for {
 					text, err := reader.ReadString('\n')
@@ -28,7 +57,7 @@ func main() {
 						return
 					}
 					if strings.TrimSpace(text) == "q" {
-						fmt.Println("\n[Joss] Terminando ejecucion por peticion del usuario (tecla 'q')...")
+						fmt.Println("\n[Joss] Terminando ejecución por petición del usuario (tecla 'q')...")
 						os.Exit(0)
 					}
 				}
