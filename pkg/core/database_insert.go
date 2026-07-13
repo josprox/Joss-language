@@ -46,16 +46,21 @@ func (r *Runtime) insertFromMap(table string, data map[string]interface{}) inter
 	placeholders := []string{}
 	bindings := []interface{}{}
 
-	// Auto-add timestamps if not present
-	if _, hasCreatedAt := data["created_at"]; !hasCreatedAt {
-		data["created_at"] = "CURRENT_TIMESTAMP"
+	// Preserve the caller's map and only add timestamps that exist in the
+	// physical table. GranDB also supports legacy/external schemas.
+	insertData := make(map[string]interface{}, len(data)+2)
+	for key, value := range data {
+		insertData[key] = value
 	}
-	if _, hasUpdatedAt := data["updated_at"]; !hasUpdatedAt {
-		data["updated_at"] = "CURRENT_TIMESTAMP"
+	if _, hasCreatedAt := insertData["created_at"]; !hasCreatedAt && r.tableHasColumn(table, "created_at") {
+		insertData["created_at"] = "CURRENT_TIMESTAMP"
+	}
+	if _, hasUpdatedAt := insertData["updated_at"]; !hasUpdatedAt && r.tableHasColumn(table, "updated_at") {
+		insertData["updated_at"] = "CURRENT_TIMESTAMP"
 	}
 
 	// Build column names, placeholders, and bindings
-	for colName, value := range data {
+	for colName, value := range insertData {
 		// Skip unsupported types (like maps)
 		if _, ok := value.(map[string]interface{}); ok {
 			continue

@@ -16,6 +16,7 @@ func (r *Runtime) EnsureNotificationTables() {
 	}
 	pushDevicesTable := prefix + "push_devices"
 	notificationsTable := prefix + "notifications"
+	deliveriesTable := prefix + "notification_deliveries"
 
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
@@ -50,6 +51,11 @@ func (r *Runtime) EnsureNotificationTables() {
 		)`, pushDevicesTable)
 	}
 	r.GetDB().Exec(queryPushDevices)
+	if dbDriver != "sqlite" {
+		// Existing installations originally used VARCHAR(255), which is too
+		// small for some modern FCM registration tokens.
+		_, _ = r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s MODIFY device_token VARCHAR(512) NOT NULL", pushDevicesTable))
+	}
 
 	// 2. Create Notifications Table (Queue and History)
 	var queryNotifications string
@@ -81,4 +87,35 @@ func (r *Runtime) EnsureNotificationTables() {
 		)`, notificationsTable)
 	}
 	r.GetDB().Exec(queryNotifications)
+
+	var queryDeliveries string
+	if dbDriver == "sqlite" {
+		queryDeliveries = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			notification_id INTEGER NOT NULL,
+			device_id INTEGER NOT NULL,
+			status VARCHAR(20) DEFAULT 'queued',
+			attempts INTEGER DEFAULT 0,
+			provider_message_id VARCHAR(500),
+			last_error TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE(notification_id, device_id)
+		)`, deliveriesTable)
+	} else {
+		queryDeliveries = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			notification_id INT NOT NULL,
+			device_id INT NOT NULL,
+			status VARCHAR(20) DEFAULT 'queued',
+			attempts INT DEFAULT 0,
+			provider_message_id VARCHAR(500),
+			last_error TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			UNIQUE KEY notification_device_unique (notification_id, device_id)
+		)`, deliveriesTable)
+	}
+	r.GetDB().Exec(queryDeliveries)
+	r.startFCMOutboxDispatcher()
 }
