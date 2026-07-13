@@ -168,6 +168,7 @@ type notificationDispatchRow struct {
 	NotificationID int64
 	DeviceID       int64
 	DeviceToken    string
+	AppID          string
 	Title          string
 	Message        string
 	Type           string
@@ -212,7 +213,7 @@ func dispatchFCMOutbox(db *sql.DB, prefix string, account *fcmServiceAccount) {
 	notificationsTable := quoteIdentifier(prefix + "notifications")
 	devicesTable := quoteIdentifier(prefix + "push_devices")
 	deliveriesTable := quoteIdentifier(prefix + "notification_deliveries")
-	query := fmt.Sprintf(`SELECT n.id, d.id, d.device_token, n.title, n.message, n.type,
+	query := fmt.Sprintf(`SELECT n.id, d.id, d.device_token, n.app_id, n.title, n.message, n.type,
 		dl.id, dl.attempts
 		FROM %s n
 		JOIN %s d ON d.user_id = n.user_id AND d.app_id = n.app_id AND d.is_active = 1
@@ -229,7 +230,7 @@ func dispatchFCMOutbox(db *sql.DB, prefix string, account *fcmServiceAccount) {
 	var pending []notificationDispatchRow
 	for rows.Next() {
 		var row notificationDispatchRow
-		if err := rows.Scan(&row.NotificationID, &row.DeviceID, &row.DeviceToken, &row.Title, &row.Message, &row.Type, &row.DeliveryID, &row.Attempts); err == nil {
+		if err := rows.Scan(&row.NotificationID, &row.DeviceID, &row.DeviceToken, &row.AppID, &row.Title, &row.Message, &row.Type, &row.DeliveryID, &row.Attempts); err == nil {
 			pending = append(pending, row)
 		}
 	}
@@ -254,7 +255,7 @@ func dispatchFCMOutbox(db *sql.DB, prefix string, account *fcmServiceAccount) {
 			"title":   row.Title,
 			"message": row.Message,
 			"type":    row.Type,
-			"app_id":  "joss_red",
+			"app_id":  row.AppID,
 		})
 		cancel()
 		if sendErr == nil {
