@@ -35,16 +35,21 @@ func (r *Runtime) executeUpdateMethod(instance *Instance, args []interface{}) in
 		return false
 	}
 
-	// Auto-update timestamp if not present
-	if _, hasUpdatedAt := data["updated_at"]; !hasUpdatedAt {
-		data["updated_at"] = "CURRENT_TIMESTAMP"
+	// Do not assume every table has Laravel-style timestamps. Older and
+	// externally-managed tables are valid GranDB targets too.
+	updateData := make(map[string]interface{}, len(data)+1)
+	for key, value := range data {
+		updateData[key] = value
+	}
+	if _, hasUpdatedAt := updateData["updated_at"]; !hasUpdatedAt && r.tableHasColumn(table, "updated_at") {
+		updateData["updated_at"] = "CURRENT_TIMESTAMP"
 	}
 
 	// Build SET clause
 	setClauses := []string{}
 	updateBindings := []interface{}{}
 
-	for colName, value := range data {
+	for colName, value := range updateData {
 		// Check if value is a SQL function
 		if strVal, ok := value.(string); ok && isSQLFunction(strVal) {
 			setClauses = append(setClauses, fmt.Sprintf("%s = %s", quoteIdentifier(colName), strVal))
@@ -84,4 +89,31 @@ func (r *Runtime) executeUpdateMethod(instance *Instance, args []interface{}) in
 	fmt.Printf("[GranDB] Rows updated: %d\n", rowsAffected)
 
 	return true
+}
+
+// tableHasColumn asks the active database for the real result metadata. The
+// LIMIT 0 query works with both SQLite and MySQL and avoids driver-specific
+// schema commands.
+func (r *Runtime) tableHasColumn(table, column string) bool {
+	if r.GetDB() == nil || strings.TrimSpace(table) == "" {
+		return false
+	}
+
+	rows, err := r.GetDB().Query(fmt.Sprintf("SELECT * FROM %s LIMIT 0", table))
+	if err != nil {
+		fmt.Printf("[GranDB] No se pudo inspeccionar columnas de %s: %v\n", table, err)
+		return false
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return false
+	}
+	for _, current := range columns {
+		if strings.EqualFold(current, column) {
+			return true
+		}
+	}
+	return false
 }
