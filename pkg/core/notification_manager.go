@@ -34,6 +34,7 @@ func (r *Runtime) EnsureNotificationTables() {
 			app_id VARCHAR(100),
 			language VARCHAR(10) DEFAULT 'es',
 			is_active INTEGER DEFAULT 1,
+			notifications_enabled INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`, pushDevicesTable)
@@ -46,6 +47,7 @@ func (r *Runtime) EnsureNotificationTables() {
 			app_id VARCHAR(100),
 			language VARCHAR(10) DEFAULT 'es',
 			is_active TINYINT(1) DEFAULT 1,
+			notifications_enabled TINYINT(1) DEFAULT 0,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 		)`, pushDevicesTable)
@@ -55,6 +57,11 @@ func (r *Runtime) EnsureNotificationTables() {
 		// Existing installations originally used VARCHAR(255), which is too
 		// small for some modern FCM registration tokens.
 		_, _ = r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s MODIFY device_token VARCHAR(512) NOT NULL", pushDevicesTable))
+	}
+	if dbDriver == "sqlite" {
+		_, _ = r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN notifications_enabled INTEGER DEFAULT 0", pushDevicesTable))
+	} else {
+		_, _ = r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN notifications_enabled TINYINT(1) DEFAULT 0", pushDevicesTable))
 	}
 
 	// 2. Create Notifications Table (Queue and History)
@@ -69,6 +76,9 @@ func (r *Runtime) EnsureNotificationTables() {
 			html_content TEXT,
 			type VARCHAR(20),
 			status VARCHAR(20) DEFAULT 'pending',
+			delivery_mode VARCHAR(20) DEFAULT 'durable',
+			delivery_window VARCHAR(30) DEFAULT 'until_expiration',
+			expires_at DATETIME,
 			sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			opened_at DATETIME
 		)`, notificationsTable)
@@ -82,11 +92,17 @@ func (r *Runtime) EnsureNotificationTables() {
 			html_content TEXT,
 			type VARCHAR(20),
 			status VARCHAR(20) DEFAULT 'pending',
+			delivery_mode VARCHAR(20) DEFAULT 'durable',
+			delivery_window VARCHAR(30) DEFAULT 'until_expiration',
+			expires_at DATETIME,
 			sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			opened_at DATETIME
 		)`, notificationsTable)
 	}
 	r.GetDB().Exec(queryNotifications)
+	_, _ = r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN delivery_mode VARCHAR(20) DEFAULT 'durable'", notificationsTable))
+	_, _ = r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN delivery_window VARCHAR(30) DEFAULT 'until_expiration'", notificationsTable))
+	_, _ = r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN expires_at DATETIME", notificationsTable))
 
 	var queryDeliveries string
 	if dbDriver == "sqlite" {

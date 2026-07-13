@@ -119,20 +119,46 @@ func fcmAccessToken(ctx context.Context, account *fcmServiceAccount) (string, er
 	return fcmTokens.accessToken, nil
 }
 
-func sendFCMMessage(ctx context.Context, account *fcmServiceAccount, deviceToken string, data map[string]string) (string, error) {
+func sendFCMMessage(ctx context.Context, account *fcmServiceAccount, deviceToken string, data map[string]string, ttlSeconds int64, expiresAt sql.NullTime) (string, error) {
 	accessToken, err := fcmAccessToken(ctx, account)
 	if err != nil {
 		return "", err
 	}
+	if ttlSeconds < 0 {
+		ttlSeconds = 0
+	}
+	if ttlSeconds > 2419200 {
+		ttlSeconds = 2419200
+	}
+	message := map[string]interface{}{
+		"token": deviceToken,
+		"data":  data,
+		"android": map[string]interface{}{
+			"priority": "HIGH",
+			"ttl":      fmt.Sprintf("%ds", ttlSeconds),
+		},
+	}
+	if expiresAt.Valid {
+		expirationUnix := expiresAt.Time.Unix()
+		if ttlSeconds == 0 {
+			expirationUnix = 0
+		}
+		message["apns"] = map[string]interface{}{
+			"headers": map[string]string{
+				"apns-expiration": fmt.Sprintf("%d", expirationUnix),
+				"apns-priority":   "10",
+			},
+		}
+	}
 	payload := map[string]interface{}{
 		"message": map[string]interface{}{
-			"token": deviceToken,
-			"data":  data,
-			"android": map[string]interface{}{
-				"priority": "HIGH",
-				"ttl":      "86400s",
-			},
+			"token":   message["token"],
+			"data":    message["data"],
+			"android": message["android"],
 		},
+	}
+	if apns, ok := message["apns"]; ok {
+		payload["message"].(map[string]interface{})["apns"] = apns
 	}
 	body, _ := json.Marshal(payload)
 	endpoint := fmt.Sprintf("https://fcm.googleapis.com/v1/projects/%s/messages:send", url.PathEscape(account.ProjectID))
@@ -172,6 +198,9 @@ type notificationDispatchRow struct {
 	Title          string
 	Message        string
 	Type           string
+	DeliveryMode   string
+	DeliveryWindow string
+	ExpiresAt      sql.NullTime
 	DeliveryID     sql.NullInt64
 	Attempts       sql.NullInt64
 }
@@ -213,15 +242,20 @@ func dispatchFCMOutbox(db *sql.DB, prefix string, account *fcmServiceAccount) {
 	notificationsTable := quoteIdentifier(prefix + "notifications")
 	devicesTable := quoteIdentifier(prefix + "push_devices")
 	deliveriesTable := quoteIdentifier(prefix + "notification_deliveries")
+	nowUTC := time.Now().UTC()
+	_, _ = db.Exec(fmt.Sprintf("UPDATE %s SET status = 'expired' WHERE status = 'pending' AND delivery_mode = 'temporary' AND expires_at IS NOT NULL AND expires_at <= ?", notificationsTable), nowUTC)
 	query := fmt.Sprintf(`SELECT n.id, d.id, d.device_token, n.app_id, n.title, n.message, n.type,
+		n.delivery_mode, n.delivery_window, n.expires_at,
 		dl.id, dl.attempts
 		FROM %s n
 		JOIN %s d ON d.user_id = n.user_id AND d.app_id = n.app_id AND d.is_active = 1
+			AND (n.delivery_mode = 'durable' OR d.notifications_enabled = 1)
 		LEFT JOIN %s dl ON dl.notification_id = n.id AND dl.device_id = d.id
 		WHERE n.status = 'pending'
-		AND (dl.id IS NULL OR (dl.status = 'failed' AND dl.attempts < 5))
+		AND (n.delivery_mode = 'durable' OR (n.expires_at IS NOT NULL AND n.expires_at > ?))
+		AND (dl.id IS NULL OR (n.delivery_mode = 'durable' AND dl.status = 'failed' AND dl.attempts < 5))
 		LIMIT 100`, notificationsTable, devicesTable, deliveriesTable)
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, nowUTC)
 	if err != nil {
 		return
 	}
@@ -230,11 +264,15 @@ func dispatchFCMOutbox(db *sql.DB, prefix string, account *fcmServiceAccount) {
 	var pending []notificationDispatchRow
 	for rows.Next() {
 		var row notificationDispatchRow
-		if err := rows.Scan(&row.NotificationID, &row.DeviceID, &row.DeviceToken, &row.AppID, &row.Title, &row.Message, &row.Type, &row.DeliveryID, &row.Attempts); err == nil {
+		if err := rows.Scan(&row.NotificationID, &row.DeviceID, &row.DeviceToken, &row.AppID, &row.Title, &row.Message, &row.Type, &row.DeliveryMode, &row.DeliveryWindow, &row.ExpiresAt, &row.DeliveryID, &row.Attempts); err == nil {
 			pending = append(pending, row)
 		}
 	}
 	for _, row := range pending {
+		if row.DeliveryMode == "temporary" && row.ExpiresAt.Valid && !row.ExpiresAt.Time.After(time.Now().UTC()) {
+			_, _ = db.Exec(fmt.Sprintf("UPDATE %s SET status = 'expired' WHERE id = ? AND status = 'pending'", notificationsTable), row.NotificationID)
+			continue
+		}
 		deliveryID := row.DeliveryID.Int64
 		attempts := row.Attempts.Int64 + 1
 		if !row.DeliveryID.Valid {
@@ -250,16 +288,33 @@ func dispatchFCMOutbox(db *sql.DB, prefix string, account *fcmServiceAccount) {
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		ttlSeconds := int64(86400)
+		expiresAtText := ""
+		if row.ExpiresAt.Valid {
+			expiresAtText = row.ExpiresAt.Time.UTC().Format(time.RFC3339)
+		}
+		if row.DeliveryMode == "temporary" {
+			ttlSeconds = 0
+			if row.DeliveryWindow == "until_expiration" && row.ExpiresAt.Valid {
+				ttlSeconds = int64(time.Until(row.ExpiresAt.Time).Seconds())
+				if ttlSeconds < 0 {
+					ttlSeconds = 0
+				}
+			}
+		}
 		providerID, sendErr := sendFCMMessage(ctx, account, row.DeviceToken, map[string]string{
-			"id":      fmt.Sprintf("%d", row.NotificationID),
-			"title":   row.Title,
-			"message": row.Message,
-			"type":    row.Type,
-			"app_id":  row.AppID,
-		})
+			"id":            fmt.Sprintf("%d", row.NotificationID),
+			"title":         row.Title,
+			"message":       row.Message,
+			"type":          row.Type,
+			"app_id":        row.AppID,
+			"delivery_mode": row.DeliveryMode,
+			"expires_at":    expiresAtText,
+		}, ttlSeconds, row.ExpiresAt)
 		cancel()
 		if sendErr == nil {
 			_, _ = db.Exec(fmt.Sprintf("UPDATE %s SET status = 'dispatched', provider_message_id = ?, last_error = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", deliveriesTable), providerID, deliveryID)
+			completeTemporaryNotification(db, notificationsTable, devicesTable, deliveriesTable, row)
 			continue
 		}
 		errorText := sendErr.Error()
@@ -267,5 +322,21 @@ func dispatchFCMOutbox(db *sql.DB, prefix string, account *fcmServiceAccount) {
 		if strings.Contains(errorText, "UNREGISTERED") || strings.Contains(errorText, "registration-token-not-registered") {
 			_, _ = db.Exec(fmt.Sprintf("UPDATE %s SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", devicesTable), row.DeviceID)
 		}
+		completeTemporaryNotification(db, notificationsTable, devicesTable, deliveriesTable, row)
+	}
+}
+
+func completeTemporaryNotification(db *sql.DB, notificationsTable, devicesTable, deliveriesTable string, row notificationDispatchRow) {
+	if row.DeliveryMode != "temporary" {
+		return
+	}
+	query := fmt.Sprintf(`SELECT COUNT(*)
+		FROM %s d
+		JOIN %s n ON n.id = ? AND d.user_id = n.user_id AND d.app_id = n.app_id
+		LEFT JOIN %s dl ON dl.notification_id = n.id AND dl.device_id = d.id
+		WHERE d.is_active = 1 AND d.notifications_enabled = 1 AND dl.id IS NULL`, devicesTable, notificationsTable, deliveriesTable)
+	var remaining int
+	if err := db.QueryRow(query, row.NotificationID).Scan(&remaining); err == nil && remaining == 0 {
+		_, _ = db.Exec(fmt.Sprintf("UPDATE %s SET status = 'sent' WHERE id = ? AND delivery_mode = 'temporary' AND status = 'pending'", notificationsTable), row.NotificationID)
 	}
 }
