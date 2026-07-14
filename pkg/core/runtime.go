@@ -426,12 +426,9 @@ func (r *Runtime) GetDB() *sql.DB {
 		}
 
 		r.EnsureCronTable()
-		r.EnsureBackupSettingsTable()
-		r.EnsureBackupLogsTable()
 		r.EnsureMigrationTable()
 		r.EnsureAuthTables()
 		r.EnsureMFATables()
-		r.EnsureNotificationTables()
 
 		// Connection Pooling Settings
 		db.SetMaxOpenConns(25)

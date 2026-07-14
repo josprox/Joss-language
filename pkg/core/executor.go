@@ -1,8 +1,12 @@
 package core
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/jossecurity/joss/pkg/parser"
 )
@@ -180,6 +184,83 @@ func (r *Runtime) executeContinue(cs *parser.ContinueStatement) interface{} {
 
 func (r *Runtime) executeImport(stmt *parser.ImportStatement) interface{} {
 	filename := stmt.Path
+
+	// Handle Package Import
+	if strings.HasPrefix(filename, "package:") {
+		pkgName := strings.TrimPrefix(filename, "package:")
+		pkgDir := filepath.Join("plugins", pkgName)
+		dirs, err := os.ReadDir(pkgDir)
+		if err != nil {
+			pkgDir = filepath.Join("..", "plugins", pkgName)
+			dirs, err = os.ReadDir(pkgDir)
+			if err != nil {
+				// Fallback to local ejemplos directory for development testing
+				pkgDir = filepath.Join("ejemplos", "plugins", pkgName)
+				dirs, err = os.ReadDir(pkgDir)
+				if err != nil {
+					fmt.Printf("Error: El paquete '%s' no está instalado. Ejecute 'joss pub add %s'\n", pkgName, pkgName)
+					return nil
+				}
+			}
+		}
+
+		var versionDir string
+		for _, d := range dirs {
+			if d.IsDir() {
+				versionDir = d.Name()
+				break
+			}
+		}
+
+		if versionDir == "" {
+			// If no version subfolder (e.g. raw dev folder), load from root dev folder
+			versionDir = "."
+		}
+
+		pkgPath := filepath.Join(pkgDir, versionDir)
+		jpFile := filepath.Join(pkgPath, pkgName+".jp")
+
+		// 1. Load from compiled .jp package if exists
+		if _, err := os.Stat(jpFile); err == nil {
+			data, err := os.ReadFile(jpFile)
+			if err != nil {
+				fmt.Printf("Error al leer paquete compilado '%s': %v\n", jpFile, err)
+				return nil
+			}
+
+			var files map[string][]byte
+			buf := bytes.NewBuffer(data)
+			dec := gob.NewDecoder(buf)
+			if err := dec.Decode(&files); err != nil {
+				fmt.Printf("Error al decodificar paquete compilado '%s': %v\n", jpFile, err)
+				return nil
+			}
+
+			pluginCode, ok := files["src/plugin.joss"]
+			if !ok {
+				fmt.Printf("Error: No se encontró 'src/plugin.joss' dentro del paquete compilado '%s'\n", pkgName)
+				return nil
+			}
+
+			l := parser.NewLexer(string(pluginCode))
+			p := parser.NewParser(l)
+			program := p.ParseProgram()
+			if len(p.Errors()) > 0 {
+				fmt.Printf("Error de parseo en paquete compilado '%s':\n", pkgName)
+				for _, msg := range p.Errors() {
+					fmt.Println("\t" + msg)
+				}
+				return nil
+			}
+			for _, s := range program.Statements {
+				r.executeStatement(s)
+			}
+			return nil
+		}
+
+		// 2. Fallback to raw folder loading
+		filename = filepath.Join(pkgPath, "src", "plugin.joss")
+	}
 
 	// Handle Global Import
 	if filename == "global" {

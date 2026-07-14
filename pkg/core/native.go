@@ -55,10 +55,6 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.registerNative("MFA", []string{"verify", "policy", "challenge", "generateTOTP", "verifyTOTP", "generateRecoveryCodes", "verifyRecoveryCode"}, (*Runtime).executeMFAMethod)
 	r.Variables["MFA"] = &Instance{Class: r.Classes["MFA"], Fields: make(map[string]interface{})}
 
-	// Notify
-	r.registerNative("Notify", []string{"app", "apps", "segment", "user", "title", "message", "html", "inApp", "schedule", "send"}, (*Runtime).executeNotifyMethod)
-	r.Variables["Notify"] = &Instance{Class: r.Classes["Notify"], Fields: make(map[string]interface{})}
-
 	// TwoFactor
 	r.registerNative("TwoFactor", []string{"verify", "required", "challenge"}, (*Runtime).executeTwoFactorMethod)
 	r.Variables["TwoFactor"] = &Instance{Class: r.Classes["TwoFactor"], Fields: make(map[string]interface{})}
@@ -66,9 +62,6 @@ func (r *Runtime) RegisterNativeClasses() {
 	// System
 	r.registerNative("System", []string{"env", "Run", "load_driver", "log", "sleep", "now"}, (*Runtime).executeSystemMethod)
 	r.Variables["System"] = &Instance{Class: r.Classes["System"], Fields: make(map[string]interface{})}
-
-	// SmtpClient
-	r.registerNative("SmtpClient", []string{"auth", "secure", "send", "timeout", "lastError"}, (*Runtime).executeSmtpClientMethod)
 
 	// Cron
 	r.registerNative("Cron", []string{"schedule"}, (*Runtime).executeCronMethod)
@@ -117,7 +110,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["Redis"] = &Instance{Class: r.Classes["Redis"], Fields: make(map[string]interface{})}
 
 	// Migration
-	r.registerNative("Migration", []string{}, nil) // No direct native method handler probably, or handled via Schema?
+	r.registerNative("Migration", []string{}, nil)
 
 	// Middleware
 	r.registerNative("Middleware", []string{}, nil)
@@ -158,19 +151,12 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.registerNative("Markdown", []string{"toHtml", "readFile"}, (*Runtime).executeMarkdownMethod)
 	r.Variables["Markdown"] = &Instance{Class: r.Classes["Markdown"], Fields: make(map[string]interface{})}
 
-	// AI (Native)
-	r.registerNative("AI", []string{"chat", "stream", "client"}, (*Runtime).executeAIMethod)
-	r.Variables["AI"] = &Instance{Class: r.Classes["AI"], Fields: make(map[string]interface{})}
-
 	// Cache (Native)
 	r.registerNative("Cache", []string{"put", "get", "has", "forget"}, (*Runtime).executeCacheMethod)
 	r.Variables["Cache"] = &Instance{Class: r.Classes["Cache"], Fields: make(map[string]interface{})}
 
 	// Stream (Native - Instantiated by Server)
 	r.registerNative("Stream", []string{"send", "close"}, (*Runtime).executeStreamMethod)
-
-	// ChatClient (Fluent AI)
-	r.registerNative("ChatClient", []string{"user", "system", "prompt", "assistant", "call", "stream", "streamTo"}, (*Runtime).executeChatClientMethod)
 
 	// Process (Native Execution)
 	r.registerNative("Process", []string{"constructor", "start", "wait", "kill", "pid", "stdin", "stdout_chan", "stderr_chan"}, (*Runtime).executeProcessMethod)
@@ -189,13 +175,6 @@ func (r *Runtime) RegisterNativeClasses() {
 	// Sitemap
 	r.registerNative("Sitemap", []string{"add", "generate"}, (*Runtime).executeSitemapMethod)
 	r.Variables["Sitemap"] = &Instance{Class: r.Classes["Sitemap"], Fields: make(map[string]interface{})}
-
-	// Backup
-	r.registerNative("Backup", []string{"create", "restore", "schedule", "list", "delete", "verify", "testProvider", "migrate"}, (*Runtime).executeBackupMethod)
-	r.Variables["Backup"] = &Instance{Class: r.Classes["Backup"], Fields: make(map[string]interface{})}
-
-	// BackupBuilder
-	r.registerNative("BackupBuilder", []string{"full", "files", "database", "differential", "incremental", "provider", "encrypt", "password", "at", "daily", "keep", "save", "run"}, (*Runtime).executeBackupBuilderMethod)
 }
 
 func (r *Runtime) executeNativeMethod(instance *Instance, method string, args []interface{}) interface{} {

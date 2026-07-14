@@ -5,10 +5,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -224,55 +222,9 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Interceptor de Migración Backup / Restore Site-to-Site
+	// Interceptor de Migración Backup / Restore Site-to-Site (Plugin Requerido)
 	if r.URL.Path == "/api/backup/migrate/receive" && r.Method == "POST" {
-		migrationToken := rt.Env["MIGRATION_TOKEN"]
-		if migrationToken == "" {
-			http.Error(w, "Migración deshabilitada. MIGRATION_TOKEN no configurado.", http.StatusForbidden)
-			return
-		}
-
-		authHeader := r.Header.Get("Authorization")
-		expectedAuth := "Bearer " + migrationToken
-		if authHeader != expectedAuth {
-			http.Error(w, "No autorizado. Token de migración inválido.", http.StatusUnauthorized)
-			return
-		}
-
-		// Save the uploaded body into a temporary file
-		tempFile, err := os.CreateTemp("", "migration_*.zip")
-		if err != nil {
-			http.Error(w, "Error creando archivo temporal en destino: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer os.Remove(tempFile.Name())
-		defer tempFile.Close()
-
-		_, err = io.Copy(tempFile, r.Body)
-		if err != nil {
-			http.Error(w, "Error escribiendo archivo recibido: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-		tempFile.Close()
-
-		// Perform full restore using the runtime method
-		os.MkdirAll("storage/backups", 0755)
-		destZipPath := filepath.Join("storage", "backups", "migration_latest.zip")
-		if errCopy := rt.CopyFile(tempFile.Name(), destZipPath); errCopy != nil {
-			http.Error(w, "Error guardando backup de migración: "+errCopy.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer os.Remove(destZipPath)
-
-		errRestore := rt.PerformRestore("migration_latest", "full", "local", "")
-		if errRestore != nil {
-			http.Error(w, "Error restaurando backup en migración: "+errRestore.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{"success":true,"message":"Migración completada exitosamente en el destino."}`)
+		http.Error(w, "El sistema de backups nativo ha sido removido y extraído al plugin 'joss_backup'. Instala el plugin para usar esta característica.", http.StatusNotImplemented)
 		return
 	}
 

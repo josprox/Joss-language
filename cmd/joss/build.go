@@ -487,3 +487,81 @@ func getEnvPort(envPath string) string {
 	}
 	return ""
 }
+
+func buildPackage(pkgPath string) {
+	fmt.Printf("[Package Build] Iniciando compilación de paquete en '%s'...\n", pkgPath)
+
+	// Validate path exists
+	info, err := os.Stat(pkgPath)
+	if err != nil || !info.IsDir() {
+		fmt.Printf("Error: La ruta '%s' no es un directorio válido\n", pkgPath)
+		return
+	}
+
+	// Read joss.yaml manifest first to check package validity
+	manifestPath := filepath.Join(pkgPath, "joss.yaml")
+	if _, err := os.Stat(manifestPath); os.IsNotExist(err) {
+		fmt.Printf("Error: Falta manifiesto 'joss.yaml' en '%s'\n", pkgPath)
+		return
+	}
+
+	// Pack files
+	files := make(map[string][]byte)
+	err = filepath.Walk(pkgPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		
+		// Skip .git folders to avoid packing credentials
+		if strings.Contains(path, "/.git/") || strings.Contains(path, "\\.git\\") || strings.HasSuffix(path, ".git") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Skip output package file
+		if strings.HasSuffix(path, ".jp") {
+			return nil
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		// Read file contents
+		data, err := os.ReadFile(path)
+		if err == nil {
+			// Get path relative to the package folder
+			relPath, err := filepath.Rel(pkgPath, path)
+			if err == nil {
+				files[filepath.ToSlash(relPath)] = data
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("Error leyendo archivos del paquete: %v\n", err)
+		return
+	}
+
+	// GOB encode files
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	if err := enc.Encode(files); err != nil {
+		fmt.Printf("Error al codificar archivos del paquete: %v\n", err)
+		return
+	}
+
+	// Target package output filename: package_name.jp
+	pkgName := filepath.Base(pkgPath)
+	outPath := filepath.Join(pkgPath, pkgName+".jp")
+
+	if err := os.WriteFile(outPath, buf.Bytes(), 0644); err != nil {
+		fmt.Printf("Error al escribir el archivo compilado del paquete: %v\n", err)
+		return
+	}
+
+	fmt.Printf("[Package Build] ¡Compilación exitosa! Archivo generado: %s\n", outPath)
+}

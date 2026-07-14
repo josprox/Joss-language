@@ -62,5 +62,18 @@ OCI_PASSPHRASE=""
 		filepath.Join(path, "config", "reglas.joss"): fmt.Sprintf(`// Constantes Globales
 const string APP_NAME = "JosSecurity Enterprise"
 const string APP_VERSION = "%s"`, version.Version),
+		filepath.Join(path, "joss.yaml"): fmt.Sprintf(`name: mi_proyecto
+version: 1.0.0
+environment:
+  joss: ">=%s <%s"
+
+dependencies:
+`, version.Version, "4.0.0"),
+		filepath.Join(path, ".gitignore"): `plugins/
+env.joss
+env.enc
+database.sqlite
+log.txt
+`,
 	}
 }

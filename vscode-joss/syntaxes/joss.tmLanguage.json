@@ -32,7 +32,7 @@
       "patterns": [
         {
           "name": "keyword.control.joss",
-          "match": "\\b(foreach|as|return|break|continue|new|this|try|catch|throw|extends|async|await|match|default)\\b"
+          "match": "\\b(foreach|as|return|break|continue|new|this|try|catch|throw|extends|async|await|match|default|use)\\b"
         },
         {
           "name": "keyword.other.joss",
@@ -61,7 +61,7 @@
           "patterns": [
             {
               "name": "constant.character.escape.joss",
-              "match": "\\\\."
+               "match": "\\\\."
             },
             {
               "name": "variable.other.joss",

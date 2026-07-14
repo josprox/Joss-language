@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/jossecurity/joss/pkg/core"
 )
 
 var upgrader = websocket.Upgrader{
@@ -78,11 +77,7 @@ type Client struct {
 }
 
 func (c *Client) readPump() {
-	var authUserId int
 	defer func() {
-		if authUserId > 0 {
-			core.UnregisterWSConnection(authUserId)
-		}
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
@@ -97,26 +92,6 @@ func (c *Client) readPump() {
 			}
 			break
 		}
-		
-		// Parse auth message for native notifications mapping
-		var msgMap map[string]interface{}
-		if errJson := json.Unmarshal(message, &msgMap); errJson == nil {
-			if eventVal, ok := msgMap["event"].(string); ok && eventVal == "auth" {
-				if uIdVal, ok := msgMap["user_id"]; ok {
-					var uId int
-					if fVal, ok := uIdVal.(float64); ok {
-						uId = int(fVal)
-					} else if iVal, ok := uIdVal.(int); ok {
-						uId = iVal
-					}
-					if uId > 0 {
-						authUserId = uId
-						core.RegisterWSConnection(authUserId, c.conn)
-					}
-				}
-			}
-		}
-
 		fmt.Printf("[WebSocket] Recibido: %s\n", message)
 	}
 }

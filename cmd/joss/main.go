@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -108,6 +109,12 @@ func main() {
 		}
 		if target == "program" {
 			buildProgram()
+		} else if target == "package" {
+			if len(os.Args) < 4 {
+				fmt.Println("Uso: joss build package [ruta_del_paquete]")
+				return
+			}
+			buildPackage(os.Args[3])
 		} else {
 			buildWeb()
 		}
@@ -167,10 +174,11 @@ func main() {
 		runMigrateFresh()
 	case "new":
 		if len(os.Args) < 3 {
-			fmt.Println("Uso: joss new [web|console] [ruta]")
-			fmt.Println("  joss new [ruta]          - Crea proyecto web (default)")
-			fmt.Println("  joss new console [ruta]  - Crea proyecto de consola")
-			fmt.Println("  joss new web [ruta]      - Crea proyecto web (explícito)")
+			fmt.Println("Uso: joss new [web|console|package] [ruta/nombre]")
+			fmt.Println("  joss new [ruta]            - Crea proyecto web (default)")
+			fmt.Println("  joss new console [ruta]    - Crea proyecto de consola")
+			fmt.Println("  joss new web [ruta]        - Crea proyecto web (explícito)")
+			fmt.Println("  joss new package [nombre]  - Crea un nuevo paquete optimizado para Joss")
 			return
 		}
 
@@ -187,6 +195,12 @@ func main() {
 				return
 			}
 			template.CreateBibleProject(os.Args[3])
+		} else if os.Args[2] == "package" {
+			if len(os.Args) < 4 {
+				fmt.Println("Uso: joss new package [nombre]")
+				return
+			}
+			createNewPackage(os.Args[3])
 		} else {
 			// Default: web project
 			template.CreateBibleProject(os.Args[2])
@@ -201,6 +215,8 @@ func main() {
 		handleBrevoConfig()
 	case "version":
 		fmt.Printf("%s v%s (%s)\n", version.Name, version.Version, version.NameVersion)
+	case "pub":
+		handlePubCli(os.Args[2:])
 	case "ai:activate":
 		activateAI()
 	case "change":
@@ -222,8 +238,6 @@ func main() {
 			targetEngine := os.Args[3]
 			changeDatabaseEngine(targetEngine)
 		}
-	case "backup", "backup:list", "backup:restore", "backup:verify", "backup:delete", "backup:schedule", "backup:providers", "backup:test-provider", "backup:migrate", "backup:config":
-		handleBackupCli(os.Args[1:])
 	case "help":
 		printHelp()
 	default:
@@ -262,4 +276,57 @@ func executeScript(filename string) {
 	}()
 
 	rt.Execute(program)
+}
+
+func createNewPackage(name string) {
+	fmt.Printf("[Package] Creando nuevo paquete '%s'...\n", name)
+
+	// Create root directory
+	if err := os.MkdirAll(name, 0755); err != nil {
+		fmt.Printf("Error al crear directorio: %v\n", err)
+		return
+	}
+
+	// Create src directory
+	srcDir := filepath.Join(name, "src")
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		fmt.Printf("Error al crear directorio src: %v\n", err)
+		return
+	}
+
+	// Create joss.yaml
+	manifestContent := fmt.Sprintf(`name: %s
+version: 1.0.0
+description: Libreria optimizada para Joss
+repository: ""
+license: MIT
+environment:
+  joss: ">=3.6.0"
+entry:
+  main: src/plugin.joss
+`, name)
+	if err := os.WriteFile(filepath.Join(name, "joss.yaml"), []byte(manifestContent), 0644); err != nil {
+		fmt.Printf("Error al escribir joss.yaml: %v\n", err)
+		return
+	}
+
+	// Create src/plugin.joss
+	pluginContent := fmt.Sprintf(`// plugin.joss
+// Punto de entrada de la libreria %s
+
+print("[%s] cargado correctamente.")
+`, name, name)
+	if err := os.WriteFile(filepath.Join(srcDir, "plugin.joss"), []byte(pluginContent), 0644); err != nil {
+		fmt.Printf("Error al escribir src/plugin.joss: %v\n", err)
+		return
+	}
+
+	// Create README.md
+	readmeContent := fmt.Sprintf("# %s\n\nLibrería optimizada para el lenguaje de programación Joss.\n\n## Instalación\n\n```bash\njoss pub add %s\n```\n\n## Uso\n\n```joss\nuse %s;\n```\n", name, name, name)
+	if err := os.WriteFile(filepath.Join(name, "README.md"), []byte(readmeContent), 0644); err != nil {
+		fmt.Printf("Error al escribir README.md: %v\n", err)
+		return
+	}
+
+	fmt.Printf("[Package] Paquete '%s' inicializado exitosamente.\n", name)
 }

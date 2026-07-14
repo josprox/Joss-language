@@ -16,6 +16,9 @@ func (p *Parser) parseStatement() Statement {
 	if p.curToken.Type == IMPORT {
 		return p.parseImportStatement()
 	}
+	if p.curToken.Type == USE {
+		return p.parseUseStatement()
+	}
 	if p.curToken.Type == ECHO || p.curToken.Type == PRINT {
 		return p.parseEchoStatement()
 	}
@@ -500,6 +503,22 @@ func (p *Parser) parseMethodStatement() *MethodStatement {
 	}
 
 	stmt.Body = p.parseBlockStatement()
+
+	return stmt
+}
+
+func (p *Parser) parseUseStatement() *ImportStatement {
+	stmt := &ImportStatement{Token: p.curToken}
+
+	if !p.expectPeek(IDENT) {
+		return nil
+	}
+
+	stmt.Path = "package:" + p.curToken.Literal
+
+	if p.peekToken.Type == SEMICOLON || p.peekToken.Type == NEWLINE {
+		p.nextToken()
+	}
 
 	return stmt
 }

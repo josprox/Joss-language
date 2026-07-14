@@ -84,6 +84,7 @@ const (
 	ELSE    = "ELSE"
 	MATCH   = "MATCH"
 	DEFAULT = "DEFAULT"
+	USE     = "USE"
 )
 
 type Token struct {
@@ -121,6 +122,7 @@ var keywords = map[string]TokenType{
 	"extends":   EXTENDS,
 	"@import":   IMPORT,
 	"import":    IMPORT,
+	"use":       USE,
 	"match":     MATCH,
 	"default":   DEFAULT,
 }
