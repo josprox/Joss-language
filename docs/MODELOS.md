@@ -1,6 +1,6 @@
 # Modelos y Base de Datos
 
-En JosSecurity, los modelos son clases que representan tablas en la base de datos y proporcionan una capa de abstracción para realizar operaciones CRUD y consultas complejas de manera segura.
+En Joss, los modelos son clases que representan tablas en la base de datos y proporcionan una capa de abstracción para realizar operaciones CRUD y consultas complejas de manera segura.
 
 ## Definición de un Modelo
 
@@ -67,7 +67,7 @@ $product.where("id", 5).delete()
 
 ## Relaciones (Joins)
 
-JosSecurity soporta joins fluidos para relacionar modelos.
+Joss soporta joins fluidos para relacionar modelos.
 
 ```javascript
 $product.innerJoin("categories", "products.category_id", "=", "categories.id")

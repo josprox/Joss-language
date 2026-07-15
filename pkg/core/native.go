@@ -80,7 +80,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["View"] = &Instance{Class: r.Classes["View"], Fields: make(map[string]interface{})}
 
 	// Router
-	r.registerNative("Router", []string{"get", "post", "put", "delete", "match", "api", "group", "middleware", "end"}, (*Runtime).executeRouterMethod)
+	r.registerNative("Router", []string{"get", "post", "put", "delete", "match", "api", "ws", "group", "middleware", "end"}, (*Runtime).executeRouterMethod)
 	r.Variables["Router"] = &Instance{Class: r.Classes["Router"], Fields: make(map[string]interface{})}
 
 	// Redirect (PHP-style convenience helper: Redirect::to("url", 302))

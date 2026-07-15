@@ -1,4 +1,4 @@
-# Servidor HTTP de JosSecurity
+# Servidor HTTP de Joss
 
 Características del servidor de desarrollo integrado.
 
@@ -59,4 +59,4 @@ REDIS_HOST="localhost:6379"
 
 ## Producción
 
-Para producción, usar servidor web tradicional (Nginx, Apache) con proxy reverso a JosSecurity.
+Para producción, usar servidor web tradicional (Nginx, Apache) con proxy reverso a Joss.

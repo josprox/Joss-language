@@ -1,6 +1,6 @@
 # Schema Builder y Blueprint
 
-JosSecurity proporciona un constructor de esquemas agnóstico de base de datos que te permite definir y manipular tablas de manera fluida. Funciona tanto para MySQL como para SQLite.
+Joss proporciona un constructor de esquemas agnóstico de base de datos que te permite definir y manipular tablas de manera fluida. Funciona tanto para MySQL como para SQLite.
 
 ## Schema
 

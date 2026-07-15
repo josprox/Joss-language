@@ -1,6 +1,6 @@
-# Concurrencia en JosSecurity
+# Concurrencia en Joss
 
-JosSecurity implementa un modelo de concurrencia inspirado en Go, permitiendo la ejecución paralela de tareas y la comunicación segura entre ellas mediante canales (Channels).
+Joss implementa un modelo de concurrencia inspirado en Go, permitiendo la ejecución paralela de tareas y la comunicación segura entre ellas mediante canales (Channels).
 
 ## Tabla de Contenidos
 - [Async y Await](#async-y-await)

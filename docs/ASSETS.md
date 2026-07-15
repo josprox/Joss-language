@@ -1,6 +1,6 @@
-# Gestión de Assets y Node.js en JosSecurity
+# Gestión de Assets y Node.js en Joss
 
-JosSecurity incluye un sistema moderno de gestión de assets que se integra automáticamente con el ecosistema de Node.js.
+Joss incluye un sistema moderno de gestión de assets que se integra automáticamente con el ecosistema de Node.js.
 
 ## Integración con Node.js (Auto-Vendor)
 
@@ -35,7 +35,7 @@ El servidor soporta recarga en caliente para dependencias:
 
 ### Rutas Virtuales
 
-Los archivos de `node_modules` no se exponen públicamente por defecto por seguridad. JosSecurity crea rutas virtuales seguras solo para los assets detectados:
+Los archivos de `node_modules` no se exponen públicamente por defecto por seguridad. Joss crea rutas virtuales seguras solo para los assets detectados:
 
 - **Ruta**: `/assets/vendor/<paquete>/<archivo>`
 - **Mapeo Real**: `node_modules/<paquete>/<archivo>`

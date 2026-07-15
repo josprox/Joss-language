@@ -1,6 +1,6 @@
 # Sistema de Vistas
 
-JosSecurity incorpora un motor de plantillas potente y seguro, inspirado en Blade, que permite separar la lógica de presentación del código de la aplicación.
+Joss incorpora un motor de plantillas potente y seguro, inspirado en Blade, que permite separar la lógica de presentación del código de la aplicación.
 
 **Ubicación**: `app/views/`
 **Extensión**: `.joss.html`
@@ -111,7 +111,7 @@ return View::render("auth.login")
 
 ## ⚠️ Reglas y Limitaciones del Motor de Vistas (CRÍTICO)
 
-El motor de renderizado de JosSecurity traduce las plantillas `.joss.html` a scripts JOSS ejecutables para una velocidad de procesamiento superior y ejecución nativa. Debido a esto, se aplican las siguientes reglas obligatorias:
+El motor de renderizado de Joss traduce las plantillas `.joss.html` a scripts JOSS ejecutables para una velocidad de procesamiento superior y ejecución nativa. Debido a esto, se aplican las siguientes reglas obligatorias:
 
 ### 1. Prohibición de `@if`
 El motor **no soporta** las directivas `@if`, `@else` o `@endif`. Toda lógica condicional debe ser manejada mediante **Block Ternaries** en la sintaxis:

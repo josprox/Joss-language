@@ -1,6 +1,6 @@
 # Controladores
 
-Los controladores son el corazón de la lógica de tu aplicación web en JosSecurity. Se encargan de recibir las peticiones, procesarlas (usando Modelos si es necesario) y devolver una respuesta (generalmente una Vista o JSON).
+Los controladores son el corazón de la lógica de tu aplicación web en Joss. Se encargan de recibir las peticiones, procesarlas (usando Modelos si es necesario) y devolver una respuesta (generalmente una Vista o JSON).
 
 ## Estructura Básica
 

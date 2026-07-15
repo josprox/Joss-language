@@ -1,6 +1,6 @@
 # Migraciones de Base de Datos
 
-Sistema de migraciones de JosSecurity para gestionar esquemas de base de datos.
+Sistema de migraciones de Joss para gestionar esquemas de base de datos.
 
 ## Comandos
 

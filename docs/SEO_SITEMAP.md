@@ -1,6 +1,6 @@
 # Gestión de SEO y Sitemaps
 
-JosSecurity incluye un motor nativo para gestionar la optimización en buscadores (SEO) y la generación dinámica de sitemaps, asegurando que las aplicaciones sean fácilmente indexables y profesionales.
+Joss incluye un motor nativo para gestionar la optimización en buscadores (SEO) y la generación dinámica de sitemaps, asegurando que las aplicaciones sean fácilmente indexables y profesionales.
 
 ## 1. Clase Nativa `SEO`
 
@@ -39,7 +39,7 @@ class HomeController {
 
 ## 2. Generación Dinámica de Sitemap
 
-JosSecurity genera automáticamente un archivo `sitemap.xml` en la raíz del proyecto.
+Joss genera automáticamente un archivo `sitemap.xml` en la raíz del proyecto.
 
 ### Funcionamiento Automático
 

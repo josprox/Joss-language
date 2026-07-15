@@ -1,10 +1,10 @@
-# Estructura de Proyecto en JosSecurity
+# Estructura de Proyecto en Joss
 
 Guía completa de la estructura de directorios para proyectos web y de consola.
 
 ## Tipos de Proyectos
 
-JosSecurity soporta dos tipos de proyectos:
+Joss soporta dos tipos de proyectos:
 1. **Proyecto Web** - Aplicación completa con interfaz web
 2. **Proyecto de Consola** - Aplicación backend-only
 
@@ -110,7 +110,7 @@ class User extends GranDB {
 ```
 
 #### `app/views/`
-Plantillas HTML con sintaxis de JosSecurity.
+Plantillas HTML con sintaxis de Joss.
 
 **Estructura recomendada**:
 - `layouts/` - Plantillas base
@@ -192,7 +192,7 @@ Proyectos de consola son ideales para:
 ```joss
 class Main {
     Init main() {
-        print("Iniciando Sistema JosSecurity...")
+        print("Iniciando Sistema Joss...")
         Server::start()
     }
 }
@@ -274,10 +274,6 @@ const bool DEBUG_MODE = true
 
 ```joss
 // Tareas programadas
-Cron::schedule("backup_diario", "00:00", {
-    System::backupDatabase()
-})
-
 Cron::schedule("limpiar_logs", "03:00", {
     DB::table("logs")->where("created_at", "<", "30 days ago")->delete()
 })
@@ -413,7 +409,7 @@ joss build
 **Error si falta alguno**:
 ```
 Error de Arquitectura: Falta archivo/directorio requerido 'main.joss'
-La Biblia de JosSecurity requiere una estructura estricta.
+La Biblia de Joss requiere una estructura estricta.
 ```
 
 ---

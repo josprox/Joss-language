@@ -1,6 +1,6 @@
 # Middleware Personalizado
 
-JosSecurity permite la creación de middleware personalizado para interceptar y procesar peticiones HTTP antes de que lleguen a sus controladores.
+Joss permite la creación de middleware personalizado para interceptar y procesar peticiones HTTP antes de que lleguen a sus controladores.
 
 ## Creación de Middleware
 
