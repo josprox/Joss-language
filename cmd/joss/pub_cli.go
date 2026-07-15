@@ -821,13 +821,28 @@ func installTransitiveDependencies(rootDeps map[string]string, offline bool) err
 }
 
 func resolvePackageDownload(name, version string) (string, string, error) {
+	officialFallbacks := map[string]string{
+		"joss_ai":      "https://github.com/josprox/joss_ai/releases/download/v1.0.0/joss_ai.jp",
+		"joss_backup":  "https://github.com/josprox/joss_backup/releases/download/v1.0.0/joss_backup.jp",
+		"joss_notify":  "https://github.com/josprox/joss_notify/releases/download/v1.0.0/joss_notify.jp",
+		"joss_smtp":    "https://github.com/josprox/joss_smtp/releases/download/v1.0.0/joss_smtp.jp",
+	}
+
 	url := fmt.Sprintf("%s/api/v1/pub/packages/%s", getRegistryURL(), name)
 	resp, err := http.Get(url)
 	if err != nil {
+		if fbURL, ok := officialFallbacks[name]; ok {
+			fmt.Printf("[Fallback] Registro no disponible (%v). Descargando '%s %s' desde GitHub...\n", err, name, version)
+			return fbURL, "", nil
+		}
 		return "", "", fmt.Errorf("conectando al registro para %s: %w", name, err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		if fbURL, ok := officialFallbacks[name]; ok {
+			fmt.Printf("[Fallback] Paquete no encontrado en el registro (HTTP %d). Descargando '%s %s' desde GitHub...\n", resp.StatusCode, name, version)
+			return fbURL, "", nil
+		}
 		return "", "", fmt.Errorf("el paquete %s no existe en el registro (HTTP %d)", name, resp.StatusCode)
 	}
 	var result struct {
@@ -847,6 +862,11 @@ func resolvePackageDownload(name, version string) (string, string, error) {
 			}
 			return candidate.DownloadURL, candidate.Checksum, nil
 		}
+	}
+	// If version is not found in the registry versions list but it's an official package, check fallback
+	if fbURL, ok := officialFallbacks[name]; ok {
+		fmt.Printf("[Fallback] Version %s no encontrada en el registro para %s. Descargando desde GitHub...\n", version, name)
+		return fbURL, "", nil
 	}
 	return "", "", fmt.Errorf("version %s no encontrada para %s", version, name)
 }
