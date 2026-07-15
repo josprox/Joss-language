@@ -31,7 +31,7 @@ Router::get("/sound/{id}", func($id) {
 })
 ```
 
-Los parámetros `{name}` se inyectan en handlers HTTP. Esto no aplica a rutas WebSocket.
+Los parámetros `{name}` se inyectan en handlers HTTP. Las rutas WebSocket también los soportan; allí `$ws` es el primer argumento y los parámetros siguen en orden.
 
 ## Request
 

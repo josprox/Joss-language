@@ -220,16 +220,11 @@ func reloadApp(changedFile string) {
 
 		// Init Redis if configured
 		if currentRuntime.Env["SESSION_DRIVER"] == "redis" {
-			host := "localhost:6379"
-			if val, ok := currentRuntime.Env["REDIS_HOST"]; ok {
-				host = val
+			if err := initializeRedisSessions(currentRuntime.Env); err != nil {
+				fmt.Printf("[Security] %v\n", err)
+			} else {
+				fmt.Println("[Security] Redis conectado para sesiones")
 			}
-			pass := ""
-			if val, ok := currentRuntime.Env["REDIS_PASSWORD"]; ok {
-				pass = val
-			}
-			core.InitRedis(host, pass, 0)
-			fmt.Println("[Security] Redis conectado para sesiones")
 		}
 	}
 
@@ -259,15 +254,9 @@ func reloadApp(changedFile string) {
 			currentRuntime.LoadEnv(GlobalFileSystem)
 			// Re-init Redis if configuration changed
 			if currentRuntime.Env["SESSION_DRIVER"] == "redis" {
-				host := "localhost:6379"
-				if val, ok := currentRuntime.Env["REDIS_HOST"]; ok {
-					host = val
+				if err := initializeRedisSessions(currentRuntime.Env); err != nil {
+					fmt.Printf("[Security] %v\n", err)
 				}
-				pass := ""
-				if val, ok := currentRuntime.Env["REDIS_PASSWORD"]; ok {
-					pass = val
-				}
-				core.InitRedis(host, pass, 0)
 			}
 		}
 		notifyClients()
@@ -306,16 +295,11 @@ func reloadApp(changedFile string) {
 
 		// Init Redis if configured
 		if currentRuntime.Env["SESSION_DRIVER"] == "redis" {
-			host := "localhost:6379"
-			if val, ok := currentRuntime.Env["REDIS_HOST"]; ok {
-				host = val
+			if err := initializeRedisSessions(currentRuntime.Env); err != nil {
+				fmt.Printf("[Security] %v\n", err)
+			} else {
+				fmt.Println("[Security] Redis conectado para sesiones")
 			}
-			pass := ""
-			if val, ok := currentRuntime.Env["REDIS_PASSWORD"]; ok {
-				pass = val
-			}
-			core.InitRedis(host, pass, 0)
-			fmt.Println("[Security] Redis conectado para sesiones")
 		}
 
 		// Load App Files

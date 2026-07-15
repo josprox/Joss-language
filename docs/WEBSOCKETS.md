@@ -1,23 +1,21 @@
 # WebSockets
 
-```joss
-Router::ws("/chat", "ChatController@connect")
-```
-
-La ruta se registra bajo el método interno `WS`. La coincidencia es estática y exacta: `{id}` no se interpreta para WebSockets.
+Las rutas aceptan parámetros dinámicos. El primer argumento del handler es la conexión y después se inyectan los parámetros en orden.
 
 ```joss
+Router::ws("/rooms/{room}/users/{id}", "ChatController@connect")
+
 class ChatController {
-    func connect($ws) {
+    func connect($ws, string $room, string $id) {
         $ws->onMessage(func($message) {
-            WebSocket::broadcast($message)
+            $ws->send($message)
         })
     }
 }
 ```
 
-La conexión expone `send`, `onMessage` y `close`; `WebSocket::broadcast()` usa el hub global. En la versión actual, `close()` está registrado pero todavía es un no-op: devuelve éxito sin cerrar el socket. El servidor conserva además `/ws` como endpoint global del hub y `/__hot_reload` para desarrollo.
+También se permiten closures. La conexión expone `send`, `onMessage` y `close`; `close()` cierra realmente el socket. `WebSocket::broadcast()` usa el hub global. El servidor conserva `/ws` para el hub y `/__hot_reload` para desarrollo.
 
-El upgrade se procesa antes de sesiones y middleware HTTP. Para autenticar, envía un JWT en query o en el primer mensaje y llama `Auth::validateToken($token)`; al validar, el runtime repuebla la sesión usada por `Auth::user()`.
+El upgrade ocurre antes del middleware HTTP normal. Para autenticación dentro del socket, valida el JWT con `Auth::validateToken($token)`; el runtime repuebla la sesión usada por `Auth::user()`.
 
-Un proxy inverso debe permitir `Upgrade` y `Connection`. El servidor integrado no ofrece `wss`; TLS termina en el proxy.
+Con `TLS_CERT_FILE` y `TLS_KEY_FILE`, el servidor integrado ofrece `wss`. Un proxy inverso sigue siendo válido y debe reenviar `Upgrade` y `Connection`.

@@ -324,10 +324,10 @@ func (r *Runtime) executeGranDBMethod(instance *Instance, method string, args []
 		return r.executeExistsMethod(instance, true)
 
 	case "insert":
-		return r.executeInsertMethod(instance, args)
+		return r.executeInsertMethod(instance, args, false)
 
 	case "insertGetId":
-		return r.executeInsertMethod(instance, args)
+		return r.executeInsertMethod(instance, args, true)
 
 	case "update":
 		return r.executeUpdateMethod(instance, args)

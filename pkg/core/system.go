@@ -1,9 +1,12 @@
 package core
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -59,10 +62,52 @@ func (r *Runtime) executeSystemMethod(instance *Instance, method string, args []
 		}
 	case "load_driver":
 		if len(args) > 0 {
-			path := args[0].(string)
-			fmt.Printf("[System] Cargando driver externo desde: %s (Simulación)\n", path)
+			path, ok := args[0].(string)
+			if !ok {
+				return false
+			}
+			name := ""
+			if len(args) > 1 {
+				name, _ = args[1].(string)
+			}
+			if name == "" {
+				name = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+			}
+			driver, err := loadNativeDriver(name, path)
+			if err != nil {
+				fmt.Printf("[System] No se pudo cargar driver %s: %v\n", path, err)
+				return false
+			}
+			r.NativeDrivers[name] = driver
 			return true
 		}
+	case "driver_call":
+		if len(args) < 2 {
+			return nil
+		}
+		name, nameOK := args[0].(string)
+		driverMethod, methodOK := args[1].(string)
+		if !nameOK || !methodOK {
+			return nil
+		}
+		callArgs := interface{}([]interface{}{})
+		if len(args) > 2 {
+			callArgs = args[2]
+		}
+		encoded, err := json.Marshal(callArgs)
+		if err != nil {
+			return nil
+		}
+		result, err := callLoadedNativeDriver(r.NativeDrivers[name], driverMethod, string(encoded))
+		if err != nil {
+			fmt.Printf("[System] Driver %s: %v\n", name, err)
+			return nil
+		}
+		var decoded interface{}
+		if err := json.Unmarshal([]byte(result), &decoded); err != nil {
+			return result
+		}
+		return normalizePluginJSON(decoded)
 	case "log":
 		if len(args) > 0 {
 			msg := fmt.Sprintf("%v", args[0])

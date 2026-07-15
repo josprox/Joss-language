@@ -30,15 +30,15 @@
 
 Joss combina la rapidez de desarrollo de lenguajes como Python y PHP con un runtime escrito en Go. Está diseñado para crear APIs, aplicaciones web, procesos de consola, servicios en tiempo real y herramientas de backend sin abandonar una sintaxis clara.
 
-El lenguaje incluye tipado en ejecución, concurrencia con `async`/`await`, servidor HTTP, WebSockets, enrutamiento, vistas, autenticación JWT, criptografía, acceso a bases de datos y un sistema de plugins compilados JP v2.
+El lenguaje incluye tipado en ejecución, concurrencia con `async`/`await`, servidor HTTP/HTTPS, WebSockets dinámicos, autenticación JWT, SQLite/MySQL/PostgreSQL y plugins JP v2 firmados con RPC o ABI C en memoria.
 
 | Área | Incluido |
 | --- | --- |
 | Lenguaje | Tipos, clases, funciones, closures, ternarios de bloque, arrays, maps y manejo estricto de retornos. |
 | Backend | Router, Request, Response, middleware, vistas, sesiones, JWT, WebSockets y tareas asíncronas. |
-| Datos | GranDB, SQLite, MySQL/MariaDB, migraciones, seeders y consultas fluidas. |
+| Datos | GranDB, SQLite, MySQL/MariaDB, PostgreSQL, migraciones, seeders y Schema Builder avanzado. |
 | Seguridad | Cifrado de entorno, CSRF, cookies HTTP-only, rate limiting y utilidades criptográficas. |
-| Extensibilidad | Plugins JP v2 autocontenidos, carga automática y SDK multilenguaje. |
+| Extensibilidad | Plugins JP v2 firmados, autocontenidos, carga automática, RPC aislado y ABI C en memoria. |
 | Herramientas | CLI, extensión de VS Code, autocompletado, firmas, navegación y diagnósticos. |
 
 ## Instalación rápida
@@ -142,9 +142,9 @@ Los plugins oficiales tienen repositorios y releases independientes. No se inclu
 
 ## Plugins JP v2
 
-Un archivo `.jp` puede transportar bytecode Joss, metadatos públicos para IntelliSense y payloads nativos por plataforma. El desarrollador que consume el plugin recibe un único paquete y no necesita instalar el lenguaje con el que se construyó el componente nativo.
+Un archivo `.jp` transporta bytecode Joss, metadatos públicos para IntelliSense, firma Ed25519 y payloads nativos por plataforma. El consumidor recibe un solo paquete y no necesita instalar el lenguaje usado para construir el componente cuando sus runtimes redistribuibles quedaron incluidos.
 
-Joss selecciona automáticamente el payload correspondiente a Windows, Linux o macOS y se comunica con él mediante el protocolo estable `joss-rpc-v1`. Los errores se propagan de forma explícita y los componentes nativos se ejecutan aislados del proceso principal.
+Joss selecciona automáticamente el target de Windows, Linux o macOS. Puede comunicarse mediante `joss-rpc-v1` en un proceso separado o cargar una DLL/SO/dylib con la ABI C v1.
 
 ```yaml
 name: mi_plugin
@@ -161,7 +161,7 @@ native:
   darwin-arm64: native/darwin-arm64/mi_plugin
 ```
 
-Consulta la [guía completa de plugins](./docs/PLUGINS.md) para conocer el manifiesto, empaquetado, publicación y contrato RPC.
+Consulta la [guía completa de plugins](./docs/PLUGINS.md) para conocer firma, validación autocontenida, RPC y ABI.
 
 ## SDK multilenguaje
 
@@ -169,7 +169,7 @@ La distribución incluye `joss-plugin-sdk.zip`, pensado para desarrollar librer�
 
 | Tecnología | Recurso incluido |
 | --- | --- |
-| C y C++ | Header `sdk/c/joss_plugin.h`. |
+| C y C++ | Headers RPC `sdk/c/joss_plugin.h` y ABI `sdk/c/joss_driver.h`. |
 | Python | Runner `sdk/python/joss_plugin.py`. |
 | PHP | Runtime y entrada RPC en `sdk/php`. |
 | Java | Contrato base `sdk/java/JossPlugin.java`. |
@@ -197,6 +197,7 @@ joss make:crud usuarios
 joss migrate
 joss db:seed
 joss change db mysql
+joss change db postgres
 joss change db migrate
 
 # Paquetes

@@ -24,6 +24,19 @@ func getColumns(db *sql.DB, dbType, tableName string) ([]ColumnSchema, error) {
 			rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk)
 			cols = append(cols, ColumnSchema{Name: name, Type: ctype})
 		}
+	} else if dbType == "postgres" || dbType == "postgresql" || dbType == "pgx" {
+		rows, err := db.Query("SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = ? ORDER BY ordinal_position", tableName)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var field, columnType string
+			if err := rows.Scan(&field, &columnType); err != nil {
+				return nil, err
+			}
+			cols = append(cols, ColumnSchema{Name: field, Type: columnType})
+		}
 	} else {
 		rows, err := db.Query(fmt.Sprintf("DESCRIBE %s", tableName))
 		if err != nil {

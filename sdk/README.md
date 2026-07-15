@@ -1,6 +1,6 @@
 # SDK de plugins nativos JP v2
 
-Un plugin nativo de Joss es un ejecutable autónomo transportado dentro del `.jp`. No enlaza contra las estructuras internas del runtime: implementa el protocolo estable `joss-rpc-v1`, por lo que puede escribirse en cualquier lenguaje capaz de leer y escribir JSON.
+Un plugin nativo puede usar un ejecutable autónomo `joss-rpc-v1` o una biblioteca C ABI v1 cargada dentro del proceso. Ambos contratos son independientes de las estructuras internas de Go.
 
 ## Contrato
 
@@ -32,11 +32,12 @@ Para `Plugin::stream`, puede escribir cero o más frames antes de la respuesta f
 
 Cada frame debe ser un objeto JSON completo. Joss valida el `id`, invoca el callback por chunk y exige una respuesta final.
 
-Los logs y diagnósticos deben escribirse en `stderr`. El proceso se ejecuta con su propio directorio como working directory y recibe las variables cargadas desde `env.joss`.
+Los logs y diagnósticos deben escribirse en `stderr`. El proceso usa su propio directorio como working directory. No recibe automáticamente `env.joss`: `PLUGIN_ENV_ALLOW` controla las claves expuestas.
 
 ## SDK disponibles
 
-- `c/joss_plugin.h`: runner header-only para C y C++.
+- `c/joss_plugin.h`: runner RPC header-only para C y C++.
+- `c/joss_driver.h`: encabezado ABI v1 para DLL, SO y dylib en memoria.
 - `python/joss_plugin.py`: runner para crear un ejecutable Python autocontenido.
 - `java/JossPlugin.java`: runner Java; use GraalVM `native-image` para que el consumidor no necesite JVM.
 - `kotlin/JossPlugin.kt`: runner Kotlin; compile con Kotlin/Native.
@@ -45,8 +46,8 @@ Los logs y diagnósticos deben escribirse en `stderr`. El proceso se ejecuta con
 - `flutter/README.md`: reglas para bundles Flutter desktop y límites reales de Android/iOS.
 - `rust`: crate mínimo basado en `serde_json`, compilable como ejecutable nativo.
 
-La envoltura pública se escribe en Joss y llama al payload con `Plugin::call("paquete", "metodo", [$arg])`. Use `Plugin::path("paquete", "ruta/asset")` cuando el payload necesite localizar un asset incluido.
+La envoltura pública se escribe en Joss y llama al payload con `Plugin::call("paquete", "metodo", [$arg])`; la misma llamada selecciona RPC o ABI según el manifiesto. Use `Plugin::path("paquete", "ruta/asset")` para localizar assets.
 
-Cada sistema operativo y arquitectura requiere su propio ejecutable en `native` dentro de `joss.yaml`. Todas las DLL, `.so`, modelos y runtimes que el binario necesite deben incluirse en el paquete y poder redistribuirse legalmente.
+Cada sistema operativo y arquitectura requiere su ejecutable en `native` o biblioteca en `abi`. Todas las DLL, `.so`, modelos y runtimes requeridos deben incluirse y poder redistribuirse legalmente. El empaquetador inspecciona imports PE/ELF/Mach-O y firma el resultado con Ed25519.
 
 Consulte [BUILDING.md](./BUILDING.md) para comandos por lenguaje y targets multiplataforma.

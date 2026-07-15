@@ -349,7 +349,7 @@ func (r *Runtime) extractRouteParams(method, path string) []interface{} {
 }
 
 // DispatchWebSocket handles WebSocket upgrades
-func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func() (int, []byte, error), sender func(interface{}) error) {
+func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func() (int, []byte, error), sender func(interface{}) error, closer func() error) {
 	// Inject a blank session for WS context so Auth can store credentials
 	if _, ok := r.Variables["$__session"]; !ok {
 		r.Variables["$__session"] = &Instance{
@@ -364,11 +364,27 @@ func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func()
 
 	// Match Route
 	var handler interface{}
+	var routeParams []interface{}
 	if r.Routes["WS"] != nil {
 		if routeInfo, ok := r.Routes["WS"][path].(map[string]interface{}); ok {
 			handler = routeInfo["handler"]
 		} else if h, ok := r.Routes["WS"][path]; ok {
 			handler = h
+		}
+		if handler == nil {
+			for pattern, rawHandler := range r.Routes["WS"] {
+				params, matches := matchRoutePattern(pattern, path)
+				if !matches {
+					continue
+				}
+				routeParams = params
+				if routeInfo, ok := rawHandler.(map[string]interface{}); ok {
+					handler = routeInfo["handler"]
+				} else {
+					handler = rawHandler
+				}
+				break
+			}
 		}
 	}
 
@@ -388,6 +404,7 @@ func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func()
 		Fields: map[string]interface{}{
 			"_conn":   conn,
 			"_sender": sender,
+			"_closer": closer,
 		},
 	}
 
@@ -406,7 +423,8 @@ func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func()
 					if m, ok := stmt.(*parser.MethodStatement); ok {
 						if m.Name.Value == methodName {
 							fmt.Printf("[WS] Executing Setup %s@%s\n", controllerName, methodName)
-							r.CallMethodEvaluated(m, instance, []interface{}{wsInstance})
+							callArgs := append([]interface{}{wsInstance}, routeParams...)
+							r.CallMethodEvaluated(m, instance, callArgs)
 							handlerExecuted = true
 							break // Found
 						}
@@ -414,6 +432,12 @@ func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func()
 				}
 			}
 		}
+	}
+	if fn, ok := handler.(*parser.FunctionLiteral); ok {
+		method := &parser.MethodStatement{Token: fn.Token, Name: &parser.Identifier{Value: "anonymous"}, Parameters: fn.Parameters, Body: fn.Body}
+		callArgs := append([]interface{}{wsInstance}, routeParams...)
+		r.CallMethodEvaluated(method, nil, callArgs)
+		handlerExecuted = true
 	}
 
 	if !handlerExecuted {
@@ -437,4 +461,37 @@ func (r *Runtime) DispatchWebSocket(path string, conn interface{}, reader func()
 			r.CallFunction(cb, []interface{}{string(msg)})
 		}
 	}
+}
+
+func matchRoutePattern(pattern, path string) ([]interface{}, bool) {
+	if pattern == path {
+		return nil, true
+	}
+	if !strings.Contains(pattern, "{") {
+		return nil, false
+	}
+	placeholder := regexp.MustCompile(`\{[a-zA-Z_][a-zA-Z0-9_]*\}`)
+	locations := placeholder.FindAllStringIndex(pattern, -1)
+	if len(locations) == 0 {
+		return nil, false
+	}
+	var expression strings.Builder
+	expression.WriteString("^")
+	last := 0
+	for _, location := range locations {
+		expression.WriteString(regexp.QuoteMeta(pattern[last:location[0]]))
+		expression.WriteString("([^/]+)")
+		last = location[1]
+	}
+	expression.WriteString(regexp.QuoteMeta(pattern[last:]))
+	expression.WriteString("$")
+	matches := regexp.MustCompile(expression.String()).FindStringSubmatch(path)
+	if len(matches) != len(locations)+1 {
+		return nil, false
+	}
+	params := make([]interface{}, 0, len(locations))
+	for _, value := range matches[1:] {
+		params = append(params, value)
+	}
+	return params, true
 }

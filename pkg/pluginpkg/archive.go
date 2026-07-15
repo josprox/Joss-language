@@ -3,6 +3,10 @@ package pluginpkg
 import (
 	"archive/zip"
 	"bytes"
+	"crypto/ed25519"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,14 +25,19 @@ const (
 )
 
 type Metadata struct {
-	Format       int               `json:"format"`
-	Name         string            `json:"name"`
-	Version      string            `json:"version"`
-	Bytecode     string            `json:"bytecode"`
-	Dependencies map[string]string `json:"dependencies,omitempty"`
-	Native       map[string]string `json:"native,omitempty"` // os-arch -> executable path
-	Protocol     string            `json:"protocol,omitempty"`
-	Symbols      string            `json:"symbols,omitempty"`
+	Format             int               `json:"format"`
+	Name               string            `json:"name"`
+	Version            string            `json:"version"`
+	Bytecode           string            `json:"bytecode"`
+	Dependencies       map[string]string `json:"dependencies,omitempty"`
+	Native             map[string]string `json:"native,omitempty"` // os-arch -> executable path
+	ABI                map[string]string `json:"abi,omitempty"`    // os-arch -> shared library path
+	Protocol           string            `json:"protocol,omitempty"`
+	Symbols            string            `json:"symbols,omitempty"`
+	SignatureAlgorithm string            `json:"signature_algorithm,omitempty"`
+	PublicKey          string            `json:"public_key,omitempty"`
+	KeyID              string            `json:"key_id,omitempty"`
+	Signature          string            `json:"signature,omitempty"`
 }
 
 type Archive struct {
@@ -37,6 +46,30 @@ type Archive struct {
 }
 
 func Build(metadata Metadata, files map[string][]byte) ([]byte, error) {
+	return build(metadata, files)
+}
+
+// BuildSigned creates a reproducible JP v2 archive signed with Ed25519.
+func BuildSigned(metadata Metadata, files map[string][]byte, privateKey ed25519.PrivateKey) ([]byte, error) {
+	if len(privateKey) != ed25519.PrivateKeySize {
+		return nil, fmt.Errorf("jp: llave privada Ed25519 invalida")
+	}
+	publicKey := privateKey.Public().(ed25519.PublicKey)
+	metadata.Format = FormatVersion
+	keyHash := sha256.Sum256(publicKey)
+	metadata.SignatureAlgorithm = "Ed25519"
+	metadata.PublicKey = base64.StdEncoding.EncodeToString(publicKey)
+	metadata.KeyID = hexKeyID(keyHash[:])
+	metadata.Signature = ""
+	digest, err := signatureDigest(metadata, files)
+	if err != nil {
+		return nil, err
+	}
+	metadata.Signature = base64.StdEncoding.EncodeToString(ed25519.Sign(privateKey, digest))
+	return build(metadata, files)
+}
+
+func build(metadata Metadata, files map[string][]byte) ([]byte, error) {
 	metadata.Format = FormatVersion
 	if metadata.Name == "" || metadata.Version == "" || metadata.Bytecode == "" {
 		return nil, fmt.Errorf("jp: metadata requiere name, version y bytecode")
@@ -48,6 +81,9 @@ func Build(metadata Metadata, files map[string][]byte) ([]byte, error) {
 		if _, ok := files[metadata.Symbols]; !ok {
 			return nil, fmt.Errorf("jp: falta indice de simbolos %q", metadata.Symbols)
 		}
+	}
+	if err := validateNativePayloads(metadata, files); err != nil {
+		return nil, err
 	}
 	metaJSON, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {
@@ -174,7 +210,111 @@ func Read(data []byte) (*Archive, error) {
 			return nil, fmt.Errorf("jp: target %s apunta a %q inexistente", target, executable)
 		}
 	}
+	for target, library := range metadata.ABI {
+		if strings.TrimSpace(target) == "" {
+			return nil, fmt.Errorf("jp: target ABI vacio")
+		}
+		if _, ok := files[library]; !ok {
+			return nil, fmt.Errorf("jp: target ABI %s apunta a %q inexistente", target, library)
+		}
+	}
+	if err := validateNativePayloads(metadata, files); err != nil {
+		return nil, err
+	}
+	if metadata.Signature != "" {
+		if err := verifySignature(metadata, files); err != nil {
+			return nil, err
+		}
+	}
 	return &Archive{Metadata: metadata, Files: files}, nil
+}
+
+// ReadVerified rejects unsigned JP archives and verifies signed archives.
+func ReadVerified(data []byte) (*Archive, error) {
+	archive, err := Read(data)
+	if err != nil {
+		return nil, err
+	}
+	if archive.Metadata.Signature == "" {
+		return nil, fmt.Errorf("jp: paquete sin firma de autor Ed25519")
+	}
+	return archive, nil
+}
+
+func verifySignature(metadata Metadata, files map[string][]byte) error {
+	if metadata.SignatureAlgorithm != "Ed25519" {
+		return fmt.Errorf("jp: algoritmo de firma %q no soportado", metadata.SignatureAlgorithm)
+	}
+	publicKey, err := base64.StdEncoding.DecodeString(metadata.PublicKey)
+	if err != nil || len(publicKey) != ed25519.PublicKeySize {
+		return fmt.Errorf("jp: llave publica Ed25519 invalida")
+	}
+	keyHash := sha256.Sum256(publicKey)
+	if metadata.KeyID != hexKeyID(keyHash[:]) {
+		return fmt.Errorf("jp: key_id no coincide con la llave publica")
+	}
+	signature, err := base64.StdEncoding.DecodeString(metadata.Signature)
+	if err != nil || len(signature) != ed25519.SignatureSize {
+		return fmt.Errorf("jp: firma Ed25519 invalida")
+	}
+	digest, err := signatureDigest(metadata, files)
+	if err != nil {
+		return err
+	}
+	if !ed25519.Verify(ed25519.PublicKey(publicKey), digest, signature) {
+		return fmt.Errorf("jp: la firma no corresponde al contenido del paquete")
+	}
+	return nil
+}
+
+func signatureDigest(metadata Metadata, files map[string][]byte) ([]byte, error) {
+	metadata.Signature = ""
+	metaJSON, err := json.Marshal(metadata)
+	if err != nil {
+		return nil, err
+	}
+	hash := sha256.New()
+	writeDigestPart(hash, "metadata", metaJSON)
+	normalized := make(map[string][]byte, len(files))
+	names := make([]string, 0, len(files))
+	for name, content := range files {
+		clean, err := cleanArchivePath(name)
+		if err != nil {
+			return nil, err
+		}
+		if clean != MetadataPath {
+			if _, duplicate := normalized[clean]; duplicate {
+				return nil, fmt.Errorf("jp: entrada duplicada %q", clean)
+			}
+			normalized[clean] = content
+			names = append(names, clean)
+		}
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		writeDigestPart(hash, name, normalized[name])
+	}
+	return hash.Sum(nil), nil
+}
+
+func writeDigestPart(writer io.Writer, name string, content []byte) {
+	var length [8]byte
+	binary.BigEndian.PutUint64(length[:], uint64(len(name)))
+	_, _ = writer.Write(length[:])
+	_, _ = writer.Write([]byte(name))
+	binary.BigEndian.PutUint64(length[:], uint64(len(content)))
+	_, _ = writer.Write(length[:])
+	_, _ = writer.Write(content)
+}
+
+func hexKeyID(value []byte) string {
+	const alphabet = "0123456789abcdef"
+	result := make([]byte, 24)
+	for index := 0; index < 12; index++ {
+		result[index*2] = alphabet[value[index]>>4]
+		result[index*2+1] = alphabet[value[index]&0x0f]
+	}
+	return string(result)
 }
 
 func IsV2(data []byte) bool {

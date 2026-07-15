@@ -4,21 +4,25 @@
 joss server start
 ```
 
-El comando ejecuta `main.joss`; ese archivo debe iniciar el servidor. El puerto predeterminado del servidor es 80, no 8000. Define `PORT` para cambiarlo.
+El puerto predeterminado es 80. Define `PORT` para cambiarlo.
 
-```env
-PORT="8000"
-```
-
-## Comportamiento implementado
+## Capacidades
 
 - Archivos públicos bajo `/public/` y `/assets/`.
-- Hot reload en desarrollo para `.joss`, HTML, CSS, JS, SCSS, traducciones, `package.json` y archivos de entorno.
-- Compilación SCSS propia desde `assets/css/*.scss` hacia CSS público.
-- Descubrimiento de CSS/JS de dependencias directas de `package.json` presentes en `node_modules`.
-- Headers `X-Content-Type-Options`, `X-Frame-Options` y `X-XSS-Protection`.
-- CSRF para métodos mutables, sesiones en memoria o Redis y CORS mediante `CORS_WEB`.
-- Rate limit fijo de 60 solicitudes por minuto por IP.
+- Hot reload de código, vistas, assets, traducciones y entorno.
+- CSRF, CORS, headers de seguridad y WebSockets.
+- Sesiones persistentes en archivo por defecto, o drivers `memory` y `redis`.
+- Rate limit por IP configurable con `RATE_LIMIT_REQUESTS` y `RATE_LIMIT_WINDOW_SECONDS`.
+- HTTPS/WSS directo mediante `TLS_CERT_FILE` y `TLS_KEY_FILE`.
 - Timeouts HTTP: lectura 15 s, escritura 15 s e inactividad 60 s.
 
-El servidor integrado escucha HTTP. Para TLS, límites configurables, compresión y operación pública usa un proxy inverso. Debe reenviar `Host`, `X-Forwarded-Proto` y los headers de upgrade WebSocket.
+```env
+PORT="8443"
+SESSION_DRIVER="file"
+RATE_LIMIT_REQUESTS="120"
+RATE_LIMIT_WINDOW_SECONDS="60"
+TLS_CERT_FILE="certs/fullchain.pem"
+TLS_KEY_FILE="certs/private.key"
+```
+
+En despliegues públicos todavía puedes usar un proxy inverso para compresión, balanceo y renovación automática de certificados.

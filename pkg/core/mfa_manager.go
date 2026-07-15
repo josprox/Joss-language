@@ -20,7 +20,7 @@ func (r *Runtime) EnsureMFATables() {
 
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
-		dbDriver = val
+		dbDriver = normalizeDatabaseDriver(val)
 	}
 
 	// 1. Create MFA Methods Table
@@ -34,6 +34,12 @@ func (r *Runtime) EnsureMFATables() {
 			is_active INTEGER DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`, mfaMethodsTable)
+	} else if dbDriver == "postgres" {
+		queryMfaMethods = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY, user_id BIGINT, method_type VARCHAR(50), secret TEXT,
+			is_active SMALLINT DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`, mfaMethodsTable)
 	} else {
 		queryMfaMethods = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
@@ -60,6 +66,12 @@ func (r *Runtime) EnsureMFATables() {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`, recoveryCodesTable)
+	} else if dbDriver == "postgres" {
+		queryRecoveryCodes = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY, user_id BIGINT, code_hash VARCHAR(255), used SMALLINT DEFAULT 0,
+			used_at TIMESTAMP, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		)`, recoveryCodesTable)
 	} else {
 		queryRecoveryCodes = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 			id INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,6 +89,9 @@ func (r *Runtime) EnsureMFATables() {
 	if dbDriver == "sqlite" {
 		r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP", recoveryCodesTable))
 		r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP", recoveryCodesTable))
+	} else if dbDriver == "postgres" {
+		r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP", recoveryCodesTable))
+		r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP", recoveryCodesTable))
 	} else {
 		// In MySQL, ignore error if column already exists
 		r.GetDB().Exec(fmt.Sprintf("ALTER TABLE %s ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP", recoveryCodesTable))
@@ -93,6 +108,11 @@ func (r *Runtime) EnsureMFATables() {
 			ip_address VARCHAR(45),
 			user_agent TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`, securityLogsTable)
+	} else if dbDriver == "postgres" {
+		querySecurityLogs = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY, user_id BIGINT, event_type VARCHAR(100), ip_address VARCHAR(45),
+			user_agent TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`, securityLogsTable)
 	} else {
 		querySecurityLogs = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (

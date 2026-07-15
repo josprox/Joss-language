@@ -74,6 +74,36 @@ func (r *Runtime) registerPluginNativePayload(name, version, root string, target
 	return nil
 }
 
+func (r *Runtime) registerPluginABIPayload(name, version, root string, targets map[string]string, files map[string][]byte) error {
+	if len(targets) == 0 {
+		return nil
+	}
+	if existing := r.NativePlugins[name]; existing != nil && existing.Executable != "" {
+		return fmt.Errorf("plugin %s %s: no puede declarar native y abi simultaneamente", name, version)
+	}
+	target := runtime.GOOS + "-" + runtime.GOARCH
+	library, ok := targets[target]
+	if !ok {
+		return fmt.Errorf("plugin %s %s: no incluye biblioteca ABI para %s; disponibles: %v", name, version, target, sortedStringKeys(targets))
+	}
+	clean, err := safePluginRelativePath(library)
+	if err != nil {
+		return err
+	}
+	definition := &NativePluginDefinition{Name: name, Version: version, Root: root, Driver: name, ArchiveFiles: files, UseVFS: r.usePluginVFS}
+	r.NativePlugins[name] = definition
+	resolved, err := materializePluginPath(definition, clean)
+	if err != nil {
+		return err
+	}
+	driver, err := loadNativeDriver(name, resolved)
+	if err != nil {
+		return fmt.Errorf("plugin %s %s: no se pudo cargar ABI: %w", name, version, err)
+	}
+	r.NativeDrivers[name] = driver
+	return nil
+}
+
 func (r *Runtime) executePluginMethod(_ *Instance, method string, args []interface{}) interface{} {
 	switch method {
 	case "platform":
@@ -145,6 +175,9 @@ func (r *Runtime) callNativePluginStream(name, method string, args []interface{}
 	definition := r.NativePlugins[name]
 	if definition == nil {
 		return nil, fmt.Errorf("plugin nativo %q no registrado", name)
+	}
+	if definition.Driver != "" {
+		return nil, fmt.Errorf("plugin %s: ABI C v1 no soporta stream; use Plugin::call", name)
 	}
 	executable, err := materializePluginPath(definition, definition.Executable)
 	if err != nil {
@@ -220,6 +253,21 @@ func (r *Runtime) callNativePlugin(name, method string, args []interface{}) (int
 	if definition == nil {
 		return nil, fmt.Errorf("plugin nativo %q no registrado", name)
 	}
+	if definition.Driver != "" {
+		encoded, err := json.Marshal(args)
+		if err != nil {
+			return nil, err
+		}
+		response, err := callLoadedNativeDriver(r.NativeDrivers[definition.Driver], method, string(encoded))
+		if err != nil {
+			return nil, err
+		}
+		var decoded interface{}
+		if err := json.Unmarshal([]byte(response), &decoded); err != nil {
+			return response, nil
+		}
+		return normalizePluginJSON(decoded), nil
+	}
 	executable, err := materializePluginPath(definition, definition.Executable)
 	if err != nil {
 		return nil, err
@@ -278,12 +326,18 @@ func pluginTimeout(env map[string]string) time.Duration {
 }
 
 func pluginCommandEnvironment(r *Runtime, executable string) []string {
-	pluginEnv := make(map[string]string, len(r.Env)+2)
-	for key, value := range r.Env {
-		pluginEnv[key] = value
+	pluginEnv := map[string]string{
+		"JOSS_PROJECT_ROOT": r.ProjectRoot,
+		"JOSS_PLUGIN_ROOT":  filepath.Dir(executable),
 	}
-	pluginEnv["JOSS_PROJECT_ROOT"] = r.ProjectRoot
-	pluginEnv["JOSS_PLUGIN_ROOT"] = filepath.Dir(executable)
+	for _, key := range strings.Split(r.Env["PLUGIN_ENV_ALLOW"], ",") {
+		key = strings.TrimSpace(key)
+		if key != "" {
+			if value, ok := r.Env[key]; ok {
+				pluginEnv[key] = value
+			}
+		}
+	}
 	return mergedPluginEnvironment(pluginEnv)
 }
 
@@ -364,9 +418,14 @@ func safePluginRelativePath(value string) (string, error) {
 
 func mergedPluginEnvironment(env map[string]string) []string {
 	merged := make(map[string]string)
+	allowedHost := map[string]bool{
+		"PATH": true, "PATHEXT": true, "SYSTEMROOT": true, "WINDIR": true,
+		"COMSPEC": true, "TEMP": true, "TMP": true, "HOME": true,
+		"USERPROFILE": true, "LANG": true, "LC_ALL": true, "TZ": true,
+	}
 	for _, entry := range os.Environ() {
 		parts := strings.SplitN(entry, "=", 2)
-		if len(parts) == 2 {
+		if len(parts) == 2 && allowedHost[strings.ToUpper(parts[0])] {
 			merged[parts[0]] = parts[1]
 		}
 	}

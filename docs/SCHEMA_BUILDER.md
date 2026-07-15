@@ -1,33 +1,44 @@
 # Schema Builder
 
-Schema opera sobre SQLite o MySQL y aplica el prefijo configurado cuando el nombre todavía no lo contiene.
+Schema opera sobre SQLite, MySQL y PostgreSQL y aplica `PREFIX`/`DB_PREFIX` automáticamente.
 
 ```joss
 Schema::create("products", func($table) {
     $table->id()
     $table->string("sku", 50)->unique()
     $table->decimal("price", 10, 2)->default(0)
-    $table->boolean("active")->default(true)
+    $table->unsignedBigInteger("tenant_id")
+    $table->unsignedBigInteger("owner_id")
+    $table->unique(["tenant_id", "sku"])
+    $table->foreign(["tenant_id", "owner_id"])
+        ->references(["tenant_id", "id"])
+        ->on("owners")
+        ->onDelete("cascade")
     $table->timestamps()
 })
 ```
 
 ## Schema
 
-- `create($table, func($blueprint))`: crea la tabla si no existe.
-- `table($table, func($blueprint))`: agrega las columnas descritas por el callback.
-- `rename($from, $to)`: renombra una tabla.
-- `drop($table)` y `dropIfExists($table)`: ambos ejecutan `DROP TABLE IF EXISTS`.
-- `hasTable($table)` y `hasColumn($table, $column)`: retornan booleanos.
+- `create($table, func($blueprint))`
+- `table($table, func($blueprint))`
+- `rename($from, $to)`
+- `drop($table)` y `dropIfExists($table)`
+- `hasTable($table)` y `hasColumn($table, $column)`
 
 ## Blueprint
 
-Tipos implementados: `id`, `increments`, `integer`, `tinyInteger`, `smallInteger`, `mediumInteger`, `bigInteger`, `unsignedInteger`, `unsignedBigInteger`, `float`, `double`, `decimal`, `char`, `string`, `text`, `mediumText`, `longText`, `date`, `dateTime`, `time`, `timestamp`, `timestamps`, `softDeletes`, `boolean`, `json` y `enum`.
+Tipos: `id`, `increments`, `integer`, `tinyInteger`, `smallInteger`, `mediumInteger`, `bigInteger`, `unsignedInteger`, `unsignedBigInteger`, `float`, `double`, `decimal`, `char`, `string`, `text`, `mediumText`, `longText`, `date`, `dateTime`, `time`, `timestamp`, `timestamps`, `softDeletes`, `boolean`, `json` y `enum`.
 
-Modificadores implementados: `nullable`, `unsigned`, `unique`, `default` y `comment`.
+Modificadores de la última columna: `nullable`, `unsigned`, `unique()`, `default` y `comment`. `unsigned` y el comentario SQL inline son propiedades de MySQL; los demás motores conservan el tipo portable sin inventar una semántica equivalente.
 
-Los modificadores afectan siempre a la última columna agregada. SQLite convierte algunos tipos a afinidades compatibles: textos largos y JSON se almacenan como `TEXT`; `enum` también es `TEXT` y no agrega una restricción de valores.
+Comandos de tabla:
 
-## Límites
+- `dropColumn($column)` o `dropColumn([$a, $b])`
+- `renameColumn($from, $to)`
+- `index($columns, $name=nil)`
+- `unique($columns, $name=nil)` o `uniqueIndex(...)`
+- `dropIndex($name)`
+- `foreign($columns, $name=nil)->references($columns)->on($table)->onDelete($action)->onUpdate($action)`
 
-`Schema::table()` solo ejecuta altas de columnas. El código reserva comandos internos para `dropColumn` y `renameColumn`, pero todavía no los procesa. No se documentan como disponibles. Tampoco hay helpers de claves foráneas o índices compuestos.
+SQLite reconstruye la tabla de forma transaccional cuando se agrega una clave foránea mediante `Schema::table()`, preservando datos, índices y triggers explícitos. PostgreSQL usa `SERIAL`/`BIGSERIAL`, `JSONB` y tipos equivalentes; `unsigned` solo modifica SQL en MySQL.

@@ -27,7 +27,7 @@ func (r *Runtime) EnsureCronTable() {
 
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
-		dbDriver = val
+		dbDriver = normalizeDatabaseDriver(val)
 	}
 
 	var query string
@@ -42,6 +42,16 @@ func (r *Runtime) EnsureCronTable() {
 			status VARCHAR(50)
 		);
 		`, tableName)
+	} else if dbDriver == "postgres" {
+		query = fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY,
+			name VARCHAR(255) NOT NULL UNIQUE,
+			schedule VARCHAR(255) NOT NULL,
+			last_run_at TIMESTAMP,
+			is_running SMALLINT DEFAULT 0,
+			status VARCHAR(50)
+		);`, tableName)
 	} else {
 		query = fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (

@@ -2,7 +2,7 @@
   "name": "joss-language",
   "displayName": "Joss Language Support",
   "description": "Joss IntelliSense with parameter hints, project indexing, navigation, diagnostics, and security analysis",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "icon": "images/icon.png",
   "publisher": "jossecurity",
   "engines": {

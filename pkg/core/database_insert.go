@@ -7,7 +7,7 @@ import (
 
 // executeInsertMethod handles insert operations for GranDB
 // Supports both array-based and map-based inserts
-func (r *Runtime) executeInsertMethod(instance *Instance, args []interface{}) interface{} {
+func (r *Runtime) executeInsertMethod(instance *Instance, args []interface{}, returnID bool) interface{} {
 	if r.GetDB() == nil {
 		panic("GranDB Error: No hay conexión a la base de datos configurada")
 	}
@@ -18,7 +18,7 @@ func (r *Runtime) executeInsertMethod(instance *Instance, args []interface{}) in
 	// Usage: $model.insert({"name": "John", "email": "john@example.com"})
 	if len(args) == 1 {
 		if data, ok := args[0].(map[string]interface{}); ok {
-			return r.insertFromMap(table, data)
+			return r.insertFromMap(table, data, returnID)
 		}
 	}
 
@@ -29,7 +29,7 @@ func (r *Runtime) executeInsertMethod(instance *Instance, args []interface{}) in
 		vals, ok2 := args[1].([]interface{})
 
 		if ok1 && ok2 {
-			return r.insertFromArrays(table, cols, vals)
+			return r.insertFromArrays(table, cols, vals, returnID)
 		}
 	}
 
@@ -37,7 +37,7 @@ func (r *Runtime) executeInsertMethod(instance *Instance, args []interface{}) in
 }
 
 // insertFromMap performs insert using a map of column-value pairs
-func (r *Runtime) insertFromMap(table string, data map[string]interface{}) interface{} {
+func (r *Runtime) insertFromMap(table string, data map[string]interface{}, returnID bool) interface{} {
 	if len(data) == 0 {
 		return false
 	}
@@ -85,20 +85,30 @@ func (r *Runtime) insertFromMap(table string, data map[string]interface{}) inter
 
 	fmt.Printf("[GranDB] Insert Query: %s\n", query)
 	fmt.Printf("[GranDB] Bindings: %v\n", bindings)
+	if returnID && normalizeDatabaseDriver(r.Env["DB"]) == "postgres" {
+		var id int64
+		if err := r.GetDB().QueryRow(query+" RETURNING id", bindings...).Scan(&id); err != nil {
+			panic(fmt.Sprintf("GranDB Error en insert: %v", err))
+		}
+		return id
+	}
 
 	result, err := r.GetDB().Exec(query, bindings...)
 	if err != nil {
 		panic(fmt.Sprintf("GranDB Error en insert: %v", err))
 	}
 
-	if id, err := result.LastInsertId(); err == nil && id > 0 {
-		return id
+	if returnID {
+		if id, err := result.LastInsertId(); err == nil && id > 0 {
+			return id
+		}
+		return false
 	}
 	return true
 }
 
 // insertFromArrays performs insert using separate arrays for columns and values
-func (r *Runtime) insertFromArrays(table string, cols []interface{}, vals []interface{}) interface{} {
+func (r *Runtime) insertFromArrays(table string, cols []interface{}, vals []interface{}, returnID bool) interface{} {
 	if len(cols) != len(vals) {
 		fmt.Println("[GranDB] Error: Column and value count mismatch")
 		return false
@@ -121,14 +131,24 @@ func (r *Runtime) insertFromArrays(table string, cols []interface{}, vals []inte
 		table,
 		strings.Join(colNames, ", "),
 		strings.Join(placeholders, ", "))
+	if returnID && normalizeDatabaseDriver(r.Env["DB"]) == "postgres" {
+		var id int64
+		if err := r.GetDB().QueryRow(query+" RETURNING id", bindings...).Scan(&id); err != nil {
+			panic(fmt.Sprintf("GranDB Error en insert from arrays: %v", err))
+		}
+		return id
+	}
 
 	result, err := r.GetDB().Exec(query, bindings...)
 	if err != nil {
 		panic(fmt.Sprintf("GranDB Error en insert from arrays: %v", err))
 	}
 
-	if id, err := result.LastInsertId(); err == nil && id > 0 {
-		return id
+	if returnID {
+		if id, err := result.LastInsertId(); err == nil && id > 0 {
+			return id
+		}
+		return false
 	}
 	return true
 }

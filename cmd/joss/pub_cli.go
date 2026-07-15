@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/jossecurity/joss/pkg/pluginpkg"
 )
@@ -30,6 +31,7 @@ type PackageManifest struct {
 
 type LockPackage struct {
 	Version      string            `json:"version"`
+	KeyID        string            `json:"key_id,omitempty"`
 	Resolved     string            `json:"resolved"`
 	Checksum     string            `json:"checksum"`
 	Dependencies map[string]string `json:"dependencies"`
@@ -454,7 +456,7 @@ func installJPFile(cachePath, name, ver string) error {
 	}
 	files := make(map[string][]byte)
 	if pluginpkg.IsV2(data) {
-		archive, err := pluginpkg.Read(data)
+		archive, err := pluginpkg.ReadVerified(data)
 		if err != nil {
 			return err
 		}
@@ -887,10 +889,14 @@ func generateLockFile(deps map[string]string) {
 		verClean = strings.TrimPrefix(verClean, "~")
 
 		checksum := ""
+		keyID := ""
 		archivePath := filepath.Join("plugins", name, verClean, name+".jp")
 		if archiveData, err := os.ReadFile(archivePath); err == nil {
 			sum := sha256.Sum256(archiveData)
 			checksum = hex.EncodeToString(sum[:])
+			if archive, readErr := pluginpkg.ReadVerified(archiveData); readErr == nil {
+				keyID = archive.Metadata.KeyID
+			}
 		}
 		pluginDeps := make(map[string]string)
 		if pluginManifest, err := os.ReadFile(filepath.Join("plugins", name, verClean, "joss.yaml")); err == nil {
@@ -904,6 +910,7 @@ func generateLockFile(deps map[string]string) {
 
 		lock.Packages[name] = LockPackage{
 			Version:      verClean,
+			KeyID:        keyID,
 			Resolved:     fmt.Sprintf("%s/api/v1/pub/packages/%s/versions/%s", getRegistryURL(), name, verClean),
 			Checksum:     checksum,
 			Dependencies: pluginDeps,
@@ -989,6 +996,12 @@ func pubPublish() {
 	fmt.Print("Introduce el hash SHA-256 de la release zip: ")
 	var checksum string
 	fmt.Scanln(&checksum)
+	keyID, err := verifyPublishArtifact(downloadUrl, checksum, name, version)
+	if err != nil {
+		fmt.Printf("Error verificando artefacto firmado: %v\n", err)
+		return
+	}
+	fmt.Printf("Firma JP verificada: %s\n", keyID)
 
 	// Send publish post
 	url := getRegistryURL() + "/api/v1/pub/packages/publish"
@@ -1025,6 +1038,72 @@ func pubPublish() {
 		json.NewDecoder(resp.Body).Decode(&errRes)
 		fmt.Printf("Error al publicar paquete (HTTP %d): %v\n", resp.StatusCode, errRes["message"])
 	}
+}
+
+func verifyPublishArtifact(downloadURL, expectedChecksum, packageName, packageVersion string) (string, error) {
+	expectedChecksum = strings.ToLower(strings.TrimSpace(expectedChecksum))
+	if len(expectedChecksum) != sha256.Size*2 {
+		return "", fmt.Errorf("el checksum debe ser SHA-256 hexadecimal")
+	}
+	client := &http.Client{Timeout: 2 * time.Minute}
+	response, err := client.Get(downloadURL)
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return "", fmt.Errorf("descarga HTTP %d", response.StatusCode)
+	}
+	const maxReleaseSize = pluginpkg.MaxArchiveSize + (32 << 20)
+	data, err := io.ReadAll(io.LimitReader(response.Body, maxReleaseSize+1))
+	if err != nil {
+		return "", err
+	}
+	if len(data) > maxReleaseSize {
+		return "", fmt.Errorf("release excede %d MiB", maxReleaseSize>>20)
+	}
+	digest := sha256.Sum256(data)
+	if hex.EncodeToString(digest[:]) != expectedChecksum {
+		return "", fmt.Errorf("checksum SHA-256 no coincide")
+	}
+	validateJP := func(jpData []byte) (string, error) {
+		archive, err := pluginpkg.ReadVerified(jpData)
+		if err != nil {
+			return "", err
+		}
+		if archive.Metadata.Name != packageName || archive.Metadata.Version != packageVersion {
+			return "", fmt.Errorf("JP declara %s %s, se esperaba %s %s", archive.Metadata.Name, archive.Metadata.Version, packageName, packageVersion)
+		}
+		return archive.Metadata.KeyID, nil
+	}
+	if pluginpkg.IsV2(data) {
+		return validateJP(data)
+	}
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
+		return "", fmt.Errorf("la release no es JP v2 ni ZIP: %w", err)
+	}
+	for _, file := range zr.File {
+		if !strings.HasSuffix(strings.ToLower(file.Name), ".jp") {
+			continue
+		}
+		reader, err := file.Open()
+		if err != nil {
+			return "", err
+		}
+		jpData, readErr := io.ReadAll(io.LimitReader(reader, pluginpkg.MaxArchiveSize+1))
+		_ = reader.Close()
+		if readErr != nil {
+			return "", readErr
+		}
+		if len(jpData) > pluginpkg.MaxArchiveSize {
+			return "", fmt.Errorf("JP dentro de release excede %d MiB", pluginpkg.MaxArchiveSize>>20)
+		}
+		if keyID, verifyErr := validateJP(jpData); verifyErr == nil {
+			return keyID, nil
+		}
+	}
+	return "", fmt.Errorf("la release no contiene un JP v2 firmado para %s %s", packageName, packageVersion)
 }
 
 func handleCacheCmd(sub string) {

@@ -51,8 +51,14 @@ func (r *Runtime) executeWebSocketMethod(instance *Instance, method string, args
 		return false
 
 	case "close":
-		// Not implemented yet
-		return true
+		if closer, ok := instance.Fields["_closer"].(func() error); ok {
+			if err := closer(); err != nil {
+				fmt.Printf("[WebSocket] Error closing connection: %v\n", err)
+				return false
+			}
+			return true
+		}
+		return false
 	}
 	return nil
 }

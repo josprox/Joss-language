@@ -3,6 +3,7 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
+	"sync"
 
 	"github.com/jossecurity/joss/pkg/parser"
 )
@@ -42,6 +43,7 @@ type Runtime struct {
 	CustomMiddlewares map[string]interface{} // Name -> Closure/Handler
 	NativeHandlers    map[string]NativeHandler
 	NativePlugins     map[string]*NativePluginDefinition
+	NativeDrivers     map[string]*NativeDriverDefinition
 	LoadedPlugins     map[string]string // package name -> resolved version
 	loadingPlugins    map[string]bool   // dependency-cycle detection
 	importedFiles     map[string]bool   // idempotent file imports
@@ -63,8 +65,19 @@ type NativePluginDefinition struct {
 	Root         string
 	Protocol     string
 	Executable   string
+	Driver       string
 	ArchiveFiles map[string][]byte // read-only, used by compiled VFS applications
 	UseVFS       bool
+}
+
+// NativeDriverDefinition is a loaded C ABI v1 library.
+type NativeDriverDefinition struct {
+	Name   string
+	Path   string
+	Handle uintptr
+	Call   func(string, string) *byte
+	Free   func(*byte)
+	Mu     sync.Mutex
 }
 
 // Instance represents an instance of a class

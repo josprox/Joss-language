@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"strings" // Added for TrimSpace
@@ -153,7 +154,7 @@ func (r *Runtime) executeAuthMethod(instance *Instance, method string, args []in
 					// created_at / updated_at handled automatically by insertFromMap if omitted
 				}
 
-				insertResult := r.insertFromMap(usersTable, insertData)
+				insertResult := r.insertFromMap(usersTable, insertData, false)
 				if insertResult != nil && insertResult != false {
 					fmt.Println("[Security] Usuario registrado exitosamente.")
 					return userToken
@@ -638,10 +639,15 @@ func (r *Runtime) executeAuthMethod(instance *Instance, method string, args []in
 
 // --- HELPERS Y CONFIGURACIÓN DE TABLAS ---
 
-var authTablesEnsured bool
+var authTablesEnsured sync.Map
 
 func (r *Runtime) ensureAuthTables(usersTable, rolesTable, prefix string) {
-	if r.GetDB() == nil || authTablesEnsured {
+	db := r.GetDB()
+	if db == nil {
+		return
+	}
+	ensureKey := fmt.Sprintf("%p:%s", db, usersTable)
+	if _, exists := authTablesEnsured.Load(ensureKey); exists {
 		return
 	}
 
@@ -650,10 +656,16 @@ func (r *Runtime) ensureAuthTables(usersTable, rolesTable, prefix string) {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name VARCHAR(50) NOT NULL UNIQUE
 	);`, rolesTable)
+	dbDriver := normalizeDatabaseDriver(r.Env["DB"])
 
 	if val, ok := r.Env["DB"]; ok && val == "mysql" {
 		createRoles = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 			id INT AUTO_INCREMENT PRIMARY KEY,
+			name VARCHAR(50) NOT NULL UNIQUE
+		);`, rolesTable)
+	} else if dbDriver == "postgres" {
+		createRoles = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY,
 			name VARCHAR(50) NOT NULL UNIQUE
 		);`, rolesTable)
 	}
@@ -694,16 +706,34 @@ func (r *Runtime) ensureAuthTables(usersTable, rolesTable, prefix string) {
 			last_login_at DATETIME,
 			FOREIGN KEY(role_id) REFERENCES %s(id)
 		);`, usersTable, rolesTable)
+	} else if dbDriver == "postgres" {
+		createUsers = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY,
+			user_token VARCHAR(128) NOT NULL,
+			username VARCHAR(50) NOT NULL,
+			first_name VARCHAR(100) NOT NULL,
+			last_name VARCHAR(100) NOT NULL,
+			email VARCHAR(100) NOT NULL UNIQUE,
+			phone VARCHAR(20), password VARCHAR(255) NOT NULL,
+			role_id BIGINT NOT NULL DEFAULT 2,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			verificado INTEGER DEFAULT 0, last_login_at TIMESTAMP,
+			FOREIGN KEY(role_id) REFERENCES %s(id)
+		);`, usersTable, rolesTable)
 	}
 	r.GetDB().Exec(createUsers)
 
 	// 3. Insertar Roles por defecto
-	r.GetDB().Exec(fmt.Sprintf("INSERT OR IGNORE INTO %s (name) VALUES ('admin'), ('client')", rolesTable))
-	if val, ok := r.Env["DB"]; ok && val == "mysql" {
+	if dbDriver == "sqlite" {
+		r.GetDB().Exec(fmt.Sprintf("INSERT OR IGNORE INTO %s (name) VALUES ('admin'), ('client')", rolesTable))
+	} else if dbDriver == "mysql" {
 		r.GetDB().Exec(fmt.Sprintf("INSERT INTO %s (name) VALUES ('admin'), ('client') ON DUPLICATE KEY UPDATE name=name", rolesTable))
+	} else if dbDriver == "postgres" {
+		r.GetDB().Exec(fmt.Sprintf("INSERT INTO %s (name) VALUES ('admin'), ('client') ON CONFLICT (name) DO NOTHING", rolesTable))
 	}
 
-	authTablesEnsured = true
+	authTablesEnsured.Store(ensureKey, true)
 
 	// 4. AUTO-MIGRACIÓN (Esto arregla el problema de SQLite)
 	isMySQL := false
@@ -718,10 +748,14 @@ func (r *Runtime) ensureAuthTables(usersTable, rolesTable, prefix string) {
 	patchColumn(r.GetDB(), usersTable, "last_name", "VARCHAR(100) NOT NULL DEFAULT ''", isMySQL)
 	patchColumn(r.GetDB(), usersTable, "phone", "VARCHAR(20) NOT NULL DEFAULT ''", isMySQL)
 	patchColumn(r.GetDB(), usersTable, "verificado", "INTEGER DEFAULT 0", isMySQL)
-	patchColumn(r.GetDB(), usersTable, "token_expires_at", "DATETIME", isMySQL)
-	patchColumn(r.GetDB(), usersTable, "created_at", "DATETIME DEFAULT CURRENT_TIMESTAMP", isMySQL)
-	patchColumn(r.GetDB(), usersTable, "updated_at", "DATETIME DEFAULT CURRENT_TIMESTAMP", isMySQL)
-	patchColumn(r.GetDB(), usersTable, "last_login_at", "DATETIME", isMySQL)
+	timeType := "DATETIME"
+	if dbDriver == "postgres" {
+		timeType = "TIMESTAMP"
+	}
+	patchColumn(r.GetDB(), usersTable, "token_expires_at", timeType, isMySQL)
+	patchColumn(r.GetDB(), usersTable, "created_at", timeType+" DEFAULT CURRENT_TIMESTAMP", isMySQL)
+	patchColumn(r.GetDB(), usersTable, "updated_at", timeType+" DEFAULT CURRENT_TIMESTAMP", isMySQL)
+	patchColumn(r.GetDB(), usersTable, "last_login_at", timeType, isMySQL)
 	// 5. Crear Tabla Recuperación Contraseñas
 	resetsTable := prefix + "password_resets"
 	createResets := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
@@ -741,6 +775,11 @@ func (r *Runtime) ensureAuthTables(usersTable, rolesTable, prefix string) {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			expires_at DATETIME,
 			used TINYINT(1) DEFAULT 0
+		);`, resetsTable)
+	} else if dbDriver == "postgres" {
+		createResets = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY, email VARCHAR(100) NOT NULL, token VARCHAR(255) NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, expires_at TIMESTAMP, used INTEGER DEFAULT 0
 		);`, resetsTable)
 	}
 	r.GetDB().Exec(createResets)

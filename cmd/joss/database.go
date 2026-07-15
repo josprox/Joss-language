@@ -158,17 +158,7 @@ func changeDatabaseEngine(target string) {
 }
 
 func connectToDB(driver string, env map[string]string) (*sql.DB, error) {
-	if driver == "sqlite" {
-		path := "database.sqlite"
-		if p, ok := env["DB_PATH"]; ok {
-			path = strings.Trim(p, "\"")
-			path = strings.Trim(path, "'")
-		}
-		return sql.Open("sqlite", path)
-	} else {
-		dsn := mysqlDatabaseDSN(env["DB_USER"], env["DB_PASS"], normalizeMySQLHost(env["DB_HOST"]), env["DB_NAME"])
-		return sql.Open("mysql", dsn)
-	}
+	return core.OpenConfiguredDatabase(driver, env)
 }
 
 func changeDatabaseMigrate() {
@@ -537,6 +527,8 @@ func getTables(db *sql.DB, driver string) ([]string, error) {
 	var query string
 	if driver == "sqlite" {
 		query = "SELECT name FROM sqlite_master WHERE type='table'"
+	} else if driver == "postgres" || driver == "postgresql" || driver == "pgx" {
+		query = "SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'"
 	} else {
 		query = "SHOW TABLES"
 	}
@@ -603,7 +595,7 @@ func changeDatabasePrefix(newPrefix string) {
 			fmt.Printf("Renombrando %s a %s... ", table, newTableName)
 
 			var query string
-			if dbDriver == "sqlite" {
+			if dbDriver == "sqlite" || dbDriver == "postgres" || dbDriver == "postgresql" || dbDriver == "pgx" {
 				query = fmt.Sprintf("ALTER TABLE %s RENAME TO %s", table, newTableName)
 			} else {
 				query = fmt.Sprintf("RENAME TABLE %s TO %s", table, newTableName)
@@ -673,6 +665,10 @@ func ensureTableSchema(destDB *sql.DB, driver string, table string, rows *sql.Ro
 		if err == nil {
 			tableExists = true
 		}
+	} else if driver == "postgres" || driver == "postgresql" || driver == "pgx" {
+		var name string
+		err = destDB.QueryRow("SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_name = ?", table).Scan(&name)
+		tableExists = err == nil
 	} else {
 		// MySQL
 		if _, err := destDB.Query("SELECT 1 FROM " + table + " LIMIT 1"); err == nil {
@@ -700,6 +696,8 @@ func ensureTableSchema(destDB *sql.DB, driver string, table string, rows *sql.Ro
 			if strings.ToLower(ct.Name()) == "id" {
 				if driver == "sqlite" {
 					colDef += " INTEGER PRIMARY KEY AUTOINCREMENT"
+				} else if driver == "postgres" || driver == "postgresql" || driver == "pgx" {
+					colDef = "id BIGSERIAL PRIMARY KEY"
 				} else {
 					colDef = "id BIGINT AUTO_INCREMENT PRIMARY KEY"
 				}
@@ -750,6 +748,24 @@ func mapTypeToSQL(ct *sql.ColumnType, driver string) string {
 		}
 		if strings.Contains(srcType, "FLOAT") || strings.Contains(srcType, "DOUBLE") || strings.Contains(srcType, "REAL") {
 			return "REAL"
+		}
+		return "TEXT"
+	}
+	if driver == "postgres" || driver == "postgresql" || driver == "pgx" {
+		if strings.Contains(srcType, "INT") {
+			return "BIGINT"
+		}
+		if strings.Contains(srcType, "BOOL") {
+			return "BOOLEAN"
+		}
+		if strings.Contains(srcType, "TIME") || strings.Contains(srcType, "DATE") {
+			return "TIMESTAMP"
+		}
+		if strings.Contains(srcType, "FLOAT") || strings.Contains(srcType, "DOUBLE") || strings.Contains(srcType, "REAL") || strings.Contains(srcType, "DECIMAL") {
+			return "DOUBLE PRECISION"
+		}
+		if strings.Contains(srcType, "JSON") {
+			return "JSONB"
 		}
 		return "TEXT"
 	}

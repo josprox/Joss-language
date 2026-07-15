@@ -39,6 +39,7 @@ var (
 				CustomMiddlewares: make(map[string]interface{}),
 				NativeHandlers:    make(map[string]NativeHandler),
 				NativePlugins:     make(map[string]*NativePluginDefinition),
+				NativeDrivers:     make(map[string]*NativeDriverDefinition),
 				LoadedPlugins:     make(map[string]string),
 				loadingPlugins:    make(map[string]bool),
 				importedFiles:     make(map[string]bool),
@@ -76,6 +77,9 @@ func NewRuntime() *Runtime {
 	}
 	if r.NativePlugins == nil {
 		r.NativePlugins = make(map[string]*NativePluginDefinition)
+	}
+	if r.NativeDrivers == nil {
+		r.NativeDrivers = make(map[string]*NativeDriverDefinition)
 	}
 	// Ensure native classes are registered (if recycled)
 	if _, ok := r.Variables["View"]; !ok {
@@ -118,6 +122,9 @@ func (r *Runtime) Free() {
 	for k := range r.NativePlugins {
 		delete(r.NativePlugins, k)
 	}
+	for k := range r.NativeDrivers {
+		delete(r.NativeDrivers, k)
+	}
 	// Restore standard variables
 	r.Variables["cout"] = &Cout{}
 	r.Variables["cin"] = &Cin{}
@@ -149,16 +156,17 @@ func (r *Runtime) Fork() *Runtime {
 	// fmt.Printf("[RUNTIME] Forking from %p\n", r)
 	newR := &Runtime{
 		Env:               make(map[string]string),
-		Classes:           r.Classes,   // Share Classes (Read-Only)
-		Functions:         r.Functions, // Share Functions (Read-Only)
+		Classes:           copyClassMap(r.Classes),
+		Functions:         copyMethodMap(r.Functions),
 		Routes:            make(map[string]map[string]interface{}),
 		CurrentMiddleware: make([]string, 0),
 		CustomMiddlewares: make(map[string]interface{}),
 		DB:                r.DB, // Share DB Connection (Thread-Safe)
 		Variables:         make(map[string]interface{}),
 		VarTypes:          make(map[string]string),
-		NativeHandlers:    r.NativeHandlers, // Share Dispatch Table
-		NativePlugins:     r.NativePlugins,  // Share immutable plugin definitions
+		NativeHandlers:    copyNativeHandlerMap(r.NativeHandlers),
+		NativePlugins:     copyNativePluginMap(r.NativePlugins),
+		NativeDrivers:     copyNativeDriverMap(r.NativeDrivers),
 		LoadedPlugins:     make(map[string]string),
 		loadingPlugins:    make(map[string]bool),
 		importedFiles:     make(map[string]bool),
@@ -231,6 +239,46 @@ func (r *Runtime) Fork() *Runtime {
 	}
 
 	return newR
+}
+
+func copyClassMap(source map[string]*parser.ClassStatement) map[string]*parser.ClassStatement {
+	result := make(map[string]*parser.ClassStatement, len(source))
+	for key, value := range source {
+		result[key] = value
+	}
+	return result
+}
+
+func copyMethodMap(source map[string]*parser.MethodStatement) map[string]*parser.MethodStatement {
+	result := make(map[string]*parser.MethodStatement, len(source))
+	for key, value := range source {
+		result[key] = value
+	}
+	return result
+}
+
+func copyNativeHandlerMap(source map[string]NativeHandler) map[string]NativeHandler {
+	result := make(map[string]NativeHandler, len(source))
+	for key, value := range source {
+		result[key] = value
+	}
+	return result
+}
+
+func copyNativePluginMap(source map[string]*NativePluginDefinition) map[string]*NativePluginDefinition {
+	result := make(map[string]*NativePluginDefinition, len(source))
+	for key, value := range source {
+		result[key] = value
+	}
+	return result
+}
+
+func copyNativeDriverMap(source map[string]*NativeDriverDefinition) map[string]*NativeDriverDefinition {
+	result := make(map[string]*NativeDriverDefinition, len(source))
+	for key, value := range source {
+		result[key] = value
+	}
+	return result
 }
 
 // LoadEnv loads environment variables from env.joss
@@ -445,7 +493,7 @@ func (r *Runtime) GetDB() *sql.DB {
 	// Connect to DB lazily
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
-		dbDriver = val
+		dbDriver = normalizeDatabaseDriver(val)
 	}
 
 	var dsn string
@@ -457,6 +505,20 @@ func (r *Runtime) GetDB() *sql.DB {
 		}
 		dsn = dbPath
 		fmt.Printf("[Security] Conectando a SQLite: %s\n", dbPath)
+	} else if dbDriver == "postgres" {
+		host := strings.TrimSpace(r.Env["DB_HOST"])
+		if host == "" {
+			return nil
+		}
+		if !strings.Contains(host, ":") {
+			host += ":5432"
+		}
+		sslMode := strings.TrimSpace(r.Env["DB_SSLMODE"])
+		if sslMode == "" {
+			sslMode = "disable"
+		}
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s sslmode=%s", host, r.Env["DB_USER"], r.Env["DB_PASS"], r.Env["DB_NAME"], sslMode)
+		fmt.Printf("[Security] Conectando a PostgreSQL: %s\n", host)
 	} else {
 		// Default to MySQL
 		if host, ok := r.Env["DB_HOST"]; ok {
@@ -473,7 +535,13 @@ func (r *Runtime) GetDB() *sql.DB {
 		}
 	}
 
-	db, err := sql.Open(dbDriver, dsn)
+	var db *sql.DB
+	var err error
+	if dbDriver == "postgres" {
+		db, err = OpenConfiguredDatabase(dbDriver, r.Env)
+	} else {
+		db, err = sql.Open(sqlDriverName(dbDriver), dsn)
+	}
 	if err == nil {
 		r.DB = db
 

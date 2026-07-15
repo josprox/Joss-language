@@ -1,6 +1,6 @@
 # Plugins y JP v2
 
-Joss carga automáticamente los plugins declarados en `joss.yaml`. El código de la aplicación usa su API como cualquier clase del lenguaje: no necesita `use`.
+Joss carga automáticamente las dependencias de `joss.yaml`; el código consumidor usa las clases del plugin sin `use`.
 
 ```bash
 joss pub add mi_plugin ^1.2.0
@@ -12,60 +12,77 @@ dependencies:
   mi_plugin: "^1.2.0"
 ```
 
-```joss
-print(MiPlugin::version())
-```
+`use mi_plugin;` solo se conserva para compatibilidad.
 
-`use mi_plugin;` se conserva como compatibilidad con proyectos existentes, pero una aplicación nueva debe omitirlo.
-
-## Crear un plugin
+## Crear y compilar
 
 ```bash
 joss new package mi_plugin
 cd mi_plugin
 joss build package .
-```
-
-```text
-mi_plugin/
-├── joss.yaml
-├── README.md
-└── src/plugin.joss
-```
-
-```yaml
-name: mi_plugin
-version: 1.0.0
-description: API de ejemplo
-license: MIT
-type: joss
-environment:
-  joss: ">=3.6.0"
-entry:
-  main: src/plugin.joss
-```
-
-## Artefacto JP v2
-
-`joss build package .` crea un `.jp` con bytecode, manifiesto, assets y payloads nativos autocontenidos que declares. El consumidor instala Joss y el plugin: no necesita instalar Python, PHP, JVM, Kotlin, MATLAB, Dart/Flutter, C/C++ o Rust si sus runtimes y bibliotecas redistribuibles están incluidos correctamente.
-
-El empaquetador no compila esos lenguajes externos: incorpora los ejecutables y archivos que el autor ya produjo. Excluye fuentes con extensiones conocidas (`.joss`, `.go`, `.c`, `.h`, `.py`, `.php`, `.java`, `.kt`, `.dart`, `.rs`, entre otras), además de `env.joss`, `env.enc` y otros `.jp`. Cada archivo descomprimido admite hasta 128 MiB y el archivo completo hasta 256 MiB.
-
-El archivo incluye `META-INF/joss-symbols.json`, usado por la extensión para autocompletado, hover y ayuda de firma sin exponer las fuentes del plugin.
-
-```bash
 joss package inspect mi_plugin.jp
 ```
 
-Los bridges nativos usan `joss-rpc-v1`: un proceso privado intercambia mensajes JSON por entrada y salida estándar. `Plugin::call()` realiza una petición y `Plugin::stream()` entrega frames incrementales. El SDK está en `sdk/` e incluye C/C++, Python, PHP, Java, Kotlin, Dart/Flutter y Rust.
+El JP incluye bytecode sin fuentes Joss, `META-INF/joss-symbols.json` para IntelliSense, assets y payloads nativos declarados. Excluye extensiones de fuente conocidas, archivos de entorno y otros JP. El límite es 128 MiB por archivo y 256 MiB por paquete.
 
-## Publicar con seguridad
+Cada build se firma con Ed25519. Joss reutiliza `~/.joss/keys/<plugin>.ed25519` o la ruta de `JOSS_PLUGIN_SIGNING_KEY`; la llave privada nunca entra al paquete. El runtime, la instalación Pub y la publicación rechazan JP v2 sin firma o con contenido alterado. `joss.lock` fija también el `key_id` del autor para detectar un cambio de llave inesperado. `joss package inspect` muestra algoritmo y `key_id`.
 
-```bash
-joss build package .
-joss pub publish
+## Payload RPC autocontenido
+
+`native` declara un ejecutable por target. El protocolo `joss-rpc-v1` intercambia JSON por stdin/stdout y admite `Plugin::call()` y `Plugin::stream()`.
+
+```yaml
+native:
+  protocol: joss-rpc-v1
+  windows-amd64: native/windows-amd64/bridge.exe
+  linux-amd64: native/linux-amd64/bridge
+  darwin-arm64: native/darwin-arm64/bridge
 ```
 
-No empaquetes secretos ni fuentes que no quieras distribuir. Un payload nativo es código ejecutable de confianza, se ejecuta con los permisos del proceso Joss y recibe las variables cargadas del entorno. El formato JP v2 no implementa firma criptográfica del autor. Instálalo solo desde autores y registros confiables.
+El SDK contiene adaptadores para C/C++, Python, PHP, Java, Kotlin, Dart/Flutter y Rust. Si el autor incluye legalmente el runtime y todas sus bibliotecas redistribuibles, el consumidor solo necesita Joss y el JP.
 
-Los plugins oficiales se publican y documentan de forma independiente: [joss_ai](https://github.com/josprox/joss_ai), [joss_smtp](https://github.com/josprox/joss_smtp), [joss_notify](https://github.com/josprox/joss_notify) y [joss_backup](https://github.com/josprox/joss_backup).
+Los sidecars no heredan automáticamente `DB_PASS`, tokens ni otras claves de `env.joss`. Reciben variables básicas del sistema y:
+
+```env
+PLUGIN_TIMEOUT_SECONDS="30"
+PLUGIN_ENV_ALLOW="PUBLIC_API_KEY,LOCALE"
+```
+
+## ABI C v1 en memoria
+
+`abi` declara una DLL, SO o dylib por target. Joss la carga dentro del proceso, sin serializar a un proceso externo. No combines `native` y `abi` en el mismo plugin.
+
+```yaml
+abi:
+  windows-amd64: native/windows-amd64/math.dll
+  linux-amd64: native/linux-amd64/libmath.so
+  darwin-arm64: native/darwin-arm64/libmath.dylib
+```
+
+El encabezado listo para usar está en `sdk/c/joss_driver.h`. Su contrato es:
+
+```c
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+// args_json es un array JSON. El resultado debe ser JSON terminado en NUL.
+const char *joss_driver_call(const char *method, const char *args_json);
+
+// Opcional. Joss lo invoca después de copiar el resultado.
+void joss_driver_free(const char *result);
+
+#ifdef __cplusplus
+}
+#endif
+```
+
+Desde Joss, `Plugin::call("mi_plugin", "sum", [10, 20])` usa automáticamente ABI o RPC según el paquete. `System::load_driver($path, $name)` y `System::driver_call($name, $method, $args)` permiten usar el mismo contrato fuera de un JP. Streaming corresponde a RPC; ABI v1 usa llamadas completas.
+
+## Validación y confianza
+
+El empaquetador comprueba targets y archivos. Para ejecutables PE, ELF y Mach-O inspecciona imports y falla cuando una biblioteca no perteneciente al sistema no está incluida. Esto evita publicar accidentalmente un puente que todavía depende de una instalación local.
+
+La firma prueba que el contenido corresponde a la llave indicada. El código nativo sigue siendo código de confianza con los permisos de la cuenta que ejecuta Joss. Instala únicamente autores y registros confiables; la firma no sustituye una auditoría ni concede derechos de redistribución.
+
+Plugins oficiales: [joss_ai](https://github.com/josprox/joss_ai), [joss_smtp](https://github.com/josprox/joss_smtp), [joss_notify](https://github.com/josprox/joss_notify) y [joss_backup](https://github.com/josprox/joss_backup).

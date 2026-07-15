@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -16,17 +15,8 @@ func createCRUD(tableName string) {
 	fmt.Printf("Generating CRUD for table '%s'...\n", tableName)
 
 	// 1. Connect to DB
-	dbType, dbPath, dbHost, dbUser, dbPass, dbName, prefix := loadEnvConfig()
-
-	var db *sql.DB
-	var err error
-
-	if dbType == "sqlite" {
-		db, err = sql.Open("sqlite", dbPath)
-	} else {
-		dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPass, dbHost, dbName)
-		db, err = sql.Open("mysql", dsn)
-	}
+	dbType, _, _, _, _, _, prefix := loadEnvConfig()
+	db, err := connectToDB(dbType, readEnvFile(GetEnvFile()))
 
 	if err != nil {
 		fmt.Printf("Error connecting to DB: %v\n", err)

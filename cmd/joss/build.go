@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/gob"
 	"encoding/json"
@@ -13,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -554,6 +557,7 @@ func buildPackage(pkgPath string) {
 		pluginpkg.SymbolsPath: symbolData,
 	}
 	nativeConfig := packageManifestSection(string(manifestData), "native")
+	abiConfig := packageManifestSection(string(manifestData), "abi")
 	protocol := nativeConfig["protocol"]
 	delete(nativeConfig, "protocol")
 	if len(nativeConfig) > 0 && protocol == "" {
@@ -609,10 +613,16 @@ func buildPackage(pkgPath string) {
 		Bytecode:     "bytecode/main.jbc",
 		Dependencies: parseManifestDependencies(string(manifestData)),
 		Native:       nativeConfig,
+		ABI:          abiConfig,
 		Protocol:     protocol,
 		Symbols:      pluginpkg.SymbolsPath,
 	}
-	archive, err := pluginpkg.Build(metadata, files)
+	signingKey, signingKeyPath, err := loadOrCreatePluginSigningKey(name)
+	if err != nil {
+		fmt.Printf("Error preparando firma del plugin: %v\n", err)
+		return
+	}
+	archive, err := pluginpkg.BuildSigned(metadata, files, signingKey)
 	if err != nil {
 		fmt.Printf("Error creando JP v2: %v\n", err)
 		return
@@ -629,7 +639,47 @@ func buildPackage(pkgPath string) {
 		return
 	}
 
-	fmt.Printf("[Package Build] JP v2 compilado sin fuentes de implementación: %s\n", outPath)
+	fmt.Printf("[Package Build] JP v2 firmado y compilado sin fuentes de implementación: %s\n", outPath)
+	fmt.Printf("[Package Build] Llave de autor: %s (no se incluye en el JP)\n", signingKeyPath)
+}
+
+func loadOrCreatePluginSigningKey(pluginName string) (ed25519.PrivateKey, string, error) {
+	configured := strings.TrimSpace(os.Getenv("JOSS_PLUGIN_SIGNING_KEY"))
+	keyPath := configured
+	if keyPath == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, "", err
+		}
+		safeName := regexp.MustCompile(`[^A-Za-z0-9_.-]+`).ReplaceAllString(pluginName, "_")
+		if safeName == "" {
+			safeName = "default"
+		}
+		keyPath = filepath.Join(home, ".joss", "keys", safeName+".ed25519")
+	}
+	if content, err := os.ReadFile(keyPath); err == nil {
+		decoded, decodeErr := base64.StdEncoding.DecodeString(strings.TrimSpace(string(content)))
+		if decodeErr != nil || len(decoded) != ed25519.PrivateKeySize {
+			return nil, keyPath, fmt.Errorf("llave Ed25519 invalida en %s", keyPath)
+		}
+		return ed25519.PrivateKey(decoded), keyPath, nil
+	} else if !os.IsNotExist(err) {
+		return nil, keyPath, err
+	}
+	if configured != "" {
+		return nil, keyPath, fmt.Errorf("JOSS_PLUGIN_SIGNING_KEY no existe: %s", keyPath)
+	}
+	_, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, keyPath, err
+	}
+	if err := os.MkdirAll(filepath.Dir(keyPath), 0700); err != nil {
+		return nil, keyPath, err
+	}
+	if err := os.WriteFile(keyPath, []byte(base64.StdEncoding.EncodeToString(privateKey)+"\n"), 0600); err != nil {
+		return nil, keyPath, err
+	}
+	return privateKey, keyPath, nil
 }
 
 func isPluginSourceExtension(ext string) bool {
@@ -708,6 +758,11 @@ func inspectPackage(filename string) {
 		return
 	}
 	fmt.Printf("JP v2 %s %s\n", archive.Metadata.Name, archive.Metadata.Version)
+	if archive.Metadata.Signature != "" {
+		fmt.Printf("Firma: %s (%s) verificada\n", archive.Metadata.SignatureAlgorithm, archive.Metadata.KeyID)
+	} else {
+		fmt.Println("Firma: ausente; el runtime rechazará este paquete")
+	}
 	fmt.Printf("Bytecode: %s (%d bytes)\n", archive.Metadata.Bytecode, len(archive.Files[archive.Metadata.Bytecode]))
 	if archive.Metadata.Symbols != "" {
 		var symbols pluginpkg.SymbolIndex
@@ -719,13 +774,20 @@ func inspectPackage(filename string) {
 			fmt.Printf("IntelliSense: %s (%d clases, %d metodos, %d funciones)\n", archive.Metadata.Symbols, len(symbols.Classes), methodCount, len(symbols.Functions))
 		}
 	}
-	if len(archive.Metadata.Native) == 0 {
+	if len(archive.Metadata.Native) == 0 && len(archive.Metadata.ABI) == 0 {
 		fmt.Println("Payloads nativos: ninguno")
-	} else {
+	} else if len(archive.Metadata.Native) > 0 {
 		fmt.Printf("Protocolo: %s\n", archive.Metadata.Protocol)
 		fmt.Println("Payloads nativos:")
 		for _, target := range sortedManifestKeys(archive.Metadata.Native) {
 			asset := archive.Metadata.Native[target]
+			fmt.Printf("  %s -> %s (%d bytes)\n", target, asset, len(archive.Files[asset]))
+		}
+	}
+	if len(archive.Metadata.ABI) > 0 {
+		fmt.Println("Bibliotecas ABI C v1:")
+		for _, target := range sortedManifestKeys(archive.Metadata.ABI) {
+			asset := archive.Metadata.ABI[target]
 			fmt.Printf("  %s -> %s (%d bytes)\n", target, asset, len(archive.Files[asset]))
 		}
 	}

@@ -447,9 +447,9 @@
     "prefix": "schema:create",
     "body": [
       "Schema::create(\"${1:tableName}\", func(\\$table) {",
-      "\t\\$table.id()",
-      "\t\\$table.string(\"${2:name}\")",
-      "\t\\$table.timestamps()",
+      "\t\\$table->id()",
+      "\t\\$table->string(\"${2:name}\")",
+      "\t\\$table->timestamps()",
       "})"
     ],
     "description": "Create a new table schema"
@@ -472,7 +472,7 @@
     "prefix": "schema:table",
     "body": [
       "Schema::table(\"${1:tableName}\", func(\\$table) {",
-      "\t\\$table.string(\"${2:column}\")",
+      "\t\\$table->string(\"${2:column}\")",
       "\t$0",
       "})"
     ],
@@ -485,15 +485,39 @@
     ],
     "description": "Rename a table"
   },
+  "Schema Foreign Key": {
+    "prefix": "schema:foreign",
+    "body": [
+      "\\$table->foreign(${1:\"user_id\"})",
+      "\t->references(${2:\"id\"})",
+      "\t->on(${3:\"users\"})",
+      "\t->onDelete(${4:\"cascade\"})"
+    ],
+    "description": "Create a foreign key with referential actions"
+  },
+  "Schema Compound Index": {
+    "prefix": "schema:index",
+    "body": [
+      "\\$table->index([${1:\"tenant_id\", \"created_at\"}], ${2:\"tenant_created_index\"})"
+    ],
+    "description": "Create a compound index"
+  },
+  "Schema Rename Column": {
+    "prefix": "schema:renameColumn",
+    "body": [
+      "\\$table->renameColumn(\"${1:from}\", \"${2:to}\")"
+    ],
+    "description": "Rename a column"
+  },
   "Migration Class": {
     "prefix": "migration",
     "body": [
       "class ${1:CreateUsersTable} extends Migration {",
       "\tfunc up() {",
       "\t\tSchema::create(\"${2:users}\", func(\\$table) {",
-      "\t\t\t\\$table.id()",
-      "\t\t\t\\$table.string(\"name\")",
-      "\t\t\t\\$table.timestamps()",
+      "\t\t\t\\$table->id()",
+      "\t\t\t\\$table->string(\"name\")",
+      "\t\t\t\\$table->timestamps()",
       "\t\t})",
       "\t}",
       "",

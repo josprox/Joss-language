@@ -30,12 +30,15 @@ type pluginManifest struct {
 	JossVersion  string
 	Dependencies map[string]string
 	Native       map[string]string
+	ABI          map[string]string
 	Protocol     string
+	KeyID        string
 }
 
 type pluginLockFile struct {
 	Packages map[string]struct {
 		Version string `json:"version"`
+		KeyID   string `json:"key_id,omitempty"`
 	} `json:"packages"`
 }
 
@@ -146,6 +149,15 @@ func (r *Runtime) loadPlugin(name, constraint string) error {
 	if manifest.Version != "" && version != "dev" && manifest.Version != version {
 		return fmt.Errorf("plugin %s: la carpeta usa %s pero el manifiesto declara %s", name, version, manifest.Version)
 	}
+	lockedKeyID := ""
+	if r.usePluginVFS {
+		lockedKeyID = lockedPluginKeyIDVFS(name)
+	} else {
+		lockedKeyID = lockedPluginKeyID(r.ProjectRoot, name)
+	}
+	if lockedKeyID != "" && manifest.KeyID != lockedKeyID {
+		return fmt.Errorf("plugin %s %s: la firma usa key_id %s, pero joss.lock fija %s", name, version, manifest.KeyID, lockedKeyID)
+	}
 	if manifest.JossVersion != "" && !versionSatisfies(currentJossVersion(), manifest.JossVersion) {
 		return fmt.Errorf("plugin %s %s requiere Joss %q pero el runtime es %s", name, version, manifest.JossVersion, currentJossVersion())
 	}
@@ -178,6 +190,9 @@ func (r *Runtime) loadPlugin(name, constraint string) error {
 			return fmt.Errorf("plugin %s %s: %w", name, version, err)
 		}
 		if err := r.registerPluginNativePayload(name, version, pkgRoot, manifest.Native, manifest.Protocol, files); err != nil {
+			return err
+		}
+		if err := r.registerPluginABIPayload(name, version, pkgRoot, manifest.ABI, files); err != nil {
 			return err
 		}
 		if err := r.executePluginProgram(name, version, program, manifest.Bytecode); err != nil {
@@ -364,7 +379,7 @@ func readInstalledPlugin(pkgRoot, name string) (pluginManifest, map[string][]byt
 
 func decodePluginArchive(data []byte) (pluginManifest, map[string][]byte, error) {
 	if pluginpkg.IsV2(data) {
-		archive, err := pluginpkg.Read(data)
+		archive, err := pluginpkg.ReadVerified(data)
 		if err != nil {
 			return pluginManifest{}, nil, err
 		}
@@ -374,7 +389,9 @@ func decodePluginArchive(data []byte) (pluginManifest, map[string][]byte, error)
 		manifest.Bytecode = archive.Metadata.Bytecode
 		manifest.Dependencies = archive.Metadata.Dependencies
 		manifest.Native = archive.Metadata.Native
+		manifest.ABI = archive.Metadata.ABI
 		manifest.Protocol = archive.Metadata.Protocol
+		manifest.KeyID = archive.Metadata.KeyID
 		return manifest, archive.Files, nil
 	}
 	if len(data) > maxPluginArchiveSize {
@@ -516,6 +533,30 @@ func lockedPluginVersionVFS(name string) string {
 		return ""
 	}
 	return lock.Packages[name].Version
+}
+
+func lockedPluginKeyID(root, name string) string {
+	data, err := os.ReadFile(filepath.Join(root, "joss.lock"))
+	if err != nil {
+		return ""
+	}
+	var lock pluginLockFile
+	if json.Unmarshal(data, &lock) != nil {
+		return ""
+	}
+	return lock.Packages[name].KeyID
+}
+
+func lockedPluginKeyIDVFS(name string) string {
+	data, err := readPluginVFSFile("joss.lock")
+	if err != nil {
+		return ""
+	}
+	var lock pluginLockFile
+	if json.Unmarshal(data, &lock) != nil {
+		return ""
+	}
+	return lock.Packages[name].KeyID
 }
 
 func readPluginVFSFile(name string) ([]byte, error) {

@@ -110,8 +110,25 @@ func Start(fileSystem http.FileSystem) {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	fmt.Printf("Iniciando servidor Joss en http://localhost:%s\n", port)
-	if err := srv.ListenAndServe(); err != nil {
+	certFile := strings.TrimSpace(currentRuntime.Env["TLS_CERT_FILE"])
+	keyFile := strings.TrimSpace(currentRuntime.Env["TLS_KEY_FILE"])
+	if (certFile == "") != (keyFile == "") {
+		fmt.Println("Error iniciando servidor: TLS_CERT_FILE y TLS_KEY_FILE deben configurarse juntos")
+		return
+	}
+
+	scheme := "http"
+	if certFile != "" {
+		scheme = "https"
+	}
+	fmt.Printf("Iniciando servidor Joss en %s://localhost:%s\n", scheme, port)
+	var err error
+	if certFile != "" {
+		err = srv.ListenAndServeTLS(certFile, keyFile)
+	} else {
+		err = srv.ListenAndServe()
+	}
+	if err != nil && err != http.ErrServerClosed {
 		fmt.Printf("Error iniciando servidor: %v\n", err)
 	}
 }

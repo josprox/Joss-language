@@ -21,6 +21,17 @@ native:
 
 Incluya `sdk/c/joss_plugin.h`, implemente el callback y compile un ejecutable por target. Copie junto a él todas las DLL o `.so` privadas.
 
+Para llamadas en memoria incluya `sdk/c/joss_driver.h`, defina `JOSS_DRIVER_BUILD` al compilar la biblioteca y declare los targets bajo `abi`:
+
+```yaml
+abi:
+  windows-amd64: native/windows-amd64/plugin.dll
+  linux-amd64: native/linux-amd64/libplugin.so
+  darwin-arm64: native/darwin-arm64/libplugin.dylib
+```
+
+No declares `native` y `abi` simultáneamente. ABI v1 usa `Plugin::call`; el streaming permanece en `joss-rpc-v1`.
+
 ## Python
 
 ```bash

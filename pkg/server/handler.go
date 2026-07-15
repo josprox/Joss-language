@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -93,7 +94,9 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		rt.SetLocale("en") // Default
 	}
 
-	// 2. Rate Limiting (60 req/min)
+	// 2. Configurable rate limiting. Defaults preserve the historical 60/min behavior.
+	rateLimitRequests := envPositiveInt(rt.Env, "RATE_LIMIT_REQUESTS", 60)
+	rateLimitWindow := time.Duration(envPositiveInt(rt.Env, "RATE_LIMIT_WINDOW_SECONDS", 60)) * time.Second
 	ip := r.Header.Get("X-Forwarded-For")
 	if ip == "" {
 		ip = strings.Split(r.RemoteAddr, ":")[0]
@@ -108,13 +111,14 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		entry = &rateLimitEntry{count: 0, lastTime: time.Now()}
 		rateLimitStore[ip] = entry
 	}
-	if time.Since(entry.lastTime) > time.Minute {
+	if time.Since(entry.lastTime) > rateLimitWindow {
 		entry.count = 0
 		entry.lastTime = time.Now()
 	}
 	entry.count++
-	if entry.count > 60 {
+	if entry.count > rateLimitRequests {
 		rateLimitMu.Unlock()
+		w.Header().Set("Retry-After", strconv.Itoa(int(rateLimitWindow.Seconds())))
 		w.WriteHeader(http.StatusTooManyRequests)
 		fmt.Fprintf(w, "<h1>429 Too Many Requests</h1>")
 		return
@@ -244,7 +248,10 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Create Sender Closure
+		var writeMu sync.Mutex
 		sender := func(v interface{}) error {
+			writeMu.Lock()
+			defer writeMu.Unlock()
 			// If v is string/byte, use WriteMessage?
 			// Joss usually sends JSON string via .send().
 			// But native logic in websocket.go gets `msg`.
@@ -262,7 +269,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Dispatch to WebSocket Handler in Core (Blocking)
-		rt.DispatchWebSocket(r.URL.Path, conn, reader, sender)
+		rt.DispatchWebSocket(r.URL.Path, conn, reader, sender, conn.Close)
 
 		return
 	}
@@ -351,7 +358,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("joss_session")
 	if err != nil {
 		sessionID = generateSessionID()
-		http.SetCookie(w, &http.Cookie{Name: "joss_session", Value: sessionID, Path: "/", HttpOnly: true})
+		http.SetCookie(w, &http.Cookie{Name: "joss_session", Value: sessionID, Path: "/", HttpOnly: true, Secure: r.TLS != nil, SameSite: http.SameSiteLaxMode})
 	} else {
 		sessionID = cookie.Value
 	}
@@ -371,7 +378,13 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("[HANDLER] %s: Session lock acquired.\n", requestID)
 
 	var sessData map[string]interface{}
-	if rt.Env["SESSION_DRIVER"] == "redis" {
+	driver := sessionDriver(rt.Env)
+	if driver == "redis" {
+		if core.GlobalRedis == nil {
+			sessionMu.Unlock()
+			http.Error(w, "Redis session storage is not available", http.StatusServiceUnavailable)
+			return
+		}
 		// Load from Redis
 		val, err := core.GlobalRedis.Get(core.Ctx, "session:"+sessionID).Result()
 		if err == nil {
@@ -382,7 +395,14 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		sessionMu.Unlock()
 	} else {
-		// In-Memory
+		if driver == "file" {
+			if err := ensureFileSessionsLoaded(rt.Env); err != nil {
+				sessionMu.Unlock()
+				http.Error(w, "Unable to load session storage", http.StatusInternalServerError)
+				fmt.Printf("[Session] %v\n", err)
+				return
+			}
+		}
 		if _, ok := sessionStore[sessionID]; !ok {
 			sessionStore[sessionID] = make(map[string]interface{})
 		}
@@ -436,10 +456,15 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		rand.Read(b)
 		csrfToken = hex.EncodeToString(b)
 		sessionMu.Lock()
-		if rt.Env["SESSION_DRIVER"] == "redis" {
+		if driver == "redis" {
 			sessData["csrf_token"] = csrfToken
 		} else {
 			sessionStore[sessionID]["csrf_token"] = csrfToken
+			if driver == "file" {
+				if err := persistFileSessions(rt.Env); err != nil {
+					fmt.Printf("[Session] Error guardando CSRF: %v\n", err)
+				}
+			}
 		}
 		sessionMu.Unlock()
 		sessData["csrf_token"] = csrfToken
@@ -470,7 +495,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := rt.Dispatch(r.Method, r.URL.Path, reqData, sessData)
 
 	// 8. Save Session
-	if rt.Env["SESSION_DRIVER"] == "redis" {
+	if driver == "redis" {
 		data, _ := json.Marshal(sessData)
 		core.GlobalRedis.Set(core.Ctx, "session:"+sessionID, data, 24*time.Hour)
 	} else {
@@ -478,6 +503,11 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		sessionMu.Lock()
 		// Overwrite the session data completely
 		sessionStore[sessionID] = sessData
+		if driver == "file" {
+			if err := persistFileSessions(rt.Env); err != nil {
+				fmt.Printf("[Session] Error persistiendo sesion: %v\n", err)
+			}
+		}
 		sessionMu.Unlock()
 	}
 
@@ -569,8 +599,9 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 						Value:    valStr,
 						Path:     "/",
 						HttpOnly: true,
-						// Secure:   r.TLS != nil,
-						MaxAge: maxAge,
+						Secure:   r.TLS != nil,
+						SameSite: http.SameSiteLaxMode,
+						MaxAge:   maxAge,
 					})
 				}
 			}
@@ -672,7 +703,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 			if val, ok := resInst.Fields["_type"]; ok && val == "REDIRECT" {
 				if flash, ok := resInst.Fields["flash"].(map[string]interface{}); ok {
 					sessionMu.Lock()
-					if rt.Env["SESSION_DRIVER"] == "redis" {
+					if driver == "redis" {
 						for k, v := range flash {
 							sessData[k] = v
 						}
@@ -684,6 +715,11 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 						}
 						for k, v := range flash {
 							sessionStore[sessionID][k] = v
+						}
+						if driver == "file" {
+							if err := persistFileSessions(rt.Env); err != nil {
+								fmt.Printf("[Session] Error persistiendo flash: %v\n", err)
+							}
 						}
 					}
 					sessionMu.Unlock()
@@ -702,8 +738,9 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 							Value:    valStr,
 							Path:     "/",
 							HttpOnly: true,
-							// Secure:   r.TLS != nil, // Optional: Force secure if HTTPS
-							MaxAge: maxAge,
+							Secure:   r.TLS != nil,
+							SameSite: http.SameSiteLaxMode,
+							MaxAge:   maxAge,
 						})
 					}
 				}
@@ -726,7 +763,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 			if strings.Contains(w.Header().Get("Content-Type"), "text/html") {
 				fmt.Fprintf(w, `<script>
 				(function() {
-					var conn = new WebSocket("ws://" + location.host + "/__hot_reload");
+					var conn = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/__hot_reload");
 					conn.onmessage = function(evt) {
 						if (evt.data === "reload") {
 							console.log("Reloading...");
@@ -755,7 +792,7 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		// Hot Reload Script (WebSocket)
 		fmt.Fprintf(w, `<script>
 			(function() {
-				var conn = new WebSocket("ws://" + location.host + "/__hot_reload");
+				var conn = new WebSocket((location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/__hot_reload");
 				conn.onmessage = function(evt) {
 					if (evt.data === "reload") {
 						console.log("Reloading...");
@@ -772,6 +809,14 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.NotFound(w, r)
+}
+
+func envPositiveInt(env map[string]string, key string, fallback int) int {
+	value, err := strconv.Atoi(strings.TrimSpace(env[key]))
+	if err != nil || value <= 0 {
+		return fallback
+	}
+	return value
 }
 
 func generateSessionID() string {

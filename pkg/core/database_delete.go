@@ -92,7 +92,7 @@ func (r *Runtime) executeTruncateMethod(instance *Instance) interface{} {
 	// Get database driver
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
-		dbDriver = val
+		dbDriver = normalizeDatabaseDriver(val)
 	}
 
 	var query string
@@ -110,7 +110,7 @@ func (r *Runtime) executeTruncateMethod(instance *Instance) interface{} {
 		// Reset auto-increment sequence
 		r.GetDB().Exec(fmt.Sprintf("DELETE FROM sqlite_sequence WHERE name='%s'", strings.TrimPrefix(table, "`")))
 	} else {
-		// MySQL has native TRUNCATE
+		// MySQL and PostgreSQL have native TRUNCATE
 		query = fmt.Sprintf("TRUNCATE TABLE %s", table)
 		fmt.Printf("[GranDB] Truncate Query (MySQL): %s\n", query)
 

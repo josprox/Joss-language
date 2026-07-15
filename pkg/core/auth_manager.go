@@ -19,7 +19,7 @@ func (r *Runtime) EnsureAuthTables() {
 
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
-		dbDriver = val
+		dbDriver = normalizeDatabaseDriver(val)
 	}
 
 	// 1. Create Roles Table
@@ -27,6 +27,11 @@ func (r *Runtime) EnsureAuthTables() {
 	if dbDriver == "sqlite" {
 		queryRoles = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name VARCHAR(50) UNIQUE
+		)`, rolesTable)
+	} else if dbDriver == "postgres" {
+		queryRoles = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY,
 			name VARCHAR(50) UNIQUE
 		)`, rolesTable)
 	} else {
@@ -42,11 +47,17 @@ func (r *Runtime) EnsureAuthTables() {
 	var insertRole string
 	if dbDriver == "sqlite" {
 		insertRole = "INSERT OR IGNORE INTO"
+	} else if dbDriver == "postgres" {
+		insertRole = "INSERT INTO"
 	} else {
 		insertRole = "INSERT IGNORE INTO"
 	}
-	r.GetDB().Exec(fmt.Sprintf("%s %s (id, name) VALUES (1, 'admin')", insertRole, rolesTable))
-	r.GetDB().Exec(fmt.Sprintf("%s %s (id, name) VALUES (2, 'client')", insertRole, rolesTable))
+	roleSuffix := ""
+	if dbDriver == "postgres" {
+		roleSuffix = " ON CONFLICT (id) DO NOTHING"
+	}
+	r.GetDB().Exec(fmt.Sprintf("%s %s (id, name) VALUES (1, 'admin')%s", insertRole, rolesTable, roleSuffix))
+	r.GetDB().Exec(fmt.Sprintf("%s %s (id, name) VALUES (2, 'client')%s", insertRole, rolesTable, roleSuffix))
 
 	// 2. Create Users Table
 	var queryUsers string
@@ -59,6 +70,17 @@ func (r *Runtime) EnsureAuthTables() {
 			role_id INTEGER DEFAULT 2,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (role_id) REFERENCES %s(id)
+		)`, usersTable, rolesTable)
+	} else if dbDriver == "postgres" {
+		queryUsers = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY,
+			name VARCHAR(255),
+			email VARCHAR(255) UNIQUE,
+			password VARCHAR(255),
+			role_id BIGINT DEFAULT 2,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (role_id) REFERENCES %s(id)
 		)`, usersTable, rolesTable)
 	} else {

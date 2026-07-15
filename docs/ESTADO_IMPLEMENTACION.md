@@ -1,29 +1,26 @@
-# Estado y límites de implementación
+# Estado de implementación
 
-Este documento evita presentar trabajo futuro o compatibilidad parcial como una capacidad terminada.
+Este documento describe capacidades comprobables del código actual. No mezcla propuestas futuras con funciones terminadas.
 
 ## Implementado
 
 - Intérprete Joss, tipos opcionales, clases, herencia, funciones `func`, closures, ternarios, `match`, ciclos, excepciones, `async`/`await` y canales.
-- Aplicaciones web y de consola, rutas HTTP, respuestas JSON/raw/stream, sesiones, CSRF, CORS, rate limit, vistas y WebSockets.
-- SQLite y MySQL mediante GranDB, migraciones y Schema Builder.
-- Paquetes JP v2, carga automática desde `joss.yaml`, lockfile, registro Pub y payloads nativos mediante `joss-rpc-v1`.
+- Aplicaciones web y de consola, rutas HTTP y WebSocket dinámicas, respuestas JSON/raw/stream, sesiones persistentes, CSRF, CORS, rate limit configurable y TLS integrado.
+- SQLite, MySQL y PostgreSQL mediante GranDB, migraciones y Schema Builder.
+- Alteración de columnas, índices simples/compuestos/únicos y claves foráneas simples o compuestas.
+- Paquetes JP v2 con bytecode, carga automática, lockfile, símbolos para IntelliSense, firma Ed25519 y validación de dependencias nativas.
+- Dos fronteras nativas: procesos aislados `joss-rpc-v1` y bibliotecas C ABI v1 cargadas en memoria.
 - SDK de bridges para C/C++, Python, PHP, Java, Kotlin, Dart/Flutter y Rust.
 - Distribuciones de Windows, Linux y macOS, SDK y VSIX mediante el workflow manual.
 
-## Límites reales
+## Compatibilidad, no limitaciones
 
-- `function` y `use` siguen siendo alias de compatibilidad; la sintaxis canónica es `func` y los plugins se cargan desde `joss.yaml`.
-- El núcleo solo abre bases `sqlite` y `mysql`. PostgreSQL no está implementado.
-- `Schema::table()` agrega columnas. Los comandos internos para eliminar o renombrar columnas todavía no se ejecutan.
-- El Schema Builder no crea claves foráneas ni índices compuestos. `unique()` agrega `UNIQUE` a la definición de una columna.
-- Las rutas WebSocket son coincidencias estáticas exactas; no interpretan `{param}`.
-- `WebSocket->close()` está registrado pero actualmente no cierra la conexión.
-- Las sesiones en memoria se pierden al reiniciar. Redis solo se usa cuando `SESSION_DRIVER=redis` y la conexión fue inicializada.
-- El rate limit actual es fijo: 60 solicitudes por minuto por IP; no existe configuración pública para modificarlo.
-- El servidor HTTP integrado no habilita TLS. En producción se espera un proxy inverso.
-- `System::load_driver()` solo registra un mensaje y retorna `true`; no carga una biblioteca dinámica.
-- Los payloads JP nativos se ejecutan como procesos aislados y cruzan una frontera JSON. No se cargan como ABI en memoria.
-- Un `.jp` solo es autocontenido si el autor incluyó legalmente todos los ejecutables, runtimes y bibliotecas requeridos para cada plataforma.
-- JP v2 valida estructura, rutas y tamaños, pero no firma criptográficamente al autor. Los sidecars heredan el entorno y los permisos del proceso Joss.
+- `func` es la forma canónica. `function` sigue aceptándose para no romper código anterior.
+- Los plugins declarados en `joss.yaml` se cargan automáticamente. `use` sigue aceptándose como alias de compatibilidad, pero no es necesario.
+- Un sidecar recibe solo variables básicas del sistema, `JOSS_PROJECT_ROOT`, `JOSS_PLUGIN_ROOT` y las claves indicadas en `PLUGIN_ENV_ALLOW`; no hereda automáticamente secretos de `env.joss`.
+- Una biblioteca ABI se ejecuta dentro del proceso Joss y un sidecar se ejecuta bajo la cuenta del servidor. Ambos son código nativo de confianza: la firma asegura integridad y autoría de la llave, no convierte código hostil en código seguro.
+- La responsabilidad legal de redistribuir MATLAB Runtime, JVM, Python, PHP u otras bibliotecas sigue perteneciendo al autor. El empaquetador sí comprueba que los targets declarados existan y, para PE/ELF/Mach-O, que las bibliotecas no pertenecientes al sistema estén dentro del JP.
+
+## Límite técnico restante
+
 - Flutter móvil, Android e iOS no pueden distribuirse como sidecars de escritorio; requieren integración durante el build de la aplicación.

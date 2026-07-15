@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/oracle/oci-go-sdk/v65/common"
@@ -390,10 +391,15 @@ func (r *Runtime) getUserIdFromToken(usersTable, token string) int {
 	return id
 }
 
-var storageTableEnsured bool
+var storageTablesEnsured sync.Map
 
 func (r *Runtime) ensureStorageTable(tableName string) {
-	if r.GetDB() == nil || storageTableEnsured {
+	db := r.GetDB()
+	if db == nil {
+		return
+	}
+	ensureKey := fmt.Sprintf("%p:%s", db, tableName)
+	if _, exists := storageTablesEnsured.Load(ensureKey); exists {
 		return
 	}
 
@@ -413,8 +419,16 @@ func (r *Runtime) ensureStorageTable(tableName string) {
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);`, tableName)
+	} else if normalizeDatabaseDriver(r.Env["DB"]) == "postgres" {
+		createCtx = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY,
+			user_id BIGINT NOT NULL,
+			path VARCHAR(255) NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);`, tableName)
 	}
 
 	r.GetDB().Exec(createCtx)
-	storageTableEnsured = true
+	storageTablesEnsured.Store(ensureKey, true)
 }

@@ -25,7 +25,7 @@ func (r *Runtime) EnsureMigrationTable() {
 
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
-		dbDriver = val
+		dbDriver = normalizeDatabaseDriver(val)
 	}
 
 	if dbDriver == "mysql" {
@@ -37,6 +37,14 @@ func (r *Runtime) EnsureMigrationTable() {
 			executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
 		`, tableName)
+	} else if dbDriver == "postgres" {
+		query = fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+			id BIGSERIAL PRIMARY KEY,
+			migration VARCHAR(255) NOT NULL,
+			batch INTEGER NOT NULL,
+			executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);`, tableName)
 	}
 
 	_, err := r.GetDB().Exec(query)
@@ -113,7 +121,7 @@ func (r *Runtime) DropAllTables() {
 
 	dbDriver := "mysql"
 	if val, ok := r.Env["DB"]; ok {
-		dbDriver = val
+		dbDriver = normalizeDatabaseDriver(val)
 	}
 
 	var tables []string
@@ -141,6 +149,25 @@ func (r *Runtime) DropAllTables() {
 				fmt.Printf("[Migration] Error eliminando tabla %s: %v\n", table, err)
 			} else {
 				fmt.Printf("[Migration] Tabla %s eliminada\n", table)
+			}
+		}
+	} else if dbDriver == "postgres" {
+		rows, err := r.GetDB().Query("SELECT table_name FROM information_schema.tables WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'")
+		if err != nil {
+			fmt.Printf("[Migration] Error obteniendo tablas: %v\n", err)
+			return
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var tableName string
+			if rows.Scan(&tableName) == nil {
+				tables = append(tables, tableName)
+			}
+		}
+		for _, table := range tables {
+			quoted, err := quoteSchemaIdentifier(table, "postgres")
+			if err == nil {
+				_, _ = r.GetDB().Exec(fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE", quoted))
 			}
 		}
 	} else {

@@ -13,7 +13,7 @@ La tabla enumera la superficie registrada por el runtime. Una llamada estática 
 | `WebResponse` | `with`, `withCookie`, `withHeader`, `status` |
 | `Schema` / `Blueprint` | creación y consulta de tablas; tipos y modificadores descritos en [Schema Builder](SCHEMA_BUILDER.md) |
 | `Session` | `get`, `put`, `has`, `forget`, `all` |
-| `System` | `env`, `Run`, `load_driver`, `log`, `sleep`, `now` |
+| `System` | `env`, `Run`, `load_driver`, `driver_call`, `log`, `sleep`, `now` |
 | `Plugin` | `call`, `stream`, `path`, `platform` |
 | Utilidades | `Math`, `Str`, `UUID`, `JSON`, `Markdown`, `Cache`, `Zip`, `Stack`, `Queue` |
 | Procesos | `Process`, `Server`, `Stream` |
@@ -33,6 +33,6 @@ La tabla enumera la superficie registrada por el runtime. Una llamada estática 
 - `Request::file()` retorna un mapa cuyo contenido está en `content`.
 - `Response::raw($data, $status, $mime, $headers)` evita la transformación HTML y sirve binarios.
 - `Response::error($message, $status)` crea JSON con la clave `error`; el status predeterminado es 400.
-- `System::load_driver()` es actualmente una simulación, no un cargador dinámico.
+- `System::load_driver($path, $name=nil)` carga una DLL, SO o dylib con la ABI C v1; `driver_call($name, $method, $args=[])` la invoca y decodifica su JSON.
 
 Consulta [Estado de implementación](ESTADO_IMPLEMENTACION.md) para límites que no deben interpretarse como funciones terminadas.

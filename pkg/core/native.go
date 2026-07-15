@@ -60,7 +60,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["TwoFactor"] = &Instance{Class: r.Classes["TwoFactor"], Fields: make(map[string]interface{})}
 
 	// System
-	r.registerNative("System", []string{"env", "Run", "load_driver", "log", "sleep", "now"}, (*Runtime).executeSystemMethod)
+	r.registerNative("System", []string{"env", "Run", "load_driver", "driver_call", "log", "sleep", "now"}, (*Runtime).executeSystemMethod)
 	r.Variables["System"] = &Instance{Class: r.Classes["System"], Fields: make(map[string]interface{})}
 
 	// Plugin (JP v2 native sidecar ABI)
@@ -107,7 +107,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["Schema"] = &Instance{Class: r.Classes["Schema"], Fields: make(map[string]interface{})}
 
 	// Blueprint
-	blueprintMethods := []string{"id", "increments", "integer", "tinyInteger", "smallInteger", "mediumInteger", "bigInteger", "unsignedInteger", "unsignedBigInteger", "float", "double", "decimal", "char", "string", "text", "mediumText", "longText", "date", "dateTime", "time", "timestamp", "timestamps", "softDeletes", "boolean", "json", "enum", "nullable", "unsigned", "unique", "default", "comment"}
+	blueprintMethods := []string{"id", "increments", "integer", "tinyInteger", "smallInteger", "mediumInteger", "bigInteger", "unsignedInteger", "unsignedBigInteger", "float", "double", "decimal", "char", "string", "text", "mediumText", "longText", "date", "dateTime", "time", "timestamp", "timestamps", "softDeletes", "boolean", "json", "enum", "nullable", "unsigned", "unique", "default", "comment", "dropColumn", "renameColumn", "index", "uniqueIndex", "dropIndex", "foreign", "references", "on", "onDelete", "onUpdate"}
 	r.registerNative("Blueprint", blueprintMethods, (*Runtime).executeBlueprintMethod)
 
 	// Redis

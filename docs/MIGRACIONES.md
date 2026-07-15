@@ -28,4 +28,4 @@ No añadas manualmente el prefijo a menos que quieras fijarlo en código; `Schem
 
 `migrate:fresh` elimina todas las tablas visibles del esquema, vuelve a crear las tablas internas y ejecuta las migraciones. Es destructivo y está pensado para desarrollo o entornos desechables.
 
-Compatibilidad implementada: SQLite y MySQL. PostgreSQL no está disponible. Los detalles de columnas soportadas están en [Schema Builder](SCHEMA_BUILDER.md).
+Compatibilidad implementada: SQLite, MySQL y PostgreSQL. Los detalles de columnas, índices y claves foráneas están en [Schema Builder](SCHEMA_BUILDER.md).
