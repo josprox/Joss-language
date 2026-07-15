@@ -165,13 +165,16 @@ Para validar una release completa del lenguaje, SDK y plugins oficiales en Windo
 powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1
 ```
 
-Para preparar todos los ZIP de distribución compatibles con los instaladores,
-la extensión VS Code, el SDK (incluido PHP), plugins oficiales, manifiesto y
-checksums SHA-256:
+Para preparar los ZIP del lenguaje para Windows, Linux y macOS, la extensión
+de VS Code, el SDK de desarrollo de plugins, el manifiesto y los checksums
+SHA-256:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build_all.ps1
 ```
+
+Los plugins oficiales tienen repositorios y releases propios. No se compilan ni
+se incluyen en la distribución del lenguaje; cada usuario decide cuáles instalar.
 
 El workflow `Build manual distribution` ejecuta este mismo proceso solo cuando
 se inicia manualmente desde GitHub Actions.

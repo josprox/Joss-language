@@ -114,7 +114,7 @@ Antes de distribuir el lenguaje:
 powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1
 ```
 
-El script ejecuta todos los tests, compila Joss para Windows/Linux/macOS amd64 y arm64, valida Java, Kotlin autocontenido con `jpackage`, PHP, Dart/Flutter y Rust, compila los sidecars oficiales para seis targets, regenera sus JP v2 y los inspecciona. `-SkipOfficialPlugins` y `-SkipSDKChecks` permiten verificaciones parciales.
+El script ejecuta todos los tests, compila Joss para Windows/Linux/macOS amd64 y arm64 y valida los SDK de Java, Kotlin autocontenido con `jpackage`, PHP, Dart/Flutter y Rust. No compila plugins ni inspecciona carpetas de ejemplos. `-SkipSDKChecks` permite una verificación parcial del núcleo.
 
 ## Plugins nativos: ABI estable tipo `.h`
 

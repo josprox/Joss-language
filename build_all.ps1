@@ -1,6 +1,5 @@
 [CmdletBinding()]
 param(
-    [switch]$SkipOfficialPlugins,
     [switch]$SkipSDKChecks,
     [switch]$SkipVSCode
 )
@@ -59,7 +58,6 @@ function Remove-WorkDirectory {
 Push-Location $root
 try {
     $verifyArgs = @()
-    if ($SkipOfficialPlugins) { $verifyArgs += '-SkipOfficialPlugins' }
     if ($SkipSDKChecks) { $verifyArgs += '-SkipSDKChecks' }
     & (Join-Path $root 'tools/verify-release.ps1') @verifyArgs
     if ($LASTEXITCODE -ne 0) { throw 'La verificacion de release fallo' }
@@ -109,12 +107,6 @@ try {
     Compress-Directory $linux (Join-Path $dist 'jossecurity-linux.zip')
     Compress-Directory $macos (Join-Path $dist 'jossecurity-macos.zip')
 
-    $allBinaries = New-StagingDirectory 'binaries'
-    Copy-Item -Path (Join-Path $windows '*') -Destination $allBinaries -Force
-    Copy-Item -Path (Join-Path $linux '*') -Destination $allBinaries -Force
-    Copy-Item -Path (Join-Path $macos '*') -Destination $allBinaries -Force
-    Compress-Directory $allBinaries (Join-Path $dist 'jossecurity-binaries.zip')
-
     if (-not $SkipVSCode) {
         $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
         if (-not $npm) { $npm = Get-Command npm -ErrorAction SilentlyContinue }
@@ -143,14 +135,6 @@ try {
     Copy-Required (Join-Path $root 'docs/PLUGINS.md') (Join-Path $sdkStage 'PLUGINS.md')
     Copy-Required (Join-Path $root 'LICENSE') (Join-Path $sdkStage 'LICENSE')
     Compress-Directory $sdkStage (Join-Path $dist 'joss-plugin-sdk.zip')
-
-    if (-not $SkipOfficialPlugins) {
-        $plugins = New-StagingDirectory 'plugins'
-        foreach ($name in @('joss_ai', 'joss_smtp', 'joss_notify', 'joss_backup')) {
-            Copy-Required (Join-Path $root "ejemplos/plugins/$name/$name.jp") (Join-Path $plugins "$name.jp")
-        }
-        Compress-Directory $plugins (Join-Path $dist 'joss-official-plugins.zip')
-    }
 
     # Solo se publican archivos finales; los binarios intermedios se quitan de dist.
     Get-ChildItem -LiteralPath $dist -Directory | Remove-Item -Recurse -Force

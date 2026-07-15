@@ -1,6 +1,5 @@
 [CmdletBinding()]
 param(
-    [switch]$SkipOfficialPlugins,
     [switch]$SkipSDKChecks
 )
 
@@ -159,39 +158,6 @@ try {
             Invoke-Checked 'SDK Rust' { & $cargo check --manifest-path sdk/rust/Cargo.toml }
         } finally {
             $env:CARGO_TARGET_DIR = $oldCargoTarget
-        }
-    }
-
-    if (-not $SkipOfficialPlugins) {
-        foreach ($name in @('joss_ai', 'joss_smtp', 'joss_notify', 'joss_backup')) {
-            $pluginRoot = Join-Path $root "ejemplos/plugins/$name"
-            if (-not (Test-Path -LiteralPath (Join-Path $pluginRoot 'go.mod'))) {
-                throw "Falta el repositorio del plugin oficial $name en $pluginRoot"
-            }
-            Push-Location $pluginRoot
-            try {
-                Invoke-Checked "Tests de $name" { go test ./... }
-                foreach ($target in $releaseTargets) {
-                    $goos, $goarch = $target
-                    $nativeDir = Join-Path $pluginRoot "native/$goos-$goarch"
-                    New-Item -ItemType Directory -Force -Path $nativeDir | Out-Null
-                    $outputName = if ($goos -eq 'windows') { "$name.exe" } else { $name }
-                    $oldGOOS, $oldGOARCH, $oldCGO = $env:GOOS, $env:GOARCH, $env:CGO_ENABLED
-                    try {
-                        $env:GOOS, $env:GOARCH, $env:CGO_ENABLED = $goos, $goarch, '0'
-                        Invoke-Checked "$name $goos-$goarch" {
-                            go build -trimpath -ldflags '-s -w' -o (Join-Path $nativeDir $outputName) ./cmd/sidecar
-                        }
-                    } finally {
-                        $env:GOOS, $env:GOARCH, $env:CGO_ENABLED = $oldGOOS, $oldGOARCH, $oldCGO
-                    }
-                }
-            } finally {
-                Pop-Location
-            }
-            Invoke-Checked "JP v2 de $name" { & $jossBinary build package $pluginRoot }
-            & $jossBinary package inspect (Join-Path $pluginRoot "$name.jp")
-            if ($LASTEXITCODE -ne 0) { throw "No se pudo inspeccionar $name.jp" }
         }
     }
 

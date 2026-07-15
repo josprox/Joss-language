@@ -625,5 +625,7 @@ Para generar los archivos finales que se suben a GitHub Releases:
 powershell -ExecutionPolicy Bypass -File build_all.ps1
 ```
 
-La salida queda en `dist/` e incluye los ZIP históricos por sistema operativo,
-el SDK, plugins oficiales, `release-manifest.json` y `SHA256SUMS.txt`.
+La salida queda en `dist/` e incluye exclusivamente los ZIP de Windows, Linux y
+macOS, el SDK, la extensión de VS Code, `release-manifest.json` y
+`SHA256SUMS.txt`. Los plugins se publican por separado y no forman parte del
+release del lenguaje.
