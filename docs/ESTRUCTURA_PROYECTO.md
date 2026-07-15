@@ -87,7 +87,7 @@ Contiene la lógica de negocio de la aplicación.
 **Ejemplo**: `HomeController.joss`
 ```joss
 class HomeController {
-    function index() {
+    func index() {
         return View::render("welcome", {"titulo": "Inicio"})
     }
 }
@@ -103,7 +103,7 @@ class User extends GranDB {
         $this->tabla = "js_users"
     }
     
-    function findByEmail($email) {
+    func findByEmail($email) {
         return $this->where("email", $email)->first()
     }
 }
@@ -307,8 +307,8 @@ class EmailService { }
 
 ```joss
 // camelCase
-function getUserById($id) { }
-function sendEmail($to, $subject) { }
+func getUserById($id) { }
+func sendEmail($to, $subject) { }
 ```
 
 ### Variables

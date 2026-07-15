@@ -16,7 +16,7 @@ instancia muestra:
 - navegación a la definición para clases, funciones y métodos del proyecto.
 
 ```joss
-function register(string $email, string $password, bool $notify = true) {
+func register(string $email, string $password, bool $notify = true) {
     return Response::json({"ok": true}, 201)
 }
 ```

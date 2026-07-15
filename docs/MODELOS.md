@@ -86,7 +86,7 @@ class Product extends GranDB {
     }
 
     // Método personalizado para obtener stock bajo
-    function getLowStock() {
+    func getLowStock() {
         return $this->where("stock", "<", 5).get()
     }
 }

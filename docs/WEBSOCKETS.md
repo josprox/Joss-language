@@ -10,8 +10,8 @@ El controlador recibe una conexión y puede enviar, escuchar, emitir a otros cli
 
 ```joss
 class ChatController {
-    function connect($ws) {
-        $ws->onMessage(function ($message) {
+    func connect($ws) {
+        $ws->onMessage(func ($message) {
             WebSocket::broadcast("/chat", $message)
         })
     }

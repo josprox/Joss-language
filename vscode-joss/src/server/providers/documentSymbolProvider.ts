@@ -32,8 +32,8 @@ export function setupDocumentSymbolProvider() {
                 });
             }
 
-            // Match function declarations
-            const funcMatch = line.match(/function\s+(\w+)/);
+            // `func` is canonical; `function` remains accepted for legacy files.
+            const funcMatch = line.match(/(?:func|function)\s+(\w+)/);
             if (funcMatch) {
                 const funcName = funcMatch[1];
                 const range: Range = {

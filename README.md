@@ -88,7 +88,7 @@ joss run main.joss
 Joss utiliza ternarios de bloque para el control condicional y permite retornos tempranos confiables.
 
 ```joss
-function bienvenida(string $nombre, int $edad) {
+func bienvenida(string $nombre, int $edad) {
     ($edad < 18) ? {
         return "Acceso restringido"
     } : {
@@ -104,7 +104,7 @@ print($resultado)
 Una API puede declararse con el router integrado:
 
 ```joss
-Router::get("/api/saludo/{nombre}", function ($nombre) {
+Router::get("/api/saludo/{nombre}", func ($nombre) {
     return Response::json({
         "ok": true,
         "message": "Hola " . $nombre

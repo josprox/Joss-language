@@ -84,34 +84,34 @@
   "Redirect": {
     "prefix": "redirect",
     "body": [
-      "return redirect(\"${1:url}\")"
+      "return Redirect::to(\"${1:url}\")"
     ],
     "description": "Redirect to URL"
   },
   "Auth Check": {
     "prefix": "auth:check",
     "body": [
-      "if (Auth::check()) {",
+      "(Auth::check()) ? {",
       "\t$0",
-      "}"
+      "} : {}"
     ],
     "description": "Check if user is authenticated"
   },
   "Auth Guest": {
     "prefix": "auth:guest",
     "body": [
-      "if (Auth::guest()) {",
+      "(Auth::guest()) ? {",
       "\t$0",
-      "}"
+      "} : {}"
     ],
     "description": "Check if user is guest"
   },
   "Auth Attempt": {
     "prefix": "auth:attempt",
     "body": [
-      "if (Auth::attempt($email, $password)) {",
+      "(Auth::attempt($email, $password)) ? {",
       "\treturn Response::redirect(\"/dashboard\")",
-      "}"
+      "} : {}"
     ],
     "description": "Attempt login"
   },
@@ -201,39 +201,35 @@
   "Auth Create": {
     "prefix": "authcreate",
     "body": [
-      "\\$auth = new Auth()",
-      "\\$auth.create([${1:email}, ${2:password}, ${3:name}])"
+      "Auth::create([${1:email}, ${2:password}, ${3:name}])"
     ],
     "description": "Create user with Auth"
   },
   "GranDB Query": {
     "prefix": "dbquery",
     "body": [
-      "\\$db = new GranDB()",
-      "\\$db.table(\"${1:tableName}\")",
-      "\\$db.where(\"${2:column}\", ${3:value})",
-      "\\$result = \\$db.get()"
+      "\\$db = GranDB::table(\"${1:tableName}\")",
+      "\\$result = \\$db->where(\"${2:column}\", ${3:value})->get()"
     ],
     "description": "Query database with GranDB"
   },
   "GranDB Pagination": {
     "prefix": "dbpaginate",
     "body": [
-      "\\$db = new GranDB()",
+      "\\$db = GranDB::table(\"${2:tableName}\")",
       "\\$page = Request::input(\"page\")",
       "\\$perPage = ${1:10}",
-      "\\$offset = (Math.abs(\\$page) - 1) * \\$perPage",
-      "\\$total = \\$db.table(\"${2:tableName}\").count()",
-      "\\$results = \\$db.table(\"${2:tableName}\").orderBy(\"id\", \"DESC\").limit(\\$perPage).offset(\\$offset).get()"
+      "\\$offset = (Math::abs(\\$page) - 1) * \\$perPage",
+      "\\$total = \\$db->count()",
+      "\\$results = \\$db->orderBy(\"id\", \"DESC\")->limit(\\$perPage)->offset(\\$offset)->get()"
     ],
     "description": "Paginate database results"
   },
   "GranDB Insert": {
     "prefix": "dbinsert",
     "body": [
-      "\\$db = new GranDB()",
-      "\\$db.table(\"${1:tableName}\")",
-      "\\$db.insert([${2:columns}], [${3:values}])"
+      "\\$db = GranDB::table(\"${1:tableName}\")",
+      "\\$db->insert([${2:columns}], [${3:values}])"
     ],
     "description": "Insert into database"
   },
@@ -307,30 +303,21 @@
   "System Run": {
     "prefix": "sysrun",
     "body": [
-      "System.Run(\"${1:command}\", [${2:args}])"
+      "System::Run(\"${1:command}\", [${2:args}])"
     ],
     "description": "Execute system command"
   },
   "System Env": {
     "prefix": "sysenv",
     "body": [
-      "\\$${1:var} = System.env(\"${2:KEY}\")"
+      "\\$${1:var} = System::env(\"${2:KEY}\")"
     ],
     "description": "Get environment variable"
-  },
-  "SMTP Send": {
-    "prefix": "mailsend",
-    "body": [
-      "\\$smtp = new SmtpClient()",
-      "\\$smtp.auth(\"${1:user}\", \"${2:pass}\")",
-      "\\$smtp.send(\"${3:to}\", \"${4:subject}\", \"${5:body}\")"
-    ],
-    "description": "Send email via SMTP"
   },
   "Cron Schedule": {
     "prefix": "cron",
     "body": [
-      "Cron.schedule(\"${1:name}\", \"${2:00:00}\", {",
+      "Cron::schedule(\"${1:name}\", \"${2:00:00}\", func() {",
       "\\t$0",
       "})"
     ],
@@ -339,7 +326,7 @@
   "Task Hit": {
     "prefix": "task",
     "body": [
-      "Task.on_request(\"${1:name}\", \"${2:00:00}\", {",
+      "Task::on_request(\"${1:name}\", func() {",
       "\\t$0",
       "})"
     ],
@@ -551,22 +538,6 @@
       "\\$valid = Auth::validateToken(${1:\\$token})"
     ],
     "description": "Validate a Bearer token"
-  },
-  "Notify Broadcast": {
-    "prefix": "notify:all",
-    "body": [
-      "\\$notify = new Notify()",
-      "\\$notify.title(\"${1:Title}\").message(\"${2:Message}\").segment(\"all\").send()"
-    ],
-    "description": "Send a broadcast notification to all users"
-  },
-  "Notify User": {
-    "prefix": "notify:user",
-    "body": [
-      "\\$notify = new Notify()",
-      "\\$notify.title(\"${1:Title}\").message(\"${2:Message}\").user(${3:userId}).send()"
-    ],
-    "description": "Send a push notification to a specific user"
   },
   "Session Get": {
     "prefix": "session:get",

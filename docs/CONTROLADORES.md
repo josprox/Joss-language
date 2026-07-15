@@ -12,7 +12,7 @@ Un controlador es una clase simple que contiene métodos públicos. No requiere 
 class ProductController {
     
     // GET /products
-    function index() {
+    func index() {
         // Lógica para obtener datos
         $model = new Product()
         $products = $model.get()
@@ -22,7 +22,7 @@ class ProductController {
     }
 
     // POST /products/create
-    function store() {
+    func store() {
         // Acceder a datos de la petición
         $name = Request::input("name")
         $price = Request::input("price")

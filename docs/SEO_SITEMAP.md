@@ -17,7 +17,7 @@ La clase `SEO` permite definir metadatos dinámicos desde los controladores que 
 
 ```joss
 class HomeController {
-    function index() {
+    func index() {
         SEO::title("Inicio — Mi Proyecto")
         SEO::description("Bienvenido a la plataforma líder en seguridad.")
         

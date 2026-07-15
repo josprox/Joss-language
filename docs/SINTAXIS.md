@@ -37,7 +37,7 @@ $message = match ($status) {
 ## Funciones y clases
 
 ```joss
-function sum(int $a, int $b) {
+func sum(int $a, int $b) {
     return $a + $b
 }
 
@@ -48,7 +48,7 @@ class User {
         $this->name = $name
     }
 
-    function greet() {
+    func greet() {
         return "Hola " . $this->name
     }
 }
