@@ -396,14 +396,14 @@ func downloadAndExtract(name, ver, downloadUrl, expectedChecksum string) error {
 
 	// Check if already in cache and checksum matches
 	if _, err := os.Stat(cachePath); err == nil {
-		if expectedChecksum == "" || verifyFileSHA256(cachePath, expectedChecksum) {
+		if expectedChecksum != "" && expectedChecksum != "checksum_placeholder" && verifyFileSHA256(cachePath, expectedChecksum) {
 			fmt.Println("Usando paquete cacheado...")
 			if isJP {
 				return installJPFile(cachePath, name, ver)
 			}
 			return extractZipSecurely(cachePath, name, ver)
 		}
-		os.Remove(cachePath) // Hash changed or file corrupt, re-download
+		os.Remove(cachePath) // Hash changed, missing, placeholder, or file corrupt; force re-download
 	}
 
 	// Download File

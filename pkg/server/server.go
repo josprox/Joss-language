@@ -31,8 +31,25 @@ func Start(fileSystem http.FileSystem) {
 	// Initial Load
 	reloadApp("")
 
-	// Start File Watcher
-	go watchChanges()
+	// Start File Watcher (disabled in production or if explicitly set)
+	disableWatch := false
+	if currentRuntime != nil {
+		if env := currentRuntime.Env["APP_ENV"]; env == "production" || env == "prod" {
+			disableWatch = true
+		}
+		if env := currentRuntime.Env["DISABLE_WATCHDOG"]; env == "true" {
+			disableWatch = true
+		}
+	}
+	if os.Getenv("DISABLE_WATCHDOG") == "true" || os.Getenv("APP_ENV") == "production" {
+		disableWatch = true
+	}
+
+	if !disableWatch {
+		go watchChanges()
+	} else {
+		fmt.Println("[Server] File watcher (Hot Reload) deshabilitado.")
+	}
 
 	port := "80"
 	if val, ok := currentRuntime.Env["PORT"]; ok && val != "" {
