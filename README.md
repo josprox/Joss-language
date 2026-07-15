@@ -33,16 +33,16 @@
 
 ## 🛠️ Instalación Rápida (One-Liner)
 
-Instala el binario global de Joss junto a la extensión oficial de VS Code en un solo paso:
+Instala el binario global de Joss, el SDK de plugins y la extensión oficial de VS Code en un solo paso:
 
 ### Windows (PowerShell como Administrador)
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; iwr -useb https://raw.githubusercontent.com/josprox/JosSecurity-language/main/install/remote-install.ps1 | iex
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; iwr -useb https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.ps1 | iex
 ```
 
 ### Linux / macOS
 ```bash
-curl -fsSL https://raw.githubusercontent.com/josprox/JosSecurity-language/main/install/remote-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.sh | bash
 ```
 
 ---
@@ -159,7 +159,7 @@ Explora las guías oficiales para dominar todas las características del ecosist
 * 🔑 [Configuración y Variables de Entorno](./docs/CONFIGURACION.md) — Gestión del archivo `env.joss` y llaves criptográficas.
 * 💾 [Manejo de Migraciones](./docs/MIGRACIONES.md) — Diseño de tablas e interacción con bases de datos relacionales.
 
-Para validar una release completa del lenguaje, SDK y plugins oficiales en Windows, Linux y macOS:
+Para validar una release completa del lenguaje, SDK y extensión en Windows, Linux y macOS:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1

@@ -10,16 +10,16 @@ $Host.UI.RawUI.ForegroundColor = "White"
 
 # --- CONFIGURACIÓN ---
 # Configuración que DEBE ser actualizada manualmente en el script
-$JossVersion = "3.0.3" 
+$JossVersion = "3.6.0"
 $RepoOwner = "josprox"
-$RepoName = "JosSecurity-language"
+$RepoName = "Joss-language"
 
 # Rutas
 $InstallDir = "C:\Program Files\JosSecurity"
+$SdkInstallDir = "$InstallDir\sdk"
 $LogFile = "$env:TEMP\jossecurity-action.log"
 $TempDir = "$env:TEMP\jossecurity-temp-action"
 $RepoUrl = "https://api.github.com/repos/$RepoOwner/$RepoName/releases/latest"
-$ZipUrl = "https://github.com/$RepoOwner/$RepoName/releases/latest/download/jossecurity-binaries.zip"
 # --------------------
 
 # --- FUNCIONES DE LOGGING/UTILIDADES ---
@@ -135,6 +135,35 @@ function Install-JosSecurity {
     }
 }
 
+function Install-SDK {
+    Write-Log "[2/3] Installing Joss plugin SDK..." "INFO"
+
+    if (-not (Test-Administrator)) {
+        Write-Log "[X] Administrator privileges are required to install the SDK." "ERROR"
+        return $false
+    }
+
+    try {
+        $sdkSource = Join-Path $TempDir "sdk-package\sdk"
+        if (-not (Test-Path -LiteralPath $sdkSource -PathType Container)) {
+            Write-Log "[X] SDK directory not found in downloaded package" "ERROR"
+            return $false
+        }
+
+        if (Test-Path -LiteralPath $SdkInstallDir) {
+            Remove-Item -LiteralPath $SdkInstallDir -Recurse -Force
+        }
+        New-Item -ItemType Directory -Path $SdkInstallDir -Force | Out-Null
+        Copy-Item -Path (Join-Path $sdkSource '*') -Destination $SdkInstallDir -Recurse -Force
+
+        Write-Log "[OK] SDK installed at $SdkInstallDir" "SUCCESS"
+        return $true
+    } catch {
+        Write-Log "[X] SDK installation failed: $($_.Exception.Message)" "ERROR"
+        return $false
+    }
+}
+
 function Install-Extension {
     Write-Log "[3/3] Installing VS Code extension..." "INFO"
     
@@ -180,6 +209,11 @@ function Uninstall-JosSecurity {
         if (Test-Path "$InstallDir\joss.exe") {
             Remove-Item "$InstallDir\joss.exe" -Force
             Write-Log "[OK] Binary removed" "SUCCESS"
+        }
+
+        if (Test-Path -LiteralPath $SdkInstallDir) {
+            Remove-Item -LiteralPath $SdkInstallDir -Recurse -Force
+            Write-Log "[OK] SDK removed" "SUCCESS"
         }
         
         # Remover directorio solo si está vacío
@@ -279,7 +313,7 @@ function Test-Update {
 
 function Run-Update {
     Write-Log "Running update: Download and reinstalling."
-    if (Install-JosSecurity -and Install-Extension) {
+    if ((Install-JosSecurity) -and (Install-SDK) -and (Install-Extension)) {
         Write-Log "Update completed successfully." "SUCCESS"
         return $true
     }
@@ -329,9 +363,11 @@ function Download-File {
 function Download-And-Extract {
     $WindowsZip = "jossecurity-windows.zip"
     $ExtensionZip = "jossecurity-vscode.zip"
+    $SdkZip = "joss-plugin-sdk.zip"
     
     $WindowsUrl = "https://github.com/$RepoOwner/$RepoName/releases/latest/download/$WindowsZip"
     $ExtensionUrl = "https://github.com/$RepoOwner/$RepoName/releases/latest/download/$ExtensionZip"
+    $SdkUrl = "https://github.com/$RepoOwner/$RepoName/releases/latest/download/$SdkZip"
 
     Write-Log "[INIT] Preparing temp directory..."
     if (Test-Path $TempDir) { Remove-Item $TempDir -Recurse -Force }
@@ -342,7 +378,7 @@ function Download-And-Extract {
     if (-not (Download-File -Url $WindowsUrl -Dest "$TempDir\$WindowsZip")) { return $false }
 
     Write-Log "[INIT] Extracting Binaries..."
-    Expand-Archive -Path "$TempDir\$WindowsZip" -DestinationPath $TempDir -Force
+    Expand-Archive -Path "$TempDir\$WindowsZip" -DestinationPath "$TempDir\runtime" -Force
     Remove-Item "$TempDir\$WindowsZip" -Force
 
     # 2. Download Extension
@@ -350,10 +386,18 @@ function Download-And-Extract {
     if (-not (Download-File -Url $ExtensionUrl -Dest "$TempDir\$ExtensionZip")) { return $false }
     
     Write-Log "[INIT] Extracting Extension..."
-    Expand-Archive -Path "$TempDir\$ExtensionZip" -DestinationPath $TempDir -Force
+    Expand-Archive -Path "$TempDir\$ExtensionZip" -DestinationPath "$TempDir\extension" -Force
     Remove-Item "$TempDir\$ExtensionZip" -Force
+
+    # 3. Download SDK
+    Write-Host "[INIT] Downloading Plugin SDK ($SdkZip)..." -ForegroundColor Cyan
+    if (-not (Download-File -Url $SdkUrl -Dest "$TempDir\$SdkZip")) { return $false }
+
+    Write-Log "[INIT] Extracting Plugin SDK..."
+    Expand-Archive -Path "$TempDir\$SdkZip" -DestinationPath "$TempDir\sdk-package" -Force
+    Remove-Item "$TempDir\$SdkZip" -Force
     
-    # 3. Check/Install VS Code (Optional but part of flow)
+    # 4. Check/Install VS Code (Optional but part of flow)
     Ensure-VSCode | Out-Null
     
     return $true
@@ -367,9 +411,9 @@ function Show-MainMenu {
     Write-Host ""
     Write-Host "Select an action:" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  [1] Install (JosSecurity Binary + Extension)" -ForegroundColor White
+    Write-Host "  [1] Install (Joss Binary + SDK + Extension)" -ForegroundColor White
     Write-Host "  [2] Update (Check and Reinstall)" -ForegroundColor White
-    Write-Host "  [3] Uninstall (Remove Binary + Extension)" -ForegroundColor White
+    Write-Host "  [3] Uninstall (Remove Binary + SDK + Extension)" -ForegroundColor White
     Write-Host "  [0] Exit" -ForegroundColor White
     Write-Host ""
     
@@ -379,6 +423,7 @@ function Show-MainMenu {
         "1" { # INSTALAR
             if (Download-And-Extract) {
                 Install-JosSecurity
+                Install-SDK
                 Install-Extension
             }
         }

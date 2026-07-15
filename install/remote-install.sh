@@ -16,16 +16,16 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Configuración que DEBE ser actualizada manualmente en el script
-JOSS_VERSION="3.0.3" 
+JOSS_VERSION="3.6.0"
 REPO_OWNER="josprox"
-REPO_NAME="JosSecurity-language"
+REPO_NAME="Joss-language"
 
 # Rutas
 INSTALL_DIR="/usr/local/bin"
+SDK_INSTALL_DIR="/usr/local/share/joss/sdk"
 LOG_FILE="/tmp/jossecurity-action.log"
 TEMP_DIR="/tmp/jossecurity-temp-action"
 REPO_URL="https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/latest"
-ZIP_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/jossecurity-binaries.zip"
 # --------------------
 
 # --- FUNCIONES DE LOGGING/UTILIDADES ---
@@ -108,6 +108,26 @@ install_jossecurity() {
     fi
 }
 
+install_sdk() {
+    log INFO "[2/3] Installing Joss plugin SDK..."
+
+    SDK_SOURCE="$TEMP_DIR/sdk-package/sdk"
+    if [ ! -d "$SDK_SOURCE" ]; then
+        log ERROR "[X] SDK directory not found in downloaded package."
+        return 1
+    fi
+
+    sudo rm -rf "$SDK_INSTALL_DIR"
+    sudo mkdir -p "$SDK_INSTALL_DIR"
+    if sudo cp -R "$SDK_SOURCE"/. "$SDK_INSTALL_DIR"/; then
+        log SUCCESS "[OK] SDK installed at $SDK_INSTALL_DIR"
+        return 0
+    fi
+
+    log ERROR "[X] SDK installation failed."
+    return 1
+}
+
 install_extension() {
     log INFO "[3/3] Installing VS Code extension..."
     
@@ -144,6 +164,10 @@ uninstall_jossecurity() {
         log SUCCESS "[OK] Binary removed from $INSTALL_DIR"
     else
         log INFO "[OK] Binary not found."
+    fi
+    if [ -d "$SDK_INSTALL_DIR" ]; then
+        sudo rm -rf "$SDK_INSTALL_DIR"
+        log SUCCESS "[OK] SDK removed from $SDK_INSTALL_DIR"
     fi
 }
 
@@ -187,7 +211,7 @@ check_update() {
 
 run_update() {
     log INFO "Running update: Download and reinstalling."
-    if install_jossecurity && install_extension; then
+    if install_jossecurity && install_sdk && install_extension; then
         log SUCCESS "Update completed successfully."
         return 0
     fi
@@ -238,9 +262,11 @@ download_and_extract() {
         OS_ZIP="jossecurity-linux.zip"
     fi
     EXT_ZIP="jossecurity-vscode.zip"
+    SDK_ZIP="joss-plugin-sdk.zip"
 
     BINARY_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/$OS_ZIP"
     EXT_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/$EXT_ZIP"
+    SDK_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/$SDK_ZIP"
     
     # 1. Binaries
     log INFO "[INIT] Downloading Binaries ($OS_ZIP)..."
@@ -256,10 +282,18 @@ download_and_extract() {
         # Non-fatal? Maybe we still proceed with binary. But let's fail safe.
         return 1
     fi
+
+    # 3. SDK
+    log INFO "[INIT] Downloading Plugin SDK ($SDK_ZIP)..."
+    if ! curl -fsSL "$SDK_URL" -o "$TEMP_DIR/$SDK_ZIP"; then
+        log ERROR "[X] Failed to download plugin SDK."
+        return 1
+    fi
     
     log INFO "[INIT] Extracting files..."
-    unzip -o "$TEMP_DIR/$OS_ZIP" -d "$TEMP_DIR"
-    unzip -o "$TEMP_DIR/$EXT_ZIP" -d "$TEMP_DIR"
+    unzip -o "$TEMP_DIR/$OS_ZIP" -d "$TEMP_DIR/runtime"
+    unzip -o "$TEMP_DIR/$EXT_ZIP" -d "$TEMP_DIR/extension"
+    unzip -o "$TEMP_DIR/$SDK_ZIP" -d "$TEMP_DIR/sdk-package"
     
     # Check VS Code
     ensure_vscode
@@ -278,9 +312,9 @@ main_menu() {
     echo ""
     echo "Select an action:"
     echo ""
-    echo "  [1] Install (JosSecurity Binary + Extension)"
+    echo "  [1] Install (Joss Binary + SDK + Extension)"
     echo "  [2] Update (Check and Reinstall)"
-    echo "  [3] Uninstall (Remove Binary + Extension)"
+    echo "  [3] Uninstall (Remove Binary + SDK + Extension)"
     echo "  [0] Exit"
     echo ""
     read -p "Option: " option < /dev/tty
@@ -289,6 +323,7 @@ main_menu() {
         1) # INSTALAR
             if download_and_extract; then
                 install_jossecurity
+                install_sdk
                 install_extension
             fi
             ;;

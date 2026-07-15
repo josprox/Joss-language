@@ -613,7 +613,7 @@ joss pub publish            # Publica el paquete actual
 
 Las dependencias de `joss.yaml` se cargan automáticamente. El código de la aplicación no necesita `use nombre;`. JP v2 compila la envoltura Joss a bytecode y puede transportar ejecutables autónomos, DLL/`.so`, modelos y runtimes redistribuibles por plataforma. El SDK incluye C/C++, Python, PHP, Java/GraalVM, Kotlin/Native, Dart/Flutter desktop y Rust. Consulta [PLUGINS.md](./PLUGINS.md) para el contrato completo.
 
-Para preparar una release completa y verificar compilación cruzada, SDK y plugins oficiales:
+Para preparar una release completa y verificar compilación cruzada, SDK y extensión de VS Code:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1
