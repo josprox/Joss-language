@@ -1,198 +1,251 @@
-# ⚡ Joss (Joss Language & Framework)
-
 <p align="center">
-  <img src="https://img.shields.io/badge/Language-Joss-blue?style=for-the-badge&logo=codeforces" alt="Joss Language">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-darkgreen?style=for-the-badge&logo=platformio" alt="Platform Supported">
-  <img src="https://img.shields.io/badge/Built%20With-Go%20%2F%20Golang-00ADD8?style=for-the-badge&logo=go" alt="Built with Go">
-  <img src="https://img.shields.io/badge/Status-Active%20Development-orange?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="License MIT">
+  <img src="./assets/JosSecurity%20logo%20color/default.png" alt="Joss" width="280">
 </p>
 
-**Joss** es un lenguaje de programación y framework web moderno, tipado y ultrarrápido diseñado específicamente para el desarrollo de APIs REST, servicios backend y aplicaciones en tiempo real de alta seguridad. Compilado e interpretado directamente sobre la infraestructura de alto rendimiento de **Go (Golang)**, Joss fusiona la simplicidad y agilidad de Python y PHP con la robustez y concurrencia segura de Go.
+<h1 align="center">Joss</h1>
+
+<p align="center">
+  Lenguaje y framework backend moderno, seguro y extensible.<br>
+  Una sintaxis productiva con un runtime de alto rendimiento construido en Go.
+</p>
+
+<p align="center">
+  <a href="https://joss.red/docs"><img alt="Documentación" src="https://img.shields.io/badge/docs-joss.red-ff5f6d?style=flat-square"></a>
+  <a href="https://joss.red/pub"><img alt="Joss Pub" src="https://img.shields.io/badge/pub-librerías-ff8a65?style=flat-square"></a>
+  <a href="https://github.com/josprox/Joss-language/releases"><img alt="Release" src="https://img.shields.io/badge/release-3.6.0-3f51b5?style=flat-square"></a>
+  <img alt="Plataformas" src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-263238?style=flat-square">
+  <a href="./LICENSE"><img alt="Licencia MIT" src="https://img.shields.io/badge/license-MIT-2e7d32?style=flat-square"></a>
+</p>
+
+<p align="center">
+  <a href="https://joss.red/docs">Documentación</a> ·
+  <a href="https://joss.red/pub">Joss Pub</a> ·
+  <a href="./docs/PLUGINS.md">Crear plugins</a> ·
+  <a href="https://github.com/josprox/Joss-language/releases">Descargas</a>
+</p>
 
 ---
 
-## 🚀 Características Principales
+## ¿Qué es Joss?
 
-### 🧠 Sintaxis Expresiva y Estricta
-* **Sin `if/else` tradicional**: Control de flujo ultra-limpio mediante operadores ternarios de bloque, simplificando la legibilidad del código.
-* **Smart Numerics**: Promoción automática y transparente de enteros a flotantes en operaciones de división.
-* **Maps y Arrays Nativos**: Estructuras de datos dinámicas con soporte nativo de inicialización de mapas (`{ key: value }`).
+Joss combina la rapidez de desarrollo de lenguajes como Python y PHP con un runtime escrito en Go. Está diseñado para crear APIs, aplicaciones web, procesos de consola, servicios en tiempo real y herramientas de backend sin abandonar una sintaxis clara.
 
-### ⚡ Concurrencia Ultra-Ligera
-* **async/await Nativo**: Manejo asíncrono y no bloqueante mediante goroutines y canales de Go empaquetados en una sintaxis familiar.
-* **Futures Simplificados**: Retorna e interactúa con llamadas de red o base de datos en segundo plano sin complejidad adicional.
+El lenguaje incluye tipado en ejecución, concurrencia con `async`/`await`, servidor HTTP, WebSockets, enrutamiento, vistas, autenticación JWT, criptografía, acceso a bases de datos y un sistema de plugins compilados JP v2.
 
-### 🔐 Seguridad y Criptografía Integradas de Fábrica
-* **Módulo Auth JWT Nativo**: Autenticación stateless integrada directamente en el core usando JSON Web Tokens y cookies HTTP-only de alta seguridad.
-* **ORM GranDB**: Constructor de consultas fluido y seguro con protección nativa contra inyecciones SQL.
-* **AES-256 Environment Encryption**: Encriptación automática del archivo de configuración `env.joss` para despliegues seguros en producción.
-* **Seguridad Web Integrada**: Protección automática contra ataques CSRF, cabeceras de seguridad automatizadas y rate limiting por IP de origen.
+| Área | Incluido |
+| --- | --- |
+| Lenguaje | Tipos, clases, funciones, closures, ternarios de bloque, arrays, maps y manejo estricto de retornos. |
+| Backend | Router, Request, Response, middleware, vistas, sesiones, JWT, WebSockets y tareas asíncronas. |
+| Datos | GranDB, SQLite, MySQL/MariaDB, migraciones, seeders y consultas fluidas. |
+| Seguridad | Cifrado de entorno, CSRF, cookies HTTP-only, rate limiting y utilidades criptográficas. |
+| Extensibilidad | Plugins JP v2 autocontenidos, carga automática y SDK multilenguaje. |
+| Herramientas | CLI, extensión de VS Code, autocompletado, firmas, navegación y diagnósticos. |
 
----
+## Instalación rápida
 
-## 🛠️ Instalación Rápida (One-Liner)
+El instalador descarga el runtime correcto para tu plataforma, el SDK para desarrollar plugins y la extensión oficial de VS Code.
 
-Instala el binario global de Joss, el SDK de plugins y la extensión oficial de VS Code en un solo paso:
+### Windows
 
-### Windows (PowerShell como Administrador)
+Ejecuta PowerShell como administrador:
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; iwr -useb https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.ps1 | iex
 ```
 
-### Linux / macOS
+### Linux y macOS
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.sh | bash
 ```
 
----
+Comprueba la instalación:
 
-## 💻 Inicio Rápido en 30 Segundos
-
-### Crear un Proyecto Web Completo
 ```bash
-joss new mi_tienda_web
-cd mi_tienda_web
+joss version
+```
+
+## Primer proyecto
+
+### Aplicación web
+
+```bash
+joss new mi_aplicacion
+cd mi_aplicacion
 joss server start
 ```
-*Tu aplicación levantará instantáneamente en http://localhost:8000 con **Hot Reload** y compilación automática de estilos SCSS activa.*
 
-### Crear un Proyecto de Consola
+### Aplicación de consola
+
 ```bash
-joss new console mi_servicio_backend
-cd mi_servicio_backend
+joss new console mi_herramienta
+cd mi_herramienta
 joss run main.joss
 ```
 
----
+## Una sintaxis directa
 
-## ✍️ Sintaxis de un Vistazo
+Joss utiliza ternarios de bloque para el control condicional y permite retornos tempranos confiables.
 
-### Control de Flujo con Bloques Ternarios
 ```joss
-// Declaración de variables y tipos
-string $nombre = "Joss Developer"
-int $edad = 25
-
-// Control de flujo limpio usando ternarios (No if/else)
-($edad >= 18) ? {
-    print("Acceso concedido a: " . $nombre)
-    $db = new GranDB()
-    $db->table("logs")->insert(["event"], ["login_success"])
-} : {
-    print("Acceso denegado.")
+function bienvenida(string $nombre, int $edad) {
+    ($edad < 18) ? {
+        return "Acceso restringido"
+    } : {
+        return "Bienvenido, " . $nombre
+    }
 }
-```
 
-### Concurrencia de Alto Rendimiento
-```joss
-// Ejecutar consulta pesada de forma asíncrona
-$future = async(consultaBaseDatos())
-
-// Hacer otra tarea en paralelo
-print("Haciendo cálculos intermedios...")
-
-// Esperar y recuperar el resultado
+$future = async(tareaPesada())
 $resultado = await($future)
+print($resultado)
 ```
 
-### ORM Fluido (GranDB)
+Una API puede declararse con el router integrado:
+
 ```joss
-$db = new GranDB()
-
-// Consultas complejas y uniones encadenadas en una sola línea
-$productos = $db->table("products")
-    ->join("categories", "products.category_id", "=", "categories.id")
-    ->select(["products.*", "categories.name as category_name"])
-    ->where("products.is_active", "1")
-    ->orderBy("products.created_at", "DESC")
-    ->get()
+Router::get("/api/saludo/{nombre}", function ($nombre) {
+    return Response::json({
+        "ok": true,
+        "message": "Hola " . $nombre
+    })
+})
 ```
 
-### Inteligencia Artificial mediante plugin
-```joss
-// Con un plugin de IA portable declarado en joss.yaml (sin `use`)
-$respuesta = AI::client()
-    ->system("Eres un experto en el lenguaje Joss.")
-    ->user("Explícame async/await.")
-    ->call()
+## Librerías y Joss Pub
 
-print($respuesta)
-```
-
----
-
-## ⚙️ Comandos del CLI
-
-Joss incluye una completa interfaz de línea de comandos para agilizar el desarrollo:
+[Joss Pub](https://joss.red/pub) es el catálogo de librerías y plugins del ecosistema. Las dependencias se declaran en `joss.yaml`, se instalan con el CLI y se cargan automáticamente: el código de la aplicación no necesita agregar `use` para cada plugin.
 
 ```bash
-# Gestión del Servidor
-joss server start             # Arranca el servidor web local con recarga en caliente (Hot Reload)
-joss build                    # Compila la aplicación y recursos para producción
-
-# Andamiaje de Código (Scaffolding)
-joss make:controller [Name]   # Genera un nuevo controlador con código limpio
-joss make:model [Name]        # Genera un modelo extendiendo GranDB
-joss make:view [Name]         # Genera una vista HTML extendiendo layouts.master
-joss make:crud [Table]        # Genera la estructura MVC completa (CRUD) para una tabla
-
-# Base de Datos y Entorno
-joss migrate                  # Ejecuta las migraciones de base de datos pendientes
-joss db:seed                  # Puebla la base de datos con tus seeders iniciales
-joss change db [mysql|sqlite] # Cambia dinámicamente el driver de conexión de datos
-joss change db migrate        # Migra la conexion actual a un nuevo MySQL
-joss brevo:config --enable --api-key=KEY # Configura Brevo sin prompts interactivos
+joss pub search ai
+joss pub add joss_ai 2.0.0
+joss pub install
 ```
 
----
+Plugins oficiales disponibles:
 
-## 📚 Documentación de Referencia
+| Librería | Propósito | Repositorio |
+| --- | --- | --- |
+| `joss_ai` | Chat, proveedores de IA y streaming. | [josprox/joss_ai](https://github.com/josprox/joss_ai) |
+| `joss_smtp` | SMTP, STARTTLS, TLS y envío de correo. | [josprox/joss_smtp](https://github.com/josprox/joss_smtp) |
+| `joss_notify` | Notificaciones push, webhook e in-app. | [josprox/joss_notify](https://github.com/josprox/joss_notify) |
+| `joss_backup` | Creación, verificación y restauración de respaldos. | [josprox/joss_backup](https://github.com/josprox/joss_backup) |
 
-Explora las guías oficiales para dominar todas las características del ecosistema:
-
-* 📖 [Guía de Sintaxis del Lenguaje](./docs/SINTAXIS.md) — Variables, Tipado, Bucles y Programación Orientada a Objetos.
-* 🛠️ [Manual de la Interfaz CLI](./docs/CLI.md) — Comandos detallados y opciones del compilador.
-* 📦 [Módulos Nativos de Joss](./docs/MODULOS_NATIVOS.md) — Documentación de APIs (Auth, GranDB, SmtpClient, etc.).
-* 🧩 [Desarrollo de Plugins](./docs/PLUGINS.md) — Autocarga, manifiesto, empaquetado, dependencias y publicación.
-* 📁 [Estructura del Proyecto](./docs/ESTRUCTURA_PROYECTO.md) — Entendiendo el esqueleto de directorios Web y Consola.
-* 🔑 [Configuración y Variables de Entorno](./docs/CONFIGURACION.md) — Gestión del archivo `env.joss` y llaves criptográficas.
-* 💾 [Manejo de Migraciones](./docs/MIGRACIONES.md) — Diseño de tablas e interacción con bases de datos relacionales.
-
-Para validar una release completa del lenguaje, SDK y extensión en Windows, Linux y macOS:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1
+```joss
+$respuesta = AI::client()
+    ->system("Responde de forma breve")
+    ->user("¿Qué es Joss?")
+    ->call()
 ```
 
-Para preparar los ZIP del lenguaje para Windows, Linux y macOS, la extensión
-de VS Code, el SDK de desarrollo de plugins, el manifiesto y los checksums
-SHA-256:
+Los plugins oficiales tienen repositorios y releases independientes. No se incluyen dentro de la distribución del lenguaje: cada proyecto instala solamente las librerías que necesita.
+
+## Plugins JP v2
+
+Un archivo `.jp` puede transportar bytecode Joss, metadatos públicos para IntelliSense y payloads nativos por plataforma. El desarrollador que consume el plugin recibe un único paquete y no necesita instalar el lenguaje con el que se construyó el componente nativo.
+
+Joss selecciona automáticamente el payload correspondiente a Windows, Linux o macOS y se comunica con él mediante el protocolo estable `joss-rpc-v1`. Los errores se propagan de forma explícita y los componentes nativos se ejecutan aislados del proceso principal.
+
+```yaml
+name: mi_plugin
+version: 1.0.0
+type: joss
+
+entry:
+  main: src/plugin.joss
+
+native:
+  protocol: joss-rpc-v1
+  windows-amd64: native/windows-amd64/mi_plugin.exe
+  linux-amd64: native/linux-amd64/mi_plugin
+  darwin-arm64: native/darwin-arm64/mi_plugin
+```
+
+Consulta la [guía completa de plugins](./docs/PLUGINS.md) para conocer el manifiesto, empaquetado, publicación y contrato RPC.
+
+## SDK multilenguaje
+
+La distribución incluye `joss-plugin-sdk.zip`, pensado para desarrollar librerías portables sin acoplarlas al núcleo.
+
+| Tecnología | Recurso incluido |
+| --- | --- |
+| C y C++ | Header `sdk/c/joss_plugin.h`. |
+| Python | Runner `sdk/python/joss_plugin.py`. |
+| PHP | Runtime y entrada RPC en `sdk/php`. |
+| Java | Contrato base `sdk/java/JossPlugin.java`. |
+| Kotlin | Contrato y entrada en `sdk/kotlin`. |
+| Dart y Flutter | Adaptador RPC en `sdk/dart` y guía Flutter. |
+| Rust | Crate base en `sdk/rust`. |
+
+También pueden integrarse componentes compilados de otras plataformas, como MATLAB, siempre que el desarrollador respete sus licencias y empaquete legalmente cualquier runtime redistribuible necesario.
+
+## CLI esencial
+
+```bash
+# Proyecto y ejecución
+joss new mi_aplicacion
+joss run main.joss
+joss server start
+
+# Generadores
+joss make:controller UsuarioController
+joss make:model Usuario
+joss make:view usuarios.index
+joss make:crud usuarios
+
+# Base de datos
+joss migrate
+joss db:seed
+joss change db mysql
+joss change db migrate
+
+# Paquetes
+joss pub search smtp
+joss pub add joss_smtp 2.0.0
+joss pub install
+
+# Plugins
+joss build package ruta/al/plugin
+joss package inspect ruta/al/plugin.jp
+```
+
+## Documentación
+
+La documentación web está disponible en [joss.red/docs](https://joss.red/docs).
+
+- [Sintaxis del lenguaje](./docs/SINTAXIS.md)
+- [Referencia del CLI](./docs/CLI.md)
+- [Módulos nativos](./docs/MODULOS_NATIVOS.md)
+- [Desarrollo de plugins](./docs/PLUGINS.md)
+- [Estructura de proyectos](./docs/ESTRUCTURA_PROYECTO.md)
+- [Configuración](./docs/CONFIGURACION.md)
+- [WebSockets](./docs/WEBSOCKETS.md)
+
+## Distribución
+
+La distribución oficial del lenguaje genera únicamente:
+
+- Runtime para Windows.
+- Runtime para Linux.
+- Runtime para macOS.
+- SDK de desarrollo de plugins.
+- Extensión oficial de VS Code.
+- Manifiesto de release y checksums SHA-256.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build_all.ps1
 ```
 
-Los plugins oficiales tienen repositorios y releases propios. No se compilan ni
-se incluyen en la distribución del lenguaje; cada usuario decide cuáles instalar.
+Los plugins se compilan y publican desde sus propios repositorios.
 
-El workflow `Build manual distribution` ejecuta este mismo proceso solo cuando
-se inicia manualmente desde GitHub Actions.
-* 🤖 [Integración de IA Nativa](./docs/IA_NATIVA.md) — Generación de texto e interacción fluida con LLMs.
-* 🔌 [Servidor y WebSockets](./docs/SERVIDOR.md) — Conexiones persistentes bidireccionales en tiempo real.
+## Contribuir
 
----
+Los reportes de errores, propuestas y pull requests son bienvenidos. Antes de enviar cambios al núcleo, ejecuta:
 
-## 🚀 Hoja de Ruta (Roadmap)
-- [x] **Smart Numerics & Native Maps** (Fase 1)
-- [x] **Autoloading Estricto de Clases** (Fase 2)
-- [x] **Concurrencia async/await basada en Goroutines** (Fase 3)
-- [x] **Proyectos de Consola Multidispositivo** (Fase 4)
-- [x] **JWT Stateless Auth & Auto-AES env config** (Fase 5)
-- [x] **IA Nativa Fluida & WebSockets Core** (Fase 6)
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1
+```
 
----
+## Licencia
 
-## 📄 Licencia
-
-Este proyecto está bajo la [Licencia MIT](./LICENSE). Siéntete libre de colaborar, modificar y construir lo que desees. Lo que crees con Joss es 100% de tu propiedad.
+Joss se distribuye bajo la [Licencia MIT](./LICENSE). Las aplicaciones creadas con el lenguaje pertenecen a sus autores.
