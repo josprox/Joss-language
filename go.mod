@@ -9,7 +9,7 @@ require (
 	github.com/gomarkdown/markdown v0.0.0-20231222211730-1d6d20845b47
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/jackc/pgx/v5 v5.7.6
+	github.com/jackc/pgx/v5 v5.9.2
 	github.com/jchv/go-webview2 v0.0.0-20250406165304-0bcfea011047
 	github.com/oracle/oci-go-sdk/v65 v65.105.0
 	github.com/redis/go-redis/v9 v9.21.0
