@@ -159,23 +159,10 @@
       "type": "object",
       "title": "Joss",
       "properties": {
-        "joss.indexOnOpen": {
-          "type": "boolean",
-          "default": true,
-          "description": "Automatically index workspace when opening a .joss file"
-        },
-        "joss.enableJoss": {
+        "joss.enableJosSecurity": {
           "type": "boolean",
           "default": true,
           "description": "Enable security analysis"
-        },
-        "joss.controllerPaths": {
-          "type": "array",
-          "default": [
-            "app/controllers",
-            "app/Controllers"
-          ],
-          "description": "Paths to search for controllers"
         }
       }
     }

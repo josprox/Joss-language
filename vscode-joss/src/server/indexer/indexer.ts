@@ -45,6 +45,14 @@ export class Indexer {
         this.workspaceRoot = root;
     }
 
+    getWorkspaceRoot(): string {
+        return this.workspaceRoot;
+    }
+
+    getSources(): Array<{ uri: string; content: string }> {
+        return Array.from(this.sources, ([uri, content]) => ({ uri, content }));
+    }
+
     async indexWorkspace(): Promise<void> {
         if (!this.workspaceRoot) return;
         this.symbols.clear();

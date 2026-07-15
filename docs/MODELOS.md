@@ -1,100 +1,40 @@
-# Modelos y Base de Datos
+# GranDB y modelos
 
-En Joss, los modelos son clases que representan tablas en la base de datos y proporcionan una capa de abstracción para realizar operaciones CRUD y consultas complejas de manera segura.
+Un modelo puede heredar de `GranDB`, pero el constructor de consultas también se usa directamente. La sintaxis válida de instancia es `->`.
 
-## Definición de un Modelo
-
-Los modelos deben heredar de la clase base `GranDB` (incluso si utilizas SQLite, el nombre se mantiene por compatibilidad).
-
-**Ubicación**: `app/models/`
-
-### Estructura Mínima
-
-Lo único obligatorio es definir el constructor `Init` y asignar la propiedad `tabla`.
-
-```javascript
-class Product extends GranDB {
-    
-    Init constructor() {
-        // Define el nombre de la tabla (sin prefijo js_ si está configurado globalmente)
-        $this->tabla = "products"
-    }
-}
+```joss
+$query = GranDB::table("products")
+$products = $query->where("active", true)->orderBy("created_at", "DESC")->get()
 ```
 
-## Uso Básico
+El prefijo de `env.joss` se aplica automáticamente a nombres sin prefijo.
 
-Una vez instanciado, el modelo hereda todos los métodos del ORM GranDB.
+## Lectura
 
-```javascript
-$product = new Product()
-
-// Obtener todos
-$all = $product.get()
-
-// Filtrar
-$cheap = $product.where("price", "<", 100).get()
-
-// Buscar Uno
-$item = $product.where("id", 5).first()
+```joss
+$all = GranDB::table("products")->get()
+$one = GranDB::table("products")->find(5)
+$first = GranDB::table("products")->where("price", "<", 100)->first()
+$names = GranDB::table("products")->pluck("name")
+$exists = GranDB::table("products")->where("sku", "A-1")->exists()
+$total = GranDB::table("products")->count()
 ```
 
-## Operaciones CRUD
+`get()` devuelve una lista nativa de mapas; `first()` y `find()` devuelven un mapa o `nil`.
 
-### Crear (Insert)
-```javascript
-$data = {
-    "name": "Laptop",
-    "price": 999.99,
-    "stock": 10
-}
-$product.insert($data)
+## Escritura
+
+```joss
+$db = GranDB::table("products")
+$db->insert({"name": "Teclado", "price": 899.99})
+$db->where("id", 5)->update({"price": 799.99})
+$db->where("id", 5)->delete()
 ```
 
-### Actualizar (Update)
-Primero filtra con `where` y luego llama a `update`.
+`delete()` sin `where` se aborta por seguridad. `deleteAll()` y `truncate()` son operaciones explícitas destructivas.
 
-```javascript
-$product.where("id", 5).update({"price": 899.99})
-```
+## Joins y filtros
 
-### Eliminar (Delete)
-Similar a actualizar, filtra primero.
+GranDB implementa `where`, `orWhere`, `whereIn`, `orWhereIn`, `whereNotIn`, `whereNull`, `whereNotNull`, `whereBetween`, `whereNotBetween`, `join`, `innerJoin`, `leftJoin` y `rightJoin`. También expone `select`, `sum`, `avg`, `min`, `max`, `latest`, `oldest`, `inRandomOrder`, `limit` y `offset`.
 
-```javascript
-$product.where("id", 5).delete()
-```
-
-## Relaciones (Joins)
-
-Joss soporta joins fluidos para relacionar modelos.
-
-```javascript
-$product.innerJoin("categories", "products.category_id", "=", "categories.id")
-        .select(["products.name", "categories.name as category_name"])
-        .get()
-```
-
-## Métodos Personalizados
-
-Puedes encapsular lógica de negocio compleja dentro de tus modelos.
-
-```javascript
-class Product extends GranDB {
-    Init constructor() {
-        $this->tabla = "products"
-    }
-
-    // Método personalizado para obtener stock bajo
-    func getLowStock() {
-        return $this->where("stock", "<", 5).get()
-    }
-}
-
-// Uso
-$model = new Product()
-$alerts = $model.getLowStock()
-```
-
-> [!NOTE]
-> Para información detallada sobre todos los métodos disponibles en el constructor de consultas, revisa la documentación de [`GranDB`](MODULOS_NATIVOS.md#grandb).
+No existe una capa automática de relaciones de objetos. Los joins producen mapas con las columnas seleccionadas.

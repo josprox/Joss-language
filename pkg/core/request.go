@@ -44,6 +44,9 @@ func (r *Runtime) executeRequestMethod(instance *Instance, method string, args [
 					}
 				}
 			}
+			if len(args) > 1 {
+				return args[1]
+			}
 			return nil
 		}
 	case "all":
@@ -120,6 +123,9 @@ func (r *Runtime) executeRequestMethod(instance *Instance, method string, args [
 						}
 					}
 				}
+			}
+			if len(args) > 1 {
+				return args[1]
 			}
 		}
 		return ""

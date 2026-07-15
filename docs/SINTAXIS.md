@@ -1,50 +1,35 @@
 # Sintaxis de Joss
 
-Las variables inician con `$`. Joss admite tipos opcionales y los valida al usar `let` o una declaración tipada.
+## Variables y tipos
+
+Las variables usan `$`. La asignación simple es dinámica; una declaración tipada valida el valor. `function` se acepta por compatibilidad, pero la palabra canónica es `func`.
 
 ```joss
-string $name = "Ada"
+$dynamic = 10
 int $age = 25
+string $name = "Ada"
+bool $active = true
+array $items = [1, 2, 3]
 $config = {"port": 8000}
-$items = [1, 2, 3]
 ```
 
-## Flujo de control
+Los tipos reconocidos por la validación del runtime incluyen `int`, `float`, `string`, `bool`, `array` y `map`. Una variable tipada como número intenta convertir una cadena numérica antes de fallar.
 
-Joss no usa `if`, `else` ni `switch`. Usa ternarios y bloques explícitos. Un `return` dentro de un bloque termina la función contenedora.
-
-```joss
-($age >= 18) ? {
-    print("Acceso permitido")
-} : {
-    print("Acceso denegado")
-}
-
-$label = ($age >= 18) ? "adulto" : "menor"
-$port = $config["port"] ?? 8000
-```
-
-También están disponibles `match`, `?:`, `??`, `&&`, `||` y `!`.
-
-```joss
-$message = match ($status) {
-    200, 201 => "Correcto",
-    404 => "No encontrado",
-    default => "Error"
-}
-```
-
-## Funciones y clases
+## Funciones, closures y clases
 
 ```joss
 func sum(int $a, int $b) {
     return $a + $b
 }
 
+$double = func(int $value) {
+    return $value * 2
+}
+
 class User {
     string $name
 
-    Init constructor($name) {
+    Init constructor(string $name) {
         $this->name = $name
     }
 
@@ -54,28 +39,60 @@ class User {
 }
 ```
 
-Usa `Clase::metodo()` para APIs estáticas y `$instance->method()` para instancias.
+Las APIs estáticas usan `Clase::metodo()`. Las instancias usan `$object->method()` y `$object->property`.
 
-## Colecciones, ciclos y errores
+## Control de flujo
+
+No existe una sentencia `if/else`. Usa ternarios; los bloques también son expresiones. `return` se propaga fuera de bloques y ciclos anidados.
+
+```joss
+($age >= 18) ? {
+    print("adulto")
+} : {
+    print("menor")
+}
+
+$label = ($active) ? "activo" : "inactivo"
+$port = $config["port"] ?? 8000
+$fallback = $name ?: "Anónimo"
+```
+
+`match` compara por tipo y valor, admite varias claves y `default`:
+
+```joss
+$message = match ($status) {
+    200, 201 => "correcto",
+    404 => "no encontrado",
+    default => "error"
+}
+```
+
+## Ciclos y errores
 
 ```joss
 foreach ($items as $item) {
     print($item)
 }
-
-while ($remaining > 0) {
-    $remaining--
+while ($pending > 0) {
+    $pending = $pending - 1
 }
+do {
+    $attempts++
+} while ($attempts < 3)
 
 try {
-    $data = JSON::parse($body)
+    throw "fallo"
 } catch ($error) {
     print($error)
 }
 ```
 
-`empty()`, `isset()`, `count()` y `push()` están disponibles. Importa código Joss con `import "ruta/archivo.joss"`.
+`break` y `continue` funcionan en ciclos. El postfix implementado es `++`; `--` no existe todavía, por lo que un decremento se escribe como asignación. `isset()` y `empty()` son expresiones del lenguaje.
 
-## Concurrencia
+## Imports
 
-Usa `async` para iniciar trabajo aislado y `await($future)` para esperar su resultado. Consulta [Concurrencia](CONCURRENCIA.md) para el modelo de aislamiento y canales.
+```joss
+import "app/models/User.joss"
+```
+
+`@import` también se reconoce. `use paquete;` solo existe para compatibilidad con plugins antiguos; las dependencias de `joss.yaml` se cargan automáticamente.

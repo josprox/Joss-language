@@ -23,7 +23,7 @@ export class SecurityAnalyzer {
         },
         {
             id: 'weak-bcrypt',
-            pattern: /bcrypt\s*\([^,]+,\s*([0-9]+)\)/g,
+            pattern: /bcrypt\s*\([^,]+,\s*(?:[0-9]|1[01])\s*\)/g,
             severity: 'error' as const,
             message: 'Bcrypt con menos de 12 rondas - inseguro'
         }

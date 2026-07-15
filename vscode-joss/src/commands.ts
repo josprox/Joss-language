@@ -288,7 +288,7 @@ export function registerCommands(context: vscode.ExtensionContext, client: Langu
     // User Storage
     context.subscriptions.push(
         vscode.commands.registerCommand('joss.userstorage', async () => {
-            const driver = await vscode.window.showQuickPick(['local', 'OCI', 'AWS', 'Azure'], {
+            const driver = await vscode.window.showQuickPick(['local', 'OCI'], {
                 placeHolder: 'Select storage driver'
             });
 

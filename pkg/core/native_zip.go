@@ -11,8 +11,9 @@ import (
 
 // Zip Native Class Implementation
 // Usage:
-//   $zip = new Zip()
-//   $zip->extract("temp_backup.zip", "temp_extracted/")
+//
+//	$zip = new Zip()
+//	$zip->extract("temp_backup.zip", "temp_extracted/")
 func (r *Runtime) executeZipMethod(instance *Instance, method string, args []interface{}) interface{} {
 	switch method {
 	case "extract":
@@ -35,9 +36,10 @@ func (r *Runtime) executeZipMethod(instance *Instance, method string, args []int
 
 		for _, f := range archive.File {
 			filePath := filepath.Join(destClean, f.Name)
-			
-			// Prevent Zip Slip vulnerability
-			if !strings.HasPrefix(filepath.Clean(filePath), destClean) {
+
+			// Prevent Zip Slip without relying on unsafe string-prefix checks.
+			relative, relErr := filepath.Rel(destClean, filepath.Clean(filePath))
+			if relErr != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || filepath.IsAbs(relative) {
 				fmt.Printf("[Zip Error] Illegal file path in zip: %s\n", f.Name)
 				return false
 			}

@@ -1,141 +1,31 @@
-# JosSecurity v3.0 - Installation Package
+# Instalación oficial
 
-**One-liner installation available!**
+Los instaladores remotos descargan tres artefactos del último release: el runtime de la plataforma, `joss-plugin-sdk.zip` y `jossecurity-vscode.zip`.
 
-## 🚀 Quick Install (Recommended)
+## Windows
 
-### Windows (PowerShell as Admin)
+Ejecuta PowerShell como administrador:
+
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; iwr -useb https://raw.githubusercontent.com/josprox/JosSecurity-language/main/install/remote-install.ps1 | iex
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; iwr -useb https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.ps1 | iex
 ```
 
-### Linux/macOS
+El runtime y el SDK se instalan en `C:\Program Files\JosSecurity`. El instalador añade esa carpeta al `PATH`. Si `code` está disponible, también instala el VSIX; si VS Code no existe, ofrece instalarlo con Winget.
+
+## Linux y macOS
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/josprox/JosSecurity-language/main/install/remote-install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.sh | bash
 ```
 
-## 📦 Manual Installation
+El runtime queda en `/usr/local/bin/joss` y el SDK en `/usr/local/share/joss/sdk`. Se usa `sudo` al copiar o eliminar archivos. Si `code` está en el `PATH`, se instala también el VSIX.
 
-If you prefer to download and run locally:
+Ambos scripts muestran un menú para instalar, buscar una actualización o desinstalar. La descarga requiere `curl` y `unzip` en Linux/macOS; en Windows requiere PowerShell 5.1 o posterior.
 
-### Windows
-1. Download `jossecurity-binaries.zip` from the latest GitHub Release.
-2. Extract the zip file to this `install` folder.
-3. Run the remote installer script locally (it handles everything):
-```powershell
-.\remote-install.ps1
-```
+Verificación:
 
-### Linux/macOS
-1. Download `jossecurity-binaries.zip` from the latest GitHub Release.
-2. Extract the zip file to this `install` folder.
-3. Run:
 ```bash
-chmod +x remote-install.sh
-./remote-install.sh
-```
-
-## ✨ What Gets Installed
-
-- **JosSecurity Compiler** (~15 MB)
-  - Installed to system PATH
-  - Ready to use: `joss version`
-
-- **VS Code Extension** (29 KB)
-  - Syntax highlighting
-  - IntelliSense
-  - Diagnostics
-  - Security analysis
-
-- **VS Code** (optional)
-  - Downloaded and installed if not present
-
-## 📋 Package Contents
-
-- `joss.exe` - Windows binary
-- `joss-linux` - Linux binary  
-- `joss-macos` - macOS binary
-- `joss-language-3.0.3.vsix` - VS Code extension
-- `remote-install.ps1` - Windows installer/updater/uninstaller
-- `remote-install.sh` - Linux/macOS installer/updater/uninstaller
-
-## 🔒 Enhanced Features
-
-### Comprehensive Verification
-- ✅ Binary size verification
-- ✅ PATH verification
-- ✅ Installation verification
-- ✅ Extension verification
-- ✅ Detailed logging
-
-### Error Handling
-- ✅ Try-catch blocks
-- ✅ Rollback on failure
-- ✅ Clear error messages
-- ✅ Installation logs
-
-### Logging
-- Windows: `%TEMP%\jossecurity-install.log`
-- Linux/macOS: `/tmp/jossecurity-install.log`
-
-## 📝 Installation Options
-```bash
-# Check version
 joss version
-
-# Check extension
-code --list-extensions | grep joss
-
-# Create first project
-joss new my_app
-cd my_app
-joss server start
 ```
 
-## 🐛 Troubleshooting
-
-### Check installation log
-**Windows**: `type %TEMP%\jossecurity-install.log`
-**Linux/macOS**: `cat /tmp/jossecurity-install.log`
-
-### "joss: command not found"
-Restart terminal or reload shell:
-```bash
-source ~/.bashrc  # Linux/macOS
-```
-
-### Permission errors
-**Windows**: Run PowerShell as Administrator
-**Linux/macOS**: Run with sudo
-
-## 🌐 Remote Installation
-
-The remote installers:
-1. Download all required files
-2. Run local installer
-3. Clean up temporary files
-4. Verify installation
-
-**Requirements**:
-- Internet connection
-- Administrator/sudo privileges
-- PowerShell 5.1+ (Windows) or Bash (Linux/macOS)
-
-## 📊 File Sizes
-
-- Windows binary: ~15 MB
-- Linux binary: ~15 MB
-- macOS binary: ~15 MB
-- VS Code extension: 29 KB
-- Installers: 2 scripts (Unified Install/Update/Uninstall)
-- **Total**: ~45 MB
-
-## 🆘 Support
-
-- Documentation: `../docs/`
-- Version: 3.0.3
-- License: MIT
-
----
-
-**Ready to install?** Choose your method above! 🚀
+Logs: `%TEMP%\jossecurity-action.log` en Windows y `/tmp/jossecurity-action.log` en Linux/macOS.

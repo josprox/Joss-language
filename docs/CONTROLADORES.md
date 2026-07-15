@@ -1,84 +1,51 @@
-# Controladores
+# Controladores y HTTP
 
-Los controladores son el corazón de la lógica de tu aplicación web en Joss. Se encargan de recibir las peticiones, procesarlas (usando Modelos si es necesario) y devolver una respuesta (generalmente una Vista o JSON).
+Un controlador es una clase Joss. El dispatcher resuelve `Controller@method` y también closures de ruta.
 
-## Estructura Básica
-
-Un controlador es una clase simple que contiene métodos públicos. No requiere extender de ninguna clase base.
-
-**Ubicación**: `app/controllers/`
-
-```javascript
+```joss
 class ProductController {
-    
-    // GET /products
     func index() {
-        // Lógica para obtener datos
-        $model = new Product()
-        $products = $model.get()
-        
-        // Retornar una vista
-        return View::render("products.index", {"items": $products})
+        $products = GranDB::table("products")->get()
+        return View::render("products.index", {"products": $products})
     }
 
-    // POST /products/create
     func store() {
-        // Acceder a datos de la petición
         $name = Request::input("name")
-        $price = Request::input("price")
-        
-        // Validación (usando ternarios para control de flujo)
-        (!$name) ? {
-            return Response::json({"error": "El nombre es obligatorio"}, 400)
+        (empty($name)) ? {
+            return Response::error("El nombre es obligatorio", 422)
         } : {}
 
-        // Guardar en BD
-        $model = new Product()
-        $model.insert({
-            "name": $name,
-            "price": $price
-        })
-
-        // Redireccionar
-        return Response::redirect("/products")->withCookie("flash", "Creado con éxito")
+        GranDB::table("products")->insert({"name": $name})
+        return Response::redirect("/products")
     }
 }
 ```
 
-## Inyección de Dependencias y Helpers
+## Rutas
 
-Dentro de los controladores, tienes acceso estático a todos los módulos nativos del sistema:
-
-- **Auth**: Para gestión de usuarios (`Auth::user()`, `Auth::id()`).
-- **Request**: Para leer inputs (`Request::input()`, `Request::header()`).
-- **Response**: Para construir respuestas (`Response::json()`, `Response::redirect()`).
-- **View**: Para renderizar HTML (`View::render()`).
-- **System**: Para logs y utilidades (`System::log()`).
-
-## Uso de Modelos
-
-Para interactuar con la base de datos, simplemente instancia tus modelos:
-
-```javascript
-$userModel = new User()
-$user = $userModel.where("id", 1).first()
+```joss
+Router::get("/products", "ProductController@index")
+Router::post("/products", "ProductController@store")
+Router::get("/sound/{id}", func($id) {
+    return Redirect::to("https://example.com/" . $id, 302)
+})
 ```
 
-## Respuestas
+Los parámetros `{name}` se inyectan en handlers HTTP. Esto no aplica a rutas WebSocket.
 
-Los métodos del controlador deben retornar un objeto de respuesta válido.
+## Request
 
-### Vistas (HTML)
-```javascript
-return View::render("carpeta.vista", {"variable": "valor"})
-```
+- `input()` y `post()` leen el mapa combinado de la petición.
+- `all()` retorna campos públicos; `except([...])` excluye claves.
+- `header()`, `cookie()` y `root()` consultan metadatos HTTP.
+- `file()` retorna un mapa; el contenido subido está en `content`.
 
-### JSON (API)
-```javascript
-return Response::json({"status": "ok", "data": [...]}, 200)
-```
+## Response
 
-### Redirecciones
-```javascript
-return Response::redirect("/login")
-```
+- `json($data, $status=200)`.
+- `error($message, $status=400)` retorna `{"error": ...}`.
+- `redirect($url)` y `back()`.
+- `raw($content, $status=200, $mime="text/plain", $headers={})`.
+- `stream($callback)` para SSE.
+
+Una respuesta admite `->with()`, `->withCookie()`, `->withHeader()` y `->status()`. Para binarios usa `raw`; un string HTML normal puede recibir el script de hot reload durante desarrollo.

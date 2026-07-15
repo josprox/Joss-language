@@ -1,62 +1,24 @@
-# Servidor HTTP de Joss
-
-Características del servidor de desarrollo integrado.
-
-## Iniciar Servidor
+# Servidor HTTP
 
 ```bash
 joss server start
 ```
 
-**Puerto**: 8000 (configurable en `env.joss`)  
-**URL**: http://localhost:PORT
+El comando ejecuta `main.joss`; ese archivo debe iniciar el servidor. El puerto predeterminado del servidor es 80, no 8000. Define `PORT` para cambiarlo.
 
-## Características
-
-### Hot Reload
-Recarga automática al detectar cambios en:
-- Archivos `.joss`
-- Archivos `.joss`
-- Archivos `.joss.html`
-- Archivos `.scss`
-- **Dependencias NPM**: Cambios en `package.json` o `node_modules` recargan assets automáticamente.
-
-### Compilación SCSS
-Compila automáticamente `assets/css/*.scss` → `public/css/*.css`
-
-### WebSocket
-Conexión en tiempo real para live reload en el navegador.
-
-### Archivos Estáticos
-Sirve archivos desde `public/`:
-- CSS: `/css/app.css`
-- JS: `/js/app.js`
-- Imágenes: `/images/logo.png`
-
-### Security Headers
-Agrega automáticamente:
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `X-XSS-Protection: 1; mode=block`
-
-### CSRF Protection
-Token CSRF automático en sesiones.
-
-### Rate Limiting
-Limitación de peticiones por IP (configurable).
-
-### Redis Sessions
-Soporte para sesiones en Redis (opcional).
-
-## Configuración
-
-```bash
-# env.joss
+```env
 PORT="8000"
-SESSION_DRIVER="redis"  # o "file"
-REDIS_HOST="localhost:6379"
 ```
 
-## Producción
+## Comportamiento implementado
 
-Para producción, usar servidor web tradicional (Nginx, Apache) con proxy reverso a Joss.
+- Archivos públicos bajo `/public/` y `/assets/`.
+- Hot reload en desarrollo para `.joss`, HTML, CSS, JS, SCSS, traducciones, `package.json` y archivos de entorno.
+- Compilación SCSS propia desde `assets/css/*.scss` hacia CSS público.
+- Descubrimiento de CSS/JS de dependencias directas de `package.json` presentes en `node_modules`.
+- Headers `X-Content-Type-Options`, `X-Frame-Options` y `X-XSS-Protection`.
+- CSRF para métodos mutables, sesiones en memoria o Redis y CORS mediante `CORS_WEB`.
+- Rate limit fijo de 60 solicitudes por minuto por IP.
+- Timeouts HTTP: lectura 15 s, escritura 15 s e inactividad 60 s.
+
+El servidor integrado escucha HTTP. Para TLS, límites configurables, compresión y operación pública usa un proxy inverso. Debe reenviar `Host`, `X-Forwarded-Proto` y los headers de upgrade WebSocket.

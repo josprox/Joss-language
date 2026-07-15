@@ -5,19 +5,19 @@ import "path/filepath"
 // GetConsoleConfigFiles returns configuration files for console projects
 func GetConsoleConfigFiles(path string) map[string]string {
 	return map[string]string{
-		filepath.Join(path, "main.joss"): `// Aplicación de Consola JosSecurity
+		filepath.Join(path, "main.joss"): `// Aplicación de Consola Joss
 // Entry Point
 
 class Main {
     Init main() {
-        print("=== Aplicación de Consola JosSecurity ===")
+        print("=== Aplicación de Consola Joss ===")
         print("")
         
         // ========================================
         // Tu lógica de aplicación aquí
         // ========================================
         
-        print("¡Hola desde JosSecurity Console!")
+        print("¡Hola desde Joss Console!")
         print("")
         print("Este es un proyecto de consola backend-only.")
         print("Puedes agregar tu lógica en este archivo main.joss")
@@ -51,10 +51,10 @@ DB_PATH="database.sqlite"
 PREFIX="js_"
 
 # Application Settings
-APP_NAME="JosSecurity Console App"
+APP_NAME="Joss Console App"
 APP_VERSION="1.0.0"`,
 		filepath.Join(path, "config", "reglas.joss"): `// Constantes Globales para Aplicación de Consola
-const string APP_NAME = "JosSecurity Console"
+const string APP_NAME = "Joss Console"
 const string APP_VERSION = "1.0.0"
 
 // Configuración de la aplicación
@@ -76,7 +76,7 @@ func GetConsoleAppFiles(path string) map[string]string {
 		filepath.Join(path, "app", "controllers", "ExampleController.joss"): `// Controlador de Ejemplo para Consola
 class ExampleController {
     
-    function ejecutar() {
+    func ejecutar() {
         print("Ejecutando ExampleController...")
         
         // Tu lógica aquí
@@ -85,7 +85,7 @@ class ExampleController {
         return $resultado
     }
     
-    function procesarDatos() {
+    func procesarDatos() {
         // Ejemplo de procesamiento
         $datos = ["item1", "item2", "item3"]
         
@@ -105,13 +105,13 @@ class ExampleModel extends GranDB {
         $this->tabla = "js_example"
     }
     
-    function obtenerTodos() {
+    func obtenerTodos() {
         $db = new GranDB()
         $db->tabla = $this->tabla
         return $db->clasic("json")
     }
     
-    function buscarPorId($id) {
+    func buscarPorId($id) {
         $db = new GranDB()
         $db->tabla = $this->tabla
         $db->comparar = "id"
@@ -121,9 +121,9 @@ class ExampleModel extends GranDB {
 }`,
 
 		// README for console project
-		filepath.Join(path, "README.md"): `# Proyecto de Consola JosSecurity
+		filepath.Join(path, "README.md"): `# Proyecto de Consola Joss
 
-Este es un proyecto backend-only de JosSecurity, diseñado para aplicaciones de línea de comandos.
+Este es un proyecto backend-only de Joss, diseñado para aplicaciones de línea de comandos.
 
 ## Estructura del Proyecto
 

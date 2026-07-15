@@ -412,5 +412,4 @@ func (r *Runtime) executeTryCatch(tcs *parser.TryCatchStatement) (result interfa
 func (r *Runtime) executeThrow(ts *parser.ThrowStatement) interface{} {
 	val := r.evaluateExpression(ts.Value)
 	panic(val)
-	return nil
 }

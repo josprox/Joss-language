@@ -8,7 +8,7 @@ func GetBrunoFiles(path string) map[string]string {
 	return map[string]string{
 		filepath.Join(path, "bruno", "bruno.json"): `{
   "version": "1",
-  "name": "JosSecurity API",
+  "name": "Joss API",
   "type": "collection"
 }`,
 		filepath.Join(path, "bruno", "1. Register.bru"): `meta {

@@ -27,10 +27,10 @@ func (r *Runtime) RegisterNativeClasses() {
 	// not the original 'r' that tried to register them.
 
 	// Stack
-	r.registerNative("Stack", []string{}, (*Runtime).executeStackMethod)
+	r.registerNative("Stack", []string{"push", "pop", "peek"}, (*Runtime).executeStackMethod)
 
 	// Queue
-	r.registerNative("Queue", []string{}, (*Runtime).executeQueueMethod)
+	r.registerNative("Queue", []string{"enqueue", "dequeue", "peek"}, (*Runtime).executeQueueMethod)
 
 	// GranDB
 	granDBMethods := []string{
@@ -45,18 +45,18 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.registerNative("GranDB", granDBMethods, (*Runtime).executeGranDBMethod)
 
 	// Auth
-	r.registerNative("Auth", []string{"user", "check", "guest", "id", "logout", "attempt", "create", "hasRole", "verify", "refresh", "delete", "login", "complete2FA"}, (*Runtime).executeAuthMethod)
+	r.registerNative("Auth", []string{"hash", "complete2FA", "login", "create", "attempt", "check", "verify", "forgotPassword", "resetPassword", "resendVerification", "user", "guest", "hasRole", "id", "refresh", "update", "delete", "logout", "validateToken"}, (*Runtime).executeAuthMethod)
 	r.Variables["Auth"] = &Instance{Class: r.Classes["Auth"], Fields: make(map[string]interface{})}
 
 	// AuthLoginResult
 	r.registerNative("AuthLoginResult", []string{"require2FA", "onSuccess", "onChallenge", "onFail", "response"}, (*Runtime).executeAuthLoginResultMethod)
 
 	// MFA
-	r.registerNative("MFA", []string{"verify", "policy", "challenge", "generateTOTP", "verifyTOTP", "generateRecoveryCodes", "verifyRecoveryCode"}, (*Runtime).executeMFAMethod)
+	r.registerNative("MFA", []string{"generateTOTP", "verifyTOTP", "generateRecoveryCodes", "verifyRecoveryCode"}, (*Runtime).executeMFAMethod)
 	r.Variables["MFA"] = &Instance{Class: r.Classes["MFA"], Fields: make(map[string]interface{})}
 
 	// TwoFactor
-	r.registerNative("TwoFactor", []string{"verify", "required", "challenge"}, (*Runtime).executeTwoFactorMethod)
+	r.registerNative("TwoFactor", []string{"verify", "required"}, (*Runtime).executeTwoFactorMethod)
 	r.Variables["TwoFactor"] = &Instance{Class: r.Classes["TwoFactor"], Fields: make(map[string]interface{})}
 
 	// System
@@ -80,7 +80,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["View"] = &Instance{Class: r.Classes["View"], Fields: make(map[string]interface{})}
 
 	// Router
-	r.registerNative("Router", []string{"get", "post", "put", "delete", "match", "api", "ws", "group", "middleware", "end"}, (*Runtime).executeRouterMethod)
+	r.registerNative("Router", []string{"get", "post", "put", "delete", "match", "api", "ws", "group", "middleware", "registerMiddleware", "end"}, (*Runtime).executeRouterMethod)
 	r.Variables["Router"] = &Instance{Class: r.Classes["Router"], Fields: make(map[string]interface{})}
 
 	// Redirect (PHP-style convenience helper: Redirect::to("url", 302))
@@ -88,11 +88,11 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["Redirect"] = &Instance{Class: r.Classes["Redirect"], Fields: make(map[string]interface{})}
 
 	// Request
-	r.registerNative("Request", []string{"input", "post", "all", "except", "get", "file", "cookie"}, (*Runtime).executeRequestMethod)
+	r.registerNative("Request", []string{"input", "post", "all", "except", "file", "cookie", "root", "header"}, (*Runtime).executeRequestMethod)
 	r.Variables["Request"] = &Instance{Class: r.Classes["Request"], Fields: make(map[string]interface{})}
 
 	// Response
-	r.registerNative("Response", []string{"json", "redirect", "error", "raw", "stream"}, (*Runtime).executeResponseMethod)
+	r.registerNative("Response", []string{"json", "error", "redirect", "back", "raw", "stream"}, (*Runtime).executeResponseMethod)
 	r.Variables["Response"] = &Instance{Class: r.Classes["Response"], Fields: make(map[string]interface{})}
 
 	// WebResponse (replaces RedirectResponse)
@@ -103,14 +103,15 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["WebSocket"] = &Instance{Class: r.Classes["WebSocket"], Fields: make(map[string]interface{})}
 
 	// Schema
-	r.registerNative("Schema", []string{"create", "table"}, (*Runtime).executeSchemaMethod)
+	r.registerNative("Schema", []string{"create", "table", "rename", "drop", "dropIfExists", "hasTable", "hasColumn"}, (*Runtime).executeSchemaMethod)
 	r.Variables["Schema"] = &Instance{Class: r.Classes["Schema"], Fields: make(map[string]interface{})}
 
 	// Blueprint
-	r.registerNative("Blueprint", []string{}, (*Runtime).executeBlueprintMethod)
+	blueprintMethods := []string{"id", "increments", "integer", "tinyInteger", "smallInteger", "mediumInteger", "bigInteger", "unsignedInteger", "unsignedBigInteger", "float", "double", "decimal", "char", "string", "text", "mediumText", "longText", "date", "dateTime", "time", "timestamp", "timestamps", "softDeletes", "boolean", "json", "enum", "nullable", "unsigned", "unique", "default", "comment"}
+	r.registerNative("Blueprint", blueprintMethods, (*Runtime).executeBlueprintMethod)
 
 	// Redis
-	r.registerNative("Redis", []string{}, (*Runtime).executeRedisMethod)
+	r.registerNative("Redis", []string{"connect", "set", "get", "del"}, (*Runtime).executeRedisMethod)
 	r.Variables["Redis"] = &Instance{Class: r.Classes["Redis"], Fields: make(map[string]interface{})}
 
 	// Migration
@@ -136,7 +137,7 @@ func (r *Runtime) RegisterNativeClasses() {
 	r.Variables["Str"] = &Instance{Class: r.Classes["Str"], Fields: make(map[string]interface{})}
 
 	// UserStorage
-	r.registerNative("UserStorage", []string{"put", "get", "getToFile", "update", "path", "exists", "delete"}, (*Runtime).executeUserStorageMethod)
+	r.registerNative("UserStorage", []string{"put", "get", "getToFile", "delete"}, (*Runtime).executeUserStorageMethod)
 	r.Variables["UserStorage"] = &Instance{Class: r.Classes["UserStorage"], Fields: make(map[string]interface{})}
 
 	// SQLite (Native)

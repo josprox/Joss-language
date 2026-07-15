@@ -1,23 +1,23 @@
 # WebSockets
 
-Registra endpoints WebSocket con `Router::ws()`. Las rutas WS son estáticas y exactas; pasa la información de conexión mediante query string o un mensaje inicial.
-
 ```joss
 Router::ws("/chat", "ChatController@connect")
 ```
 
-El controlador recibe una conexión y puede enviar, escuchar, emitir a otros clientes o cerrar.
+La ruta se registra bajo el método interno `WS`. La coincidencia es estática y exacta: `{id}` no se interpreta para WebSockets.
 
 ```joss
 class ChatController {
     func connect($ws) {
-        $ws->onMessage(func ($message) {
-            WebSocket::broadcast("/chat", $message)
+        $ws->onMessage(func($message) {
+            WebSocket::broadcast($message)
         })
     }
 }
 ```
 
-La actualización WebSocket sucede antes del middleware HTTP habitual. Para conexiones autenticadas, envía el token en el mensaje de inicio o como query string y valida explícitamente con `Auth::validateToken($token)` antes de confiar en `Auth::user()`.
+La conexión expone `send`, `onMessage` y `close`; `WebSocket::broadcast()` usa el hub global. En la versión actual, `close()` está registrado pero todavía es un no-op: devuelve éxito sin cerrar el socket. El servidor conserva además `/ws` como endpoint global del hub y `/__hot_reload` para desarrollo.
 
-Evita proxys que oculten el encabezado `Upgrade`; Nginx debe reenviar `Upgrade` y `Connection` hacia Joss.
+El upgrade se procesa antes de sesiones y middleware HTTP. Para autenticar, envía un JWT en query o en el primer mensaje y llama `Auth::validateToken($token)`; al validar, el runtime repuebla la sesión usada por `Auth::user()`.
+
+Un proxy inverso debe permitir `Upgrade` y `Connection`. El servidor integrado no ofrece `wss`; TLS termina en el proxy.

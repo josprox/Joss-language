@@ -24,13 +24,7 @@ func InitRedis(addr, password string, db int) {
 
 // Redis Native Class
 func (r *Runtime) executeRedisMethod(instance *Instance, method string, args []interface{}) interface{} {
-	if GlobalRedis == nil {
-		fmt.Println("[Redis] Error: Not connected (Call Redis.connect first or configure .env)")
-		return nil
-	}
-
-	switch method {
-	case "connect":
+	if method == "connect" {
 		// Manual connection: Redis.connect("localhost:6379", "", 0)
 		if len(args) >= 1 {
 			addr := args[0].(string)
@@ -50,7 +44,14 @@ func (r *Runtime) executeRedisMethod(instance *Instance, method string, args []i
 			return true
 		}
 		return false
+	}
 
+	if GlobalRedis == nil {
+		fmt.Println("[Redis] Error: Not connected (Call Redis.connect first or configure .env)")
+		return nil
+	}
+
+	switch method {
 	case "set":
 		// Redis.set("key", "value", seconds_ttl)
 		if len(args) >= 2 {

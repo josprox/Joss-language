@@ -7,7 +7,7 @@ func GetNpmFiles(path string) map[string]string {
 		filepath.Join(path, "package.json"): `{
   "name": "joss-app",
   "version": "1.0.0",
-  "description": "JosSecurity Application",
+  "description": "Joss Application",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

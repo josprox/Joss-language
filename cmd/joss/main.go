@@ -207,7 +207,7 @@ func main() {
 		}
 	case "userstorage":
 		if len(os.Args) < 3 {
-			fmt.Println("Uso: joss userstorage [local | OCI | AWS | Azure]")
+			fmt.Println("Uso: joss userstorage [local | OCI]")
 			return
 		}
 		handleUserStorage(os.Args[2])
@@ -324,7 +324,7 @@ dependencies:
 // Se carga automaticamente al declarar %s en joss.yaml.
 
 class %s {
-    function version() {
+    func version() {
         return "1.0.0"
     }
 }

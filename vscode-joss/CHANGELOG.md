@@ -15,6 +15,12 @@
 - Preserved the specialized controller-variable completion provider for `.joss.html` views.
 - Workspace symbols are refreshed when an open document changes.
 
+### Fixed
+- Native signatures and snippets now match the runtime contracts for Router, Request, Response, Cron and Task.
+- `Joss: Make Controller` creates a real controller instead of returning placeholder success.
+- `Joss: Run Security Check` scans indexed workspace sources instead of returning an empty result.
+- The published security configuration key now matches the key consumed by the language server.
+
 ## [3.3.0] - 2026-02-22
 ### Added
 - **Core Architecture Sync**: Support for JOSS v3.3.0.

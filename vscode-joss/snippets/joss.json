@@ -54,9 +54,9 @@
   "Router Group": {
     "prefix": "route:group",
     "body": [
-      "Router::group(\"/${1:prefix}\")",
-      "$0",
-      "Router::end()"
+      "Router::group(\"${1:middleware}\", func() {",
+      "\\t$0",
+      "})"
     ],
     "description": "Define a router group"
   },
@@ -317,7 +317,7 @@
   "Cron Schedule": {
     "prefix": "cron",
     "body": [
-      "Cron::schedule(\"${1:name}\", \"${2:00:00}\", func() {",
+      "Cron::schedule(\"${1:name}\", \"${2:00:00}\", {",
       "\\t$0",
       "})"
     ],
@@ -326,7 +326,7 @@
   "Task Hit": {
     "prefix": "task",
     "body": [
-      "Task::on_request(\"${1:name}\", func() {",
+      "Task::on_request(\"${1:name}\", \"${2:interval}\", {",
       "\\t$0",
       "})"
     ],

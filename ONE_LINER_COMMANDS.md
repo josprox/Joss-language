@@ -1,48 +1,28 @@
-# JosSecurity v3.0.3 - Quick Commands
+# Comandos rápidos
 
-## 🚀 Installation
+## Instalar o actualizar
 
-### Windows (PowerShell as Admin)
+Windows, desde PowerShell como administrador:
+
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; iwr -useb https://raw.githubusercontent.com/josprox/JosSecurity-language/main/install/remote-install.ps1 | iex
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; iwr -useb https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.ps1 | iex
 ```
 
-### Linux/macOS
-```bash
-curl -fsSL https://raw.githubusercontent.com/josprox/JosSecurity-language/main/install/remote-install.sh | bash
-```
-
----
-
-## 🔄 Update / 🗑️ Uninstall
-
-Run the **Installation command above**. The script will detect your existing installation and show a menu:
-
-```text
-[1] Install
-[2] Update
-[3] Uninstall
-```
-
-Simply select the option you need.
-
----
-
-## 📝 Manual Installation
-
-If you prefer to download and run locally:
+Linux o macOS:
 
 ```bash
-# Clone repository
-git clone https://github.com/josprox/JosSecurity-language.git
-cd JosSecurity-language/install
-
-# Run the menu-driven installer
-bash remote-install.sh    # Linux/macOS
-# or
-.\remote-install.ps1   # Windows
+curl -fsSL https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.sh | bash
 ```
 
----
+Los scripts abren un menú para instalar, actualizar o desinstalar el runtime, el SDK y, cuando VS Code está disponible, la extensión.
 
-**No dependencies required!** 🎉
+## Verificar y empezar
+
+```bash
+joss version
+joss new mi_aplicacion
+cd mi_aplicacion
+joss server start
+```
+
+Consulta los detalles y requisitos en [install/README.md](install/README.md).

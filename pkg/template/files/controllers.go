@@ -5,7 +5,7 @@ import "path/filepath"
 func GetControllerFiles(path string) map[string]string {
 	return map[string]string{
 		filepath.Join(path, "app", "controllers", "ProfileController.joss"): `class ProfileController {
-    function index() {
+    func index() {
         $u = Auth::user()
         $userId = Auth::id()
 
@@ -35,7 +35,7 @@ func GetControllerFiles(path string) map[string]string {
         })
     }
 
-    function update() {
+    func update() {
         $id = Auth::user()->id
         
         $data = {
@@ -51,7 +51,7 @@ func GetControllerFiles(path string) map[string]string {
         return ($success) ? Response::redirect("/profile")->with("success", "Perfil actualizado correctamente.") : Response::back()->with("error", "Error al actualizar el perfil.")
     }
 
-    function activate2FA() {
+    func activate2FA() {
         $code = Request::input("code")
         $prefix = System::env("PREFIX") ?? "js_"
         $mfa = new MfaManager()
@@ -61,7 +61,7 @@ func GetControllerFiles(path string) map[string]string {
         return ($success) ? Response::redirect("/profile")->with("success", "Autenticación de dos factores (2FA) activada con éxito.") : Response::redirect("/profile")->with("error", "Código de verificación inválido.")
     }
 
-    function deactivate2FA() {
+    func deactivate2FA() {
         $prefix = System::env("PREFIX") ?? "js_"
         $mfa = new MfaManager()
         $mfa->setPrefix($prefix)
@@ -70,7 +70,7 @@ func GetControllerFiles(path string) map[string]string {
         return ($success) ? Response::redirect("/profile")->with("success", "Autenticación de dos factores (2FA) desactivada.") : Response::redirect("/profile")->with("error", "Error al desactivar la autenticación de dos factores.")
     }
 
-    function delete() {
+    func delete() {
         $id = Auth::user()->id
         
         // Remove account
@@ -88,7 +88,7 @@ func GetControllerFiles(path string) map[string]string {
 		filepath.Join(path, "app", "controllers", "HomeController.joss"): `class HomeController {
     func index() {
         return View::render("welcome", {
-            "title": "Bienvenido a JosSecurity",
+            "title": "Bienvenido a Joss",
             "version": JOSS_VERSION
         })
     }
@@ -146,7 +146,7 @@ func GetControllerFiles(path string) map[string]string {
         ($token) ? {
             // Send Verification Email
             $link = Request::root() . "/verify/" . $token
-            $body = "<h1>Bienvenido a JosSecurity</h1><p>Por favor verifica tu cuenta haciendo click en el siguiente enlace:</p><a href='" . $link . "'>Verificar Cuenta</a>"
+            $body = "<h1>Bienvenido a Joss</h1><p>Por favor verifica tu cuenta haciendo click en el siguiente enlace:</p><a href='" . $link . "'>Verificar Cuenta</a>"
             
             SmtpClient::send($data["email"], "Verifica tu cuenta", $body)
             
@@ -333,12 +333,12 @@ func GetControllerFiles(path string) map[string]string {
 		filepath.Join(path, "app", "controllers", "PasswordController.joss"): `class PasswordController {
     
     // Mostrar formulario de olvido
-    function showForgot() {
+    func showForgot() {
         return View::render("auth.forgot", { "title": "Recuperar Contraseña" })
     }
 
     // Procesar envío de link
-    function sendResetLink() {
+    func sendResetLink() {
         $email = Request::input("email")
         $token = Auth::forgotPassword($email)
         
@@ -357,13 +357,13 @@ func GetControllerFiles(path string) map[string]string {
     }
 
     // Mostrar formulario de reset
-    function showReset() {
+    func showReset() {
         $token = Request::input("token")
         return View::render("auth.reset", { "token": $token, "title": "Nueva Contraseña" })
     }
 
     // Procesar cambio de password
-    function resetPassword() {
+    func resetPassword() {
         $token = Request::input("token")
         $password = Request::input("password")
         

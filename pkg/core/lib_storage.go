@@ -16,8 +16,6 @@ import (
 
 // UserStorage Native Class Implementation
 // Usage: UserStorage::put($user_token, "profile.jpg", $file_content)
-//
-//	UserStorage::path($user_token, "profile.jpg")
 func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, args []interface{}) interface{} {
 	basePath := "assets/users"
 	storageType := "local"
@@ -59,6 +57,11 @@ func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, ar
 		userToken := extractToken(args[0])
 		fileName := fmt.Sprintf("%v", args[1]) // Can be "photos/my_pic.jpg"
 		content := fmt.Sprintf("%v", args[2])
+		fullPath, pathErr := safeUserStoragePath(basePath, userToken, fileName)
+		if pathErr != nil {
+			fmt.Printf("[Storage] Ruta rechazada: %v\n", pathErr)
+			return false
+		}
 
 		// DB Registry Logic (Common for both)
 		if r.GetDB() != nil {
@@ -91,7 +94,6 @@ func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, ar
 			return r.ociPut(userToken, fileName, content)
 		} else {
 			// LOCAL STORAGE
-			fullPath := filepath.Join(basePath, userToken, fileName)
 			dir := filepath.Dir(fullPath)
 			if err := os.MkdirAll(dir, 0755); err != nil {
 				fmt.Printf("[Storage DEBUG] MkdirAll error: %v\n", err)
@@ -111,11 +113,14 @@ func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, ar
 		}
 		userToken := extractToken(args[0])
 		fileName := fmt.Sprintf("%v", args[1])
+		fullPath, pathErr := safeUserStoragePath(basePath, userToken, fileName)
+		if pathErr != nil {
+			return nil
+		}
 
 		if storageType == "OCI" {
 			return r.ociGet(userToken, fileName)
 		} else {
-			fullPath := filepath.Join(basePath, userToken, fileName)
 			content, err := os.ReadFile(fullPath)
 			if err != nil {
 				return nil
@@ -130,12 +135,15 @@ func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, ar
 		userToken := extractToken(args[0])
 		fileName := fmt.Sprintf("%v", args[1])
 		destPath := fmt.Sprintf("%v", args[2])
+		srcPath, pathErr := safeUserStoragePath(basePath, userToken, fileName)
+		if pathErr != nil {
+			return false
+		}
 
 		if storageType == "OCI" {
 			return r.ociGetToFile(userToken, fileName, destPath)
 		} else {
 			// Local: just copy the file
-			srcPath := filepath.Join(basePath, userToken, fileName)
 			content, err := os.ReadFile(srcPath)
 			if err != nil {
 				return false
@@ -152,6 +160,10 @@ func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, ar
 		}
 		userToken := extractToken(args[0])
 		fileName := fmt.Sprintf("%v", args[1])
+		fullPath, pathErr := safeUserStoragePath(basePath, userToken, fileName)
+		if pathErr != nil {
+			return false
+		}
 
 		// DB Registry Delete
 		if r.GetDB() != nil {
@@ -165,7 +177,6 @@ func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, ar
 		if storageType == "OCI" {
 			return r.ociDelete(userToken, fileName)
 		} else {
-			fullPath := filepath.Join(basePath, userToken, fileName)
 			if err := os.Remove(fullPath); err != nil {
 				return false
 			}
@@ -173,6 +184,28 @@ func (r *Runtime) executeUserStorageMethod(instance *Instance, method string, ar
 		}
 	}
 	return nil
+}
+
+func safeUserStoragePath(basePath, userToken, fileName string) (string, error) {
+	for _, value := range []string{userToken, fileName} {
+		clean := filepath.Clean(value)
+		if clean == "." || clean == ".." || filepath.IsAbs(value) || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+			return "", fmt.Errorf("token o nombre de archivo fuera del almacenamiento")
+		}
+	}
+	root, err := filepath.Abs(basePath)
+	if err != nil {
+		return "", err
+	}
+	target, err := filepath.Abs(filepath.Join(root, userToken, fileName))
+	if err != nil {
+		return "", err
+	}
+	relative, err := filepath.Rel(root, target)
+	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || filepath.IsAbs(relative) {
+		return "", fmt.Errorf("token o nombre de archivo fuera del almacenamiento")
+	}
+	return target, nil
 }
 
 // --- OCI Helpers ---

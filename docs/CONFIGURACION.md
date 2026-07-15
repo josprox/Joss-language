@@ -1,48 +1,53 @@
 # Configuración
 
-Joss lee `env.joss` y mantiene sus valores disponibles para el runtime mediante `System::env()`. No subas este archivo al repositorio; publica un `env.joss.example` sin secretos.
+El runtime busca `env.joss`, después `env.enc` y finalmente `.env`; en desarrollo también intenta directorios padre. Las variables del sistema operativo sobrescriben los valores del archivo. `System::env("KEY", "default")` lee el mapa cargado.
 
 ```env
 APP_ENV="development"
 APP_NAME="Mi aplicación"
+APP_URL="http://localhost:8000"
 PORT="8000"
 
 DB="sqlite"
 DB_PATH="database.sqlite"
-DB_PREFIX="js_"
+PREFIX="js_"
 
-JWT_SECRET="reemplaza-por-un-secreto-largo-y-aleatorio"
+JWT_SECRET="secreto-largo-y-unico"
+APP_KEY="clave-larga-y-unica"
 CORS_WEB="http://localhost:3000"
 ```
 
-Para MySQL, sustituye la configuración de SQLite:
+`PREFIX` es la clave usada por el runtime. `DB_PREFIX` se acepta como alias y ambos valores se sincronizan al cargar el entorno.
+
+Para MySQL:
 
 ```env
 DB="mysql"
-DB_HOST="127.0.0.1"
-DB_PORT="3306"
+DB_HOST="127.0.0.1:3306"
 DB_NAME="mi_app"
-DB_USER="mi_usuario"
-DB_PASS="mi_contrasena"
+DB_USER="usuario"
+DB_PASS="secreto"
 ```
 
-## Seguridad y producción
+No existe un driver PostgreSQL en el núcleo. `DB_HOST` puede incluir el puerto; si no lo incluye, Joss usa 3306.
 
-- Define un `JWT_SECRET` único y largo en cada entorno.
-- `CORS_WEB=*` permite cualquier origen sin credenciales. Para cookies o JWT en navegadores, usa una lista explícita separada por comas, por ejemplo `https://app.example.com,https://admin.example.com`.
-- `ALLOW_SYSTEM_RUN=true` habilita `System::Run()`; mantenlo deshabilitado salvo que sea imprescindible.
-- En procesos sin interacción, define `NON_INTERACTIVE=true`.
+## Seguridad y servidor
 
-```joss
-$environment = System::env("APP_ENV")
-```
+- Si `JWT_SECRET` o `APP_KEY` faltan, son débiles o conservan el valor inseguro conocido, el runtime genera valores aleatorios y actualiza el archivo de entorno.
+- `CORS_WEB` vacío no agrega CORS. `*` permite cualquier origen sin credenciales. Una lista separada por comas permite solo coincidencias exactas y habilita credenciales.
+- `ALLOW_SYSTEM_RUN=true` habilita ejecución de procesos desde Joss.
+- `NON_INTERACTIVE` está destinado a flujos sin entrada, aunque no todos los comandos interactivos de la CLI lo consultan.
+- `SESSION_DRIVER=redis`, `REDIS_HOST` y `REDIS_PASSWORD` activan sesiones Redis cuando el servidor inicializa correctamente el cliente.
 
-## Base de datos
+No publiques `env.joss`, `.env`, credenciales o llaves privadas. Usa un archivo de ejemplo sin secretos.
 
-Usa `joss change db mysql` o `joss change db sqlite` para cambiar el motor. Para mover una conexión existente hacia otro servidor MySQL:
+## Cambios de base de datos
 
 ```bash
-joss change db migrate --host=10.0.0.118 --port=3306 --database=mi_app --user=usuario --password=secreto
+joss change db mysql
+joss change db sqlite
+joss change db prefix app_
+joss change db migrate --host=db.example --port=3306 --database=app --user=user --password=secret
 ```
 
-El comando valida el destino y solo actualiza `env.joss` al concluir; crea un archivo de respaldo antes del cambio. Consulta [Migraciones](MIGRACIONES.md) para versionar el esquema.
+La migración a otro MySQL comprueba origen y destino, copia los datos y solo después respalda y actualiza el archivo de entorno. No promete conservar todas las características específicas de cada motor; revisa tipos, índices y restricciones después de migrar.

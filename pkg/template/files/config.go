@@ -11,7 +11,7 @@ func GetConfigFiles(path string) map[string]string {
 	return map[string]string{
 		filepath.Join(path, "main.joss"): `class Main {
     Init main() {
-        print("Iniciando Sistema JosSecurity...")
+        print("Iniciando Sistema Joss...")
         Server::start()
     }
 }`,
@@ -60,7 +60,7 @@ OCI_PRIVATE_KEY_PATH=""
 OCI_PASSPHRASE=""
 `,
 		filepath.Join(path, "config", "reglas.joss"): fmt.Sprintf(`// Constantes Globales
-const string APP_NAME = "JosSecurity Enterprise"
+const string APP_NAME = "Joss Enterprise"
 const string APP_VERSION = "%s"`, version.Version),
 		filepath.Join(path, "joss.yaml"): fmt.Sprintf(`name: mi_proyecto
 version: 1.0.0

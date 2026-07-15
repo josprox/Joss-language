@@ -4,7 +4,7 @@ import "path/filepath"
 
 func GetAssetFiles(path string) map[string]string {
 	return map[string]string{
-		filepath.Join(path, "assets", "js", "app.js"): `console.log('JosSecurity Enterprise v3.0 - Inicializado');`,
+		filepath.Join(path, "assets", "js", "app.js"): `console.log('Joss Enterprise v3.0 - Inicializado');`,
 
 		// SCSS Modules
 		filepath.Join(path, "assets", "css", "_variables.scss"): `$primary: #2563eb;

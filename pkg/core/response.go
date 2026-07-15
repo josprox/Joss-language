@@ -9,10 +9,23 @@ import (
 // executeResponseMethod handles Response methods
 func (r *Runtime) executeResponseMethod(instance *Instance, method string, args []interface{}) interface{} {
 	switch method {
+	case "error":
+		if len(args) > 0 {
+			statusCode := 400
+			if len(args) > 1 {
+				statusCode = toInt(args[1])
+			}
+			return r.createWebResponse("JSON", "", map[string]interface{}{"error": fmt.Sprintf("%v", args[0])}, statusCode)
+		}
+
 	case "redirect":
 		if len(args) > 0 {
 			url := args[0].(string)
-			return r.createWebResponse("REDIRECT", url, nil, 302)
+			statusCode := 302
+			if len(args) > 1 {
+				statusCode = toInt(args[1])
+			}
+			return r.createWebResponse("REDIRECT", url, nil, statusCode)
 		}
 	case "back":
 		referer := "/"

@@ -1,61 +1,82 @@
 # CLI de Joss
 
-Ejecuta `joss help` para ver los comandos instalados y `joss version` para consultar la versión del runtime.
+La fuente canónica de comandos es `cmd/joss/main.go`. `joss help` muestra el binario realmente instalado y `joss version` su versión.
 
-## Proyectos y ejecución
+## Ejecución y build
 
 ```bash
-joss new web mi_app
-joss new console mi_app
 joss server start
 joss program start
 joss run archivo.joss
 joss build web
 joss build program
+joss build package ruta
 ```
 
-Los generadores disponibles son `make:controller`, `make:middleware`, `make:model`, `make:view`, `make:mvc`, `make:crud`, `remove:crud` y `make:migration`.
+`server start` exige `main.joss`. `build` sin target y cualquier target desconocido ejecutan actualmente el build web; usa un target explícito en automatizaciones.
+
+## Crear y generar
 
 ```bash
+joss new mi_web
+joss new web mi_web
+joss new console mi_cli
+joss new package mi_plugin
 joss make:controller Users
-joss make:migration create_users
+joss make:middleware AuthGuard
+joss make:model User
+joss make:view users/index
+joss make:mvc Product
+joss make:crud products
+joss remove:crud products
+joss make:migration create_products
+```
+
+Los generadores no sobrescriben archivos existentes salvo los flujos que aceptan `--force`. `make:crud` requiere una base accesible y una tabla existente para inspeccionar columnas.
+
+## Datos
+
+```bash
 joss migrate
 joss migrate:fresh
 joss db:seed
-```
-
-## Base de datos
-
-```bash
 joss change db mysql
 joss change db sqlite
 joss change db prefix app_
-joss change db migrate --host=db.example --port=3306 --database=app --user=user --password=secret
+joss change db migrate --host=HOST --port=3306 --database=DB --user=USER --password=PASS
 ```
 
-El último comando prueba el destino antes de actualizar `env.joss` y conserva un respaldo del archivo de configuración si la migración finaliza.
+`migrate:fresh` elimina las tablas antes de reconstruirlas. No lo uses con datos que deban conservarse.
 
-## Paquetes y plugins
+## Pub y JP
 
 ```bash
-joss new package mi_plugin
-joss build package .
-joss package inspect mi_plugin.jp
-joss pub add mi_plugin ^1.0.0
+joss pub add paquete ^1.2.0
+joss pub remove paquete
 joss pub install
+joss pub install --offline
 joss pub update
+joss pub search termino
+joss pub info paquete
 joss pub publish
+joss pub login
+joss pub logout
+joss pub cache clean
+joss pub cache list
+joss pub cache verify
+joss package inspect paquete.jp
 ```
 
-`joss pub` también incluye `remove`, `login`, `search` e `info`. Consulta [Plugins y JP v2](PLUGINS.md) para el formato y el SDK.
+Si no se define `PUB_REGISTRY_URL`, Pub intenta usar `APP_URL` del `env.joss`; si tampoco existe, usa `http://localhost:9000`. Para el registro público configura la URL correspondiente.
 
-## Operación
+## Configuradores
 
 ```bash
-joss userstorage provider
-joss ai:activate
-joss brevo:config --enable --api-key=API_KEY
+joss userstorage local
+joss userstorage OCI
+joss brevo:config --enable --api-key=KEY
 joss brevo:config --disable
+joss ai:activate
 ```
 
-`ai:activate` y `brevo:config` configuran integraciones opcionales; sus capacidades de aplicación se proveen mediante los plugins correspondientes.
+`userstorage` configura actualmente `local` y Oracle Cloud Infrastructure (`OCI`). Brevo e IA preparan configuración; la API de aplicación pertenece a sus plugins.

@@ -48,7 +48,6 @@ func (p *Parser) parseExpression(precedence int) Expression {
 		leftExp = infix(leftExp)
 	}
 
-	return leftExp
 }
 
 func isExpressionContinuation(t TokenType) bool {

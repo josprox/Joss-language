@@ -77,7 +77,7 @@ func createMiddleware(name string) {
 	os.MkdirAll(filepath.Dir(path), 0755)
 
 	content := fmt.Sprintf(`// Middleware: %s
-Router::registerMiddleware("%s", function() {
+Router::registerMiddleware("%s", func() {
     // Middleware Logic
     // Return explicit Response to block, or nothing/true to continue
     

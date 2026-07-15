@@ -1,126 +1,48 @@
-# Guía de Integración: JosSecurity en HestiaCP
+# Integración experimental con HestiaCP
 
-Este documento detalla los pasos para preparar un servidor VPS con **HestiaCP** para alojar aplicaciones desarrolladas en **JosSecurity**.
+Esta carpeta contiene `setup_hestia_cp.sh`, un script independiente para un servidor Linux que ya tenga HestiaCP y el comando `joss` instalado. No forma parte del instalador general ni del runtime.
 
-El sistema utiliza una arquitectura **"Zero Config"**: detecta automáticamente usuarios, rutas y puertos mediante un script de despliegue automatizado.
+## Qué modifica
 
------
+El script debe ejecutarse como `root` y escribe configuración del sistema:
 
-## 📋 1. Requisitos Previos
+- plantillas Nginx de Hestia llamadas `joss`;
+- `/usr/local/bin/joss-launcher`;
+- `/etc/systemd/system/joss@.service`;
+- `/usr/local/bin/deploy-joss`.
 
-Antes de ejecutar el instalador, asegúrate de cumplir con lo siguiente:
+El servicio systemd arranca como `root`, pero el launcher localiza `/home/*/web/<dominio>/public_html`, obtiene el propietario de Hestia y ejecuta `joss run main.joss` mediante `runuser`. Revisa el script antes de usarlo en producción: sobrescribe esos archivos y recarga systemd/Nginx.
 
-1.  **VPS con HestiaCP instalado** y funcionando.
-2.  **Acceso Root** al servidor.
-3.  **Lenguaje Joss Instalado**: El binario `joss` debe estar instalado en el servidor y accesible globalmente (ej. en `/usr/local/bin/joss`).
-      * *Verificación:* Ejecuta `joss --version` en la terminal. Si da error, instálalo primero.
-
------
-
-## 🚀 2. Instalación del Stack (Solo una vez)
-
-Este paso configura las plantillas de Nginx, los servicios de Systemd y las herramientas de despliegue.
-
-1.  Sube el script `install_joss_stack.sh` a tu servidor (por ejemplo, a `/root/`).
-2.  Dale permisos de ejecución y ejecútalo:
-
-<!-- end list -->
+## Preparación
 
 ```bash
-chmod +x install_joss_stack.sh
-./install_joss_stack.sh
+joss version
+sudo bash setup_hestia_cp.sh
 ```
 
-**¿Qué acaba de pasar?**
+Después, crea el dominio en HestiaCP y selecciona la plantilla Nginx `joss`.
 
-  * ✅ Se instalaron las plantillas `joss` en HestiaCP.
-  * ✅ Se creó el servicio universal `joss@.service`.
-  * ✅ Se instaló el comando global `deploy-joss`.
-
------
-
-## 🌐 3. Crear un Nuevo Sitio en HestiaCP
-
-Cada vez que quieras alojar un nuevo proyecto Joss:
-
-1.  Entra a tu panel de HestiaCP.
-2.  Ve a **WEB** -\> **Añadir dominio web**.
-3.  Ingresa el nombre del dominio.
-4.  Haz clic en **Opciones Avanzadas**.
-5.  En **Plantilla Web NGINX**, selecciona la opción: `joss`.
-6.  Guarda los cambios.
-
------
-
-## 📦 4. Despliegue del Proyecto
-
-### En tu computadora local (Desarrollo):
-
-1.  Compila tu proyecto para web. Esto generará la carpeta `build/` con el archivo `nginx_port.conf` automático.
-    ```bash
-    joss build web
-    ```
-
-### En el servidor (Producción):
-
-1.  Sube **todo el contenido** de la carpeta local `build/` a la carpeta `public_html` del servidor:
-      * Ruta típica: `/home/TU_USUARIO/web/TU_DOMINIO.com/public_html/`
-2.  Conéctate por SSH (puedes ser root o admin).
-3.  Ejecuta el comando de despliegue:
-
-<!-- end list -->
+En el proyecto local:
 
 ```bash
-deploy-joss midominio.com
+joss build web
 ```
 
-**El comando `deploy-joss` se encargará de:**
+Ese comando copia el proyecto a `build/`, excluye `env.joss`, cifra el entorno como `env.enc` y crea `nginx_port.conf` con el valor de `PORT` —o `8000` para el build si no está definido—. No compila el programa a un binario autónomo.
 
-  * Ajustar los permisos de archivos al usuario correcto.
-  * Reiniciar el servicio de tu aplicación.
-  * Recargar Nginx para leer el puerto asignado en `nginx_port.conf`.
-
------
-
-## 🛠 Comandos Útiles y Troubleshooting
-
-### Ver estado de un servicio
-
-Si tu web no carga, verifica si la aplicación está corriendo:
+Sube el contenido de `build/` a `/home/<usuario>/web/<dominio>/public_html/` y ejecuta:
 
 ```bash
-systemctl status joss@midominio.com
+sudo deploy-joss ejemplo.com
 ```
 
-### Logs de errores
+El despliegue cambia el propietario de `public_html`, reinicia y habilita `joss@ejemplo.com`, y recarga Nginx.
 
-  * **Logs de la aplicación Joss:**
-    ```bash
-    journalctl -u joss@midominio.com -f
-    ```
-  * **Logs de Nginx:**
-    ```bash
-    tail -f /var/log/hestia/nginx-error.log
-    ```
+## Diagnóstico
 
-### Cambiar el puerto manualmente
-
-Si necesitas cambiar el puerto de una app ya desplegada:
-
-1.  Edita el archivo `nginx_port.conf` en el `public_html` del dominio.
-2.  Cambia el puerto en tu configuración de Joss (si aplica).
-3.  Ejecuta de nuevo: `deploy-joss midominio.com`.
-
------
-
-## 📂 Estructura de Archivos Esperada
-
-El sistema espera que la carpeta `public_html` tenga esta estructura mínima para funcionar:
-
-```text
-/home/usuario/web/dominio.com/public_html/
-├── main.joss          # Tu archivo de entrada
-├── nginx_port.conf    # Generado por 'joss build web' (ej. set $joss_port 9005;)
-├── env.enc            # Entorno encriptado
-└── assets/            # Carpetas estáticas
+```bash
+systemctl status joss@ejemplo.com
+journalctl -u joss@ejemplo.com -f
 ```
+
+Limitaciones: la búsqueda del dominio usa la primera coincidencia bajo `/home/*/web`; no hay rollback, aislamiento por sandbox de systemd ni gestión automática de secretos. Esta integración debe endurecerse y probarse en un entorno de staging antes de producción.

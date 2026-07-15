@@ -49,6 +49,8 @@ entry:
 
 `joss build package .` crea un `.jp` con bytecode, manifiesto, assets y payloads nativos autocontenidos que declares. El consumidor instala Joss y el plugin: no necesita instalar Python, PHP, JVM, Kotlin, MATLAB, Dart/Flutter, C/C++ o Rust si sus runtimes y bibliotecas redistribuibles están incluidos correctamente.
 
+El empaquetador no compila esos lenguajes externos: incorpora los ejecutables y archivos que el autor ya produjo. Excluye fuentes con extensiones conocidas (`.joss`, `.go`, `.c`, `.h`, `.py`, `.php`, `.java`, `.kt`, `.dart`, `.rs`, entre otras), además de `env.joss`, `env.enc` y otros `.jp`. Cada archivo descomprimido admite hasta 128 MiB y el archivo completo hasta 256 MiB.
+
 El archivo incluye `META-INF/joss-symbols.json`, usado por la extensión para autocompletado, hover y ayuda de firma sin exponer las fuentes del plugin.
 
 ```bash
@@ -64,6 +66,6 @@ joss build package .
 joss pub publish
 ```
 
-No empaquetes secretos ni fuentes que no quieras distribuir. Un payload nativo es código ejecutable de confianza: instálalo solo desde autores y registros confiables.
+No empaquetes secretos ni fuentes que no quieras distribuir. Un payload nativo es código ejecutable de confianza, se ejecuta con los permisos del proceso Joss y recibe las variables cargadas del entorno. El formato JP v2 no implementa firma criptográfica del autor. Instálalo solo desde autores y registros confiables.
 
 Los plugins oficiales se publican y documentan de forma independiente: [joss_ai](https://github.com/josprox/joss_ai), [joss_smtp](https://github.com/josprox/joss_smtp), [joss_notify](https://github.com/josprox/joss_notify) y [joss_backup](https://github.com/josprox/joss_backup).
