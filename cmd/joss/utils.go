@@ -112,6 +112,7 @@ func printHelp() {
 	fmt.Printf("  brevo:config            - %s\n", tr("brevoConfig"))
 	fmt.Printf("    --enable --api-key / --disable\n")
 	fmt.Printf("  pub [subcomando]        - Gestionar paquetes y dependencias (add, remove, install, update, publish, login)\n")
+	fmt.Printf("  package inspect [jp]    - Inspeccionar bytecode y payloads nativos de un JP v2\n")
 	fmt.Printf("  version                 - %s\n", tr("version"))
 	fmt.Printf("  help                    - %s\n", tr("helpPrint"))
 }

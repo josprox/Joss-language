@@ -1,6 +1,6 @@
-# Módulo Nativo de Backup / Restore en Joss
+# Plugin de Backup / Restore en Joss
 
-El módulo nativo de **Backup / Restore** permite a cualquier aplicación en Joss realizar respaldos completos o parciales, backups incrementales/diferenciales, cifrado AES-256 de paquetes, restauración granular y migración automatizada ("site-to-site") directamente desde el runtime, mediante el planificador de tareas (`Cron`), o utilizando la consola de comandos (CLI).
+Backup / Restore ya no forma parte del núcleo. Esta guía describe la API de `joss_backup` 2.0, un JP v2 declarado en `joss.yaml` y cargado automáticamente sin `use`. La versión 2.0 incluye backup local, restauración segura, verificación, retención y AES-256-GCM; los proveedores remotos requieren adaptadores externos. Consulte [PLUGINS.md](./PLUGINS.md).
 
 ---
 
@@ -75,7 +75,7 @@ joss backup:delete backup_2026_07_08_041234
 
 ## 3. Tareas Programadas y Políticas de Retención (`config/cron.joss`)
 
-Al configurar tus respaldos en el CLI mediante `joss backup:config`, el sistema creará automáticamente el archivo [config/cron.joss](file:///c:/Users/joss/Documents/proyectos/Joss-language/ejemplos/Joss-Red-JosSecurity/config/cron.joss) en tu proyecto si no existe. 
+Al configurar tus respaldos en el CLI mediante `joss backup:config`, el sistema creara automaticamente el archivo `config/cron.joss` en tu proyecto si no existe.
 
 El archivo define tres políticas de respaldos de base de datos con rotación automática administradas por la base de datos:
 

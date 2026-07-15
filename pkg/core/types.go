@@ -41,11 +41,30 @@ type Runtime struct {
 	CurrentMiddleware []string
 	CustomMiddlewares map[string]interface{} // Name -> Closure/Handler
 	NativeHandlers    map[string]NativeHandler
+	NativePlugins     map[string]*NativePluginDefinition
+	LoadedPlugins     map[string]string // package name -> resolved version
+	loadingPlugins    map[string]bool   // dependency-cycle detection
+	importedFiles     map[string]bool   // idempotent file imports
+	pluginsAutoloaded bool
+	ProjectRoot       string
+	importBaseDir     string
+	usePluginVFS      bool
 
 	// SEO & Sitemap
 	SEO            *SEOData
 	SitemapEntries []SitemapEntry
 	CurrentSource  string // "routes", "api", "app", etc.
+}
+
+// NativePluginDefinition describes a self-contained JP v2 sidecar payload.
+type NativePluginDefinition struct {
+	Name         string
+	Version      string
+	Root         string
+	Protocol     string
+	Executable   string
+	ArchiveFiles map[string][]byte // read-only, used by compiled VFS applications
+	UseVFS       bool
 }
 
 // Instance represents an instance of a class

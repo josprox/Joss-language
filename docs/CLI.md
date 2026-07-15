@@ -104,7 +104,7 @@ joss run main.joss
 joss run app/scripts/proceso.joss
 
 # Ejecutar ejemplo
-joss run examples/final_test.joss
+joss run ruta/al/archivo.joss
 ```
 
 ### `joss build`
@@ -595,3 +595,35 @@ Instalar extensión `vscode-joss` para:
 - Autocompletado
 - Snippets
 - Linting
+
+---
+
+## Plugins y paquetes
+
+```bash
+joss new package mi_plugin  # Crea un plugin Joss portable
+joss build package .        # Valida y genera mi_plugin.jp
+joss package inspect mi_plugin.jp # Muestra bytecode y payloads nativos del JP v2
+joss pub add nombre 1.2.0   # Instala y declara una dependencia
+joss pub install            # Restaura joss.yaml y genera joss.lock
+joss pub install --offline  # Solo usa paquetes ya instalados
+joss pub remove nombre      # Elimina y actualiza manifiesto/lock
+joss pub publish            # Publica el paquete actual
+```
+
+Las dependencias de `joss.yaml` se cargan automáticamente. El código de la aplicación no necesita `use nombre;`. JP v2 compila la envoltura Joss a bytecode y puede transportar ejecutables autónomos, DLL/`.so`, modelos y runtimes redistribuibles por plataforma. El SDK incluye C/C++, Python, PHP, Java/GraalVM, Kotlin/Native, Dart/Flutter desktop y Rust. Consulta [PLUGINS.md](./PLUGINS.md) para el contrato completo.
+
+Para preparar una release completa y verificar compilación cruzada, SDK y plugins oficiales:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1
+```
+
+Para generar los archivos finales que se suben a GitHub Releases:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build_all.ps1
+```
+
+La salida queda en `dist/` e incluye los ZIP históricos por sistema operativo,
+el SDK, plugins oficiales, `release-manifest.json` y `SHA256SUMS.txt`.

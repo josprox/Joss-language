@@ -109,9 +109,9 @@ $productos = $db->table("products")
     ->get()
 ```
 
-### Inteligencia Artificial Nativa
+### Inteligencia Artificial mediante plugin
 ```joss
-// Llamar a modelos de IA fluidamente desde el núcleo de Joss
+// Con un plugin de IA portable declarado en joss.yaml (sin `use`)
 $respuesta = AI::client()
     ->system("Eres un experto en el lenguaje Joss.")
     ->user("Explícame async/await.")
@@ -154,9 +154,27 @@ Explora las guías oficiales para dominar todas las características del ecosist
 * 📖 [Guía de Sintaxis del Lenguaje](./docs/SINTAXIS.md) — Variables, Tipado, Bucles y Programación Orientada a Objetos.
 * 🛠️ [Manual de la Interfaz CLI](./docs/CLI.md) — Comandos detallados y opciones del compilador.
 * 📦 [Módulos Nativos de Joss](./docs/MODULOS_NATIVOS.md) — Documentación de APIs (Auth, GranDB, SmtpClient, etc.).
+* 🧩 [Desarrollo de Plugins](./docs/PLUGINS.md) — Autocarga, manifiesto, empaquetado, dependencias y publicación.
 * 📁 [Estructura del Proyecto](./docs/ESTRUCTURA_PROYECTO.md) — Entendiendo el esqueleto de directorios Web y Consola.
 * 🔑 [Configuración y Variables de Entorno](./docs/CONFIGURACION.md) — Gestión del archivo `env.joss` y llaves criptográficas.
 * 💾 [Manejo de Migraciones](./docs/MIGRACIONES.md) — Diseño de tablas e interacción con bases de datos relacionales.
+
+Para validar una release completa del lenguaje, SDK y plugins oficiales en Windows, Linux y macOS:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify-release.ps1
+```
+
+Para preparar todos los ZIP de distribución compatibles con los instaladores,
+la extensión VS Code, el SDK (incluido PHP), plugins oficiales, manifiesto y
+checksums SHA-256:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build_all.ps1
+```
+
+El workflow `Build manual distribution` ejecuta este mismo proceso solo cuando
+se inicia manualmente desde GitHub Actions.
 * 🤖 [Integración de IA Nativa](./docs/IA_NATIVA.md) — Generación de texto e interacción fluida con LLMs.
 * 🔌 [Servidor y WebSockets](./docs/SERVIDOR.md) — Conexiones persistentes bidireccionales en tiempo real.
 

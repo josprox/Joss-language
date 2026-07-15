@@ -6,17 +6,22 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	_ "embed"
 
+	"github.com/jossecurity/joss/pkg/bytecode"
 	"github.com/jossecurity/joss/pkg/crypto"
+	"github.com/jossecurity/joss/pkg/parser"
+	"github.com/jossecurity/joss/pkg/pluginpkg"
 )
 
 //go:embed runner_windows.exe
@@ -504,14 +509,63 @@ func buildPackage(pkgPath string) {
 		fmt.Printf("Error: Falta manifiesto 'joss.yaml' en '%s'\n", pkgPath)
 		return
 	}
+	manifestData, err := os.ReadFile(manifestPath)
+	if err != nil {
+		fmt.Printf("Error: No se pudo leer joss.yaml: %v\n", err)
+		return
+	}
+	pluginType := packageManifestValue(string(manifestData), "type", "")
+	if strings.EqualFold(pluginType, "go_extension") {
+		fmt.Println("Error: type=go_extension no produce un plugin dinámico multiplataforma.")
+		fmt.Println("Use type: joss y declare entry.main (por defecto src/plugin.joss).")
+		return
+	}
+	entry := packageManifestValue(string(manifestData), "entry", "main")
+	if entry == "" {
+		entry = "src/plugin.joss"
+	}
+	cleanEntry := filepath.Clean(filepath.FromSlash(entry))
+	if cleanEntry == ".." || filepath.IsAbs(cleanEntry) || strings.HasPrefix(cleanEntry, ".."+string(filepath.Separator)) {
+		fmt.Printf("Error: entry.main sale del paquete: %s\n", entry)
+		return
+	}
+	program, err := compilePluginProgram(pkgPath, filepath.Join(pkgPath, cleanEntry), make(map[string]int))
+	if err != nil {
+		fmt.Printf("Error compilando entry.main '%s': %v\n", entry, err)
+		return
+	}
+	compiled, err := bytecode.Encode(program)
+	if err != nil {
+		fmt.Printf("Error generando bytecode: %v\n", err)
+		return
+	}
 
-	// Pack files
-	files := make(map[string][]byte)
+	name := packageManifestValue(string(manifestData), "name", "")
+	versionValue := packageManifestValue(string(manifestData), "version", "")
+	symbolData, err := json.MarshalIndent(pluginpkg.BuildSymbolIndex(program, name, versionValue), "", "  ")
+	if err != nil {
+		fmt.Printf("Error generando indice de simbolos: %v\n", err)
+		return
+	}
+
+	files := map[string][]byte{
+		"joss.yaml":           manifestData,
+		"bytecode/main.jbc":   compiled,
+		pluginpkg.SymbolsPath: symbolData,
+	}
+	nativeConfig := packageManifestSection(string(manifestData), "native")
+	protocol := nativeConfig["protocol"]
+	delete(nativeConfig, "protocol")
+	if len(nativeConfig) > 0 && protocol == "" {
+		protocol = "joss-rpc-v1"
+	}
+
+	// Include assets and autonomous native payloads, never Joss/Go source.
 	err = filepath.Walk(pkgPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
-		
+
 		// Skip .git folders to avoid packing credentials
 		if strings.Contains(path, "/.git/") || strings.Contains(path, "\\.git\\") || strings.HasSuffix(path, ".git") {
 			if info.IsDir() {
@@ -520,8 +574,8 @@ func buildPackage(pkgPath string) {
 			return nil
 		}
 
-		// Skip output package file
-		if strings.HasSuffix(path, ".jp") {
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext == ".jp" || isPluginSourceExtension(ext) || info.Name() == "env.joss" || info.Name() == "env.enc" {
 			return nil
 		}
 
@@ -529,7 +583,10 @@ func buildPackage(pkgPath string) {
 			return nil
 		}
 
-		// Read file contents
+		// joss.yaml was normalized above.
+		if filepath.Clean(path) == filepath.Clean(manifestPath) {
+			return nil
+		}
 		data, err := os.ReadFile(path)
 		if err == nil {
 			// Get path relative to the package folder
@@ -546,22 +603,220 @@ func buildPackage(pkgPath string) {
 		return
 	}
 
-	// GOB encode files
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	if err := enc.Encode(files); err != nil {
-		fmt.Printf("Error al codificar archivos del paquete: %v\n", err)
+	metadata := pluginpkg.Metadata{
+		Name:         name,
+		Version:      versionValue,
+		Bytecode:     "bytecode/main.jbc",
+		Dependencies: parseManifestDependencies(string(manifestData)),
+		Native:       nativeConfig,
+		Protocol:     protocol,
+		Symbols:      pluginpkg.SymbolsPath,
+	}
+	archive, err := pluginpkg.Build(metadata, files)
+	if err != nil {
+		fmt.Printf("Error creando JP v2: %v\n", err)
 		return
 	}
 
-	// Target package output filename: package_name.jp
-	pkgName := filepath.Base(pkgPath)
+	pkgName := name
+	if pkgName == "" {
+		pkgName = filepath.Base(pkgPath)
+	}
 	outPath := filepath.Join(pkgPath, pkgName+".jp")
 
-	if err := os.WriteFile(outPath, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(outPath, archive, 0644); err != nil {
 		fmt.Printf("Error al escribir el archivo compilado del paquete: %v\n", err)
 		return
 	}
 
-	fmt.Printf("[Package Build] ¡Compilación exitosa! Archivo generado: %s\n", outPath)
+	fmt.Printf("[Package Build] JP v2 compilado sin fuentes de implementación: %s\n", outPath)
+}
+
+func isPluginSourceExtension(ext string) bool {
+	switch ext {
+	case ".joss", ".go", ".c", ".cc", ".cpp", ".cxx", ".h", ".hpp", ".py", ".pyw", ".php", ".phtml", ".m", ".mm", ".java", ".kt", ".kts", ".dart", ".cs", ".rs", ".swift":
+		return true
+	default:
+		return false
+	}
+}
+
+func packageManifestValue(content, section, key string) string {
+	activeSection := ""
+	for _, raw := range strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n") {
+		line := strings.TrimRight(raw, " \t")
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := len(line) - len(strings.TrimLeft(line, " \t"))
+		parts := strings.SplitN(trimmed, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		lineKey := strings.TrimSpace(parts[0])
+		value := strings.Trim(strings.TrimSpace(parts[1]), "\"'")
+		if indent == 0 {
+			activeSection = lineKey
+			if key == "" && lineKey == section {
+				return value
+			}
+			continue
+		}
+		if activeSection == section && lineKey == key {
+			return value
+		}
+	}
+	return ""
+}
+
+func inspectPackage(filename string) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Printf("Error leyendo JP: %v\n", err)
+		return
+	}
+	if !pluginpkg.IsV2(data) {
+		if len(data) > pluginpkg.MaxArchiveSize {
+			fmt.Printf("JP legado inválido: excede %d MiB\n", pluginpkg.MaxArchiveSize>>20)
+			return
+		}
+		var files map[string][]byte
+		if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&files); err != nil {
+			fmt.Printf("JP legado inválido: %v\n", err)
+			return
+		}
+		manifest := string(files["joss.yaml"])
+		fmt.Printf("JP legado v1 %s %s (type=%s)\n",
+			packageManifestValue(manifest, "name", ""),
+			packageManifestValue(manifest, "version", ""),
+			packageManifestValue(manifest, "type", ""))
+		fmt.Println("Bytecode: ninguno; este contenedor no es una librería compilada JP v2.")
+		fmt.Println("Archivos internos:")
+		for _, name := range sortedByteFileKeys(files) {
+			label := "asset"
+			if isPluginSourceExtension(strings.ToLower(filepath.Ext(name))) {
+				label = "fuente"
+			}
+			fmt.Printf("  %s (%s, %d bytes)\n", name, label, len(files[name]))
+		}
+		return
+	}
+	archive, err := pluginpkg.Read(data)
+	if err != nil {
+		fmt.Printf("JP v2 inválido: %v\n", err)
+		return
+	}
+	fmt.Printf("JP v2 %s %s\n", archive.Metadata.Name, archive.Metadata.Version)
+	fmt.Printf("Bytecode: %s (%d bytes)\n", archive.Metadata.Bytecode, len(archive.Files[archive.Metadata.Bytecode]))
+	if archive.Metadata.Symbols != "" {
+		var symbols pluginpkg.SymbolIndex
+		if err := json.Unmarshal(archive.Files[archive.Metadata.Symbols], &symbols); err == nil {
+			methodCount := 0
+			for _, class := range symbols.Classes {
+				methodCount += len(class.Methods)
+			}
+			fmt.Printf("IntelliSense: %s (%d clases, %d metodos, %d funciones)\n", archive.Metadata.Symbols, len(symbols.Classes), methodCount, len(symbols.Functions))
+		}
+	}
+	if len(archive.Metadata.Native) == 0 {
+		fmt.Println("Payloads nativos: ninguno")
+	} else {
+		fmt.Printf("Protocolo: %s\n", archive.Metadata.Protocol)
+		fmt.Println("Payloads nativos:")
+		for _, target := range sortedManifestKeys(archive.Metadata.Native) {
+			asset := archive.Metadata.Native[target]
+			fmt.Printf("  %s -> %s (%d bytes)\n", target, asset, len(archive.Files[asset]))
+		}
+	}
+	fmt.Printf("Archivos internos: %d\n", len(archive.Files))
+}
+
+func sortedByteFileKeys(values map[string][]byte) []string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func sortedManifestKeys(values map[string]string) []string {
+	keys := make([]string, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func packageManifestSection(content, section string) map[string]string {
+	values := make(map[string]string)
+	active := false
+	for _, raw := range strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n") {
+		line := strings.TrimRight(raw, " \t")
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		indent := len(line) - len(strings.TrimLeft(line, " \t"))
+		if indent == 0 {
+			active = trimmed == section+":"
+			continue
+		}
+		if !active {
+			continue
+		}
+		parts := strings.SplitN(trimmed, ":", 2)
+		if len(parts) == 2 {
+			values[strings.TrimSpace(parts[0])] = strings.Trim(strings.TrimSpace(parts[1]), "\"'")
+		}
+	}
+	return values
+}
+
+func compilePluginProgram(root, filename string, state map[string]int) (*parser.Program, error) {
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return nil, err
+	}
+	absFile, err := filepath.Abs(filename)
+	if err != nil {
+		return nil, err
+	}
+	rel, err := filepath.Rel(absRoot, absFile)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return nil, fmt.Errorf("import fuera del paquete: %s", filename)
+	}
+	switch state[absFile] {
+	case 1:
+		return nil, fmt.Errorf("ciclo de imports locales en %s", filepath.ToSlash(rel))
+	case 2:
+		return &parser.Program{}, nil
+	}
+	state[absFile] = 1
+	data, err := os.ReadFile(absFile)
+	if err != nil {
+		return nil, err
+	}
+	p := parser.NewParser(parser.NewLexer(string(data)))
+	program := p.ParseProgram()
+	if errs := p.Errors(); len(errs) > 0 {
+		return nil, fmt.Errorf("%s: %s", filepath.ToSlash(rel), strings.Join(errs, "; "))
+	}
+	linked := make([]parser.Statement, 0, len(program.Statements))
+	for _, statement := range program.Statements {
+		importStatement, ok := statement.(*parser.ImportStatement)
+		if !ok || strings.HasPrefix(importStatement.Path, "package:") || importStatement.Path == "global" {
+			linked = append(linked, statement)
+			continue
+		}
+		imported, err := compilePluginProgram(absRoot, filepath.Join(filepath.Dir(absFile), filepath.FromSlash(importStatement.Path)), state)
+		if err != nil {
+			return nil, err
+		}
+		linked = append(linked, imported.Statements...)
+	}
+	state[absFile] = 2
+	return &parser.Program{Statements: linked}, nil
 }

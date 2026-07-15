@@ -1,8 +1,6 @@
 package core
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,6 +14,11 @@ func (r *Runtime) Execute(program *parser.Program) {
 	// Ensure env is loaded
 	if len(r.Env) == 0 {
 		r.LoadEnv(nil)
+	}
+	if !r.pluginsAutoloaded {
+		if err := r.AutoloadPlugins(""); err != nil {
+			panic(err)
+		}
 	}
 
 	// First pass: Register classes and functions
@@ -161,6 +164,8 @@ func (r *Runtime) executeStatement(stmt parser.Statement) interface{} {
 		return r.executeContinue(s)
 	case *parser.MethodStatement:
 		r.Functions[s.Name.Value] = s
+	case *parser.ClassStatement:
+		r.registerClass(s)
 
 	}
 	return nil
@@ -188,101 +193,62 @@ func (r *Runtime) executeImport(stmt *parser.ImportStatement) interface{} {
 	// Handle Package Import
 	if strings.HasPrefix(filename, "package:") {
 		pkgName := strings.TrimPrefix(filename, "package:")
-		pkgDir := filepath.Join("plugins", pkgName)
-		dirs, err := os.ReadDir(pkgDir)
-		if err != nil {
-			pkgDir = filepath.Join("..", "plugins", pkgName)
-			dirs, err = os.ReadDir(pkgDir)
-			if err != nil {
-				// Fallback to local ejemplos directory for development testing
-				pkgDir = filepath.Join("ejemplos", "plugins", pkgName)
-				dirs, err = os.ReadDir(pkgDir)
-				if err != nil {
-					fmt.Printf("Error: El paquete '%s' no está instalado. Ejecute 'joss pub add %s'\n", pkgName, pkgName)
-					return nil
-				}
-			}
+		if err := r.LoadPlugin(pkgName); err != nil {
+			panic(err)
 		}
-
-		var versionDir string
-		for _, d := range dirs {
-			if d.IsDir() {
-				versionDir = d.Name()
-				break
-			}
-		}
-
-		if versionDir == "" {
-			// If no version subfolder (e.g. raw dev folder), load from root dev folder
-			versionDir = "."
-		}
-
-		pkgPath := filepath.Join(pkgDir, versionDir)
-		jpFile := filepath.Join(pkgPath, pkgName+".jp")
-
-		// 1. Load from compiled .jp package if exists
-		if _, err := os.Stat(jpFile); err == nil {
-			data, err := os.ReadFile(jpFile)
-			if err != nil {
-				fmt.Printf("Error al leer paquete compilado '%s': %v\n", jpFile, err)
-				return nil
-			}
-
-			var files map[string][]byte
-			buf := bytes.NewBuffer(data)
-			dec := gob.NewDecoder(buf)
-			if err := dec.Decode(&files); err != nil {
-				fmt.Printf("Error al decodificar paquete compilado '%s': %v\n", jpFile, err)
-				return nil
-			}
-
-			pluginCode, ok := files["src/plugin.joss"]
-			if !ok {
-				fmt.Printf("Error: No se encontró 'src/plugin.joss' dentro del paquete compilado '%s'\n", pkgName)
-				return nil
-			}
-
-			l := parser.NewLexer(string(pluginCode))
-			p := parser.NewParser(l)
-			program := p.ParseProgram()
-			if len(p.Errors()) > 0 {
-				fmt.Printf("Error de parseo en paquete compilado '%s':\n", pkgName)
-				for _, msg := range p.Errors() {
-					fmt.Println("\t" + msg)
-				}
-				return nil
-			}
-			for _, s := range program.Statements {
-				r.executeStatement(s)
-			}
-			return nil
-		}
-
-		// 2. Fallback to raw folder loading
-		filename = filepath.Join(pkgPath, "src", "plugin.joss")
+		return nil
 	}
 
 	// Handle Global Import
 	if filename == "global" {
 		filename = "config/global.joss"
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			// Try looking in parent directories if running from subfolder
-			if _, err := os.Stat("../config/global.joss"); err == nil {
-				filename = "../config/global.joss"
-			} else if _, err := os.Stat("../../config/global.joss"); err == nil {
-				filename = "../../config/global.joss"
-			} else {
-				fmt.Println("Error: @import \"global\" requiere 'config/global.joss'")
-				return nil
+		if !r.usePluginVFS {
+			if _, err := os.Stat(filename); os.IsNotExist(err) {
+				// Try looking in parent directories if running from subfolder
+				if _, err := os.Stat("../config/global.joss"); err == nil {
+					filename = "../config/global.joss"
+				} else if _, err := os.Stat("../../config/global.joss"); err == nil {
+					filename = "../../config/global.joss"
+				} else {
+					fmt.Println("Error: @import \"global\" requiere 'config/global.joss'")
+					return nil
+				}
 			}
 		}
 	}
 
-	content, err := os.ReadFile(filename)
+	var content []byte
+	var err error
+	resolvedFilename := filename
+	if r.usePluginVFS {
+		if r.importBaseDir != "" {
+			resolvedFilename = filepath.Join(r.importBaseDir, filename)
+		}
+		resolvedFilename = filepath.ToSlash(filepath.Clean(resolvedFilename))
+		if r.importedFiles["vfs:"+resolvedFilename] {
+			return nil
+		}
+		content, err = readPluginVFSFile(resolvedFilename)
+	} else {
+		if !filepath.IsAbs(filename) && r.importBaseDir != "" {
+			resolvedFilename = filepath.Join(r.importBaseDir, filename)
+		}
+		resolvedFilename, _ = filepath.Abs(resolvedFilename)
+		resolvedFilename = filepath.Clean(resolvedFilename)
+		if r.importedFiles[resolvedFilename] {
+			return nil
+		}
+		content, err = os.ReadFile(resolvedFilename)
+	}
 	if err != nil {
-		fmt.Printf("Error: No se pudo importar '%s': %v\n", filename, err)
+		fmt.Printf("Error: No se pudo importar '%s': %v\n", resolvedFilename, err)
 		return nil
 	}
+	importKey := resolvedFilename
+	if r.usePluginVFS {
+		importKey = "vfs:" + resolvedFilename
+	}
+	r.importedFiles[importKey] = true
 
 	l := parser.NewLexer(string(content))
 	p := parser.NewParser(l)
@@ -295,6 +261,10 @@ func (r *Runtime) executeImport(stmt *parser.ImportStatement) interface{} {
 		}
 		return nil
 	}
+
+	previousBase := r.importBaseDir
+	r.importBaseDir = filepath.Dir(resolvedFilename)
+	defer func() { r.importBaseDir = previousBase }()
 
 	// Execute imported program in current runtime (shared scope)
 	for _, s := range program.Statements {

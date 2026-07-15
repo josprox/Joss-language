@@ -1,6 +1,6 @@
 import { DefinitionParams, Definition } from 'vscode-languageserver/node';
 import { connection, documents, indexer } from '../server';
-import { getWordAtPosition } from '../utils/textUtils';
+import { referenceAtPosition } from '../utils/callContext';
 
 export function setupDefinitionProvider() {
     connection.onDefinition(async (params: DefinitionParams): Promise<Definition | null> => {
@@ -38,18 +38,21 @@ export function setupDefinitionProvider() {
         }
 
         // Fallback: try to find symbol at cursor position
-        const word = getWordAtPosition(document, position);
+        const word = referenceAtPosition(document, position);
 
         // Try direct symbol lookup
         let symbol = await indexer.findSymbol(word);
         if (symbol) return symbol.location;
 
         // Try as Controller.method
-        if (word.includes('.')) {
-            const [controller, method] = word.split('.');
+        if (word.includes('::') || word.includes('->')) {
+            const [controller, method] = word.split(/::|->/);
             symbol = await indexer.findMethod(controller, method);
             if (symbol) return symbol.location;
         }
+
+        const sameName = await indexer.findSymbolsBySimpleName(word.replace(/^\$/, ''));
+        if (sameName.length) return sameName[0].location;
 
         return null;
     });

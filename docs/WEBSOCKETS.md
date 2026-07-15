@@ -2,6 +2,8 @@
 
 JosSecurity soporta WebSockets de forma nativa, permitiendo comunicación bidireccional en tiempo real.
 
+Los ejemplos que usan `AI::client()` requieren un plugin de IA portable declarado en `joss.yaml`; no requieren `use` y esa API no pertenece al núcleo.
+
 ## Definición de Rutas (`routes.joss` / `api.joss`)
 
 Usa el método `Router::ws` para definir un endpoint WebSocket.

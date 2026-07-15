@@ -217,6 +217,12 @@ func main() {
 		fmt.Printf("%s v%s (%s)\n", version.Name, version.Version, version.NameVersion)
 	case "pub":
 		handlePubCli(os.Args[2:])
+	case "package":
+		if len(os.Args) == 4 && os.Args[2] == "inspect" {
+			inspectPackage(os.Args[3])
+		} else {
+			fmt.Println("Uso: joss package inspect archivo.jp")
+		}
 	case "ai:activate":
 		activateAI()
 	case "change":
@@ -300,10 +306,12 @@ version: 1.0.0
 description: Libreria optimizada para Joss
 repository: ""
 license: MIT
+type: joss
 environment:
   joss: ">=3.6.0"
 entry:
   main: src/plugin.joss
+dependencies:
 `, name)
 	if err := os.WriteFile(filepath.Join(name, "joss.yaml"), []byte(manifestContent), 0644); err != nil {
 		fmt.Printf("Error al escribir joss.yaml: %v\n", err)
@@ -311,22 +319,43 @@ entry:
 	}
 
 	// Create src/plugin.joss
+	className := packageClassName(name)
 	pluginContent := fmt.Sprintf(`// plugin.joss
-// Punto de entrada de la libreria %s
+// Se carga automaticamente al declarar %s en joss.yaml.
 
-print("[%s] cargado correctamente.")
-`, name, name)
+class %s {
+    function version() {
+        return "1.0.0"
+    }
+}
+`, name, className)
 	if err := os.WriteFile(filepath.Join(srcDir, "plugin.joss"), []byte(pluginContent), 0644); err != nil {
 		fmt.Printf("Error al escribir src/plugin.joss: %v\n", err)
 		return
 	}
 
 	// Create README.md
-	readmeContent := fmt.Sprintf("# %s\n\nLibrería optimizada para el lenguaje de programación Joss.\n\n## Instalación\n\n```bash\njoss pub add %s\n```\n\n## Uso\n\n```joss\nuse %s;\n```\n", name, name, name)
+	readmeContent := fmt.Sprintf("# %s\n\nPlugin para el lenguaje de programación Joss.\n\n## Compilar\n\n```bash\njoss build package .\njoss package inspect %s.jp\n```\n\nEl JP v2 resultante contiene bytecode y no distribuye las fuentes de implementación. Para integrar C/C++, Python, PHP, MATLAB, Java, Kotlin, Dart/Flutter o Rust, declara ejecutables autocontenidos como payloads `native` en `joss.yaml` y llama `Plugin::call(...)`; consulta `docs/PLUGINS.md` y el SDK de Joss.\n\n## Instalación\n\n```bash\njoss pub add %s\n```\n\nJoss lo carga automáticamente desde `joss.yaml`; no se necesita `use`.\n\n## Uso\n\n```joss\nprint(%s::version())\n```\n", name, name, name, className)
 	if err := os.WriteFile(filepath.Join(name, "README.md"), []byte(readmeContent), 0644); err != nil {
 		fmt.Printf("Error al escribir README.md: %v\n", err)
 		return
 	}
 
 	fmt.Printf("[Package] Paquete '%s' inicializado exitosamente.\n", name)
+}
+
+func packageClassName(name string) string {
+	parts := strings.FieldsFunc(name, func(r rune) bool { return r == '-' || r == '_' || r == ' ' })
+	var result strings.Builder
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		result.WriteString(strings.ToUpper(part[:1]))
+		result.WriteString(part[1:])
+	}
+	if result.Len() == 0 {
+		return "Plugin"
+	}
+	return result.String()
 }

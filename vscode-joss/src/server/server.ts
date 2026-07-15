@@ -15,9 +15,11 @@ import { SecurityAnalyzer } from './analyzer/securityAnalyzer';
 import { setupHoverProvider } from './providers/hoverProvider';
 import { setupDefinitionProvider } from './providers/definitionProvider';
 import { setupCompletionProvider } from './providers/completionProvider';
+import { setupSignatureHelpProvider } from './providers/signatureHelpProvider';
 import { setupDiagnostics } from './providers/diagnosticsProvider';
 import { setupCustomRequests } from './providers/customRequests';
 import { setupDocumentSymbolProvider } from './providers/documentSymbolProvider';
+import { setupReferencesProvider } from './providers/referencesProvider';
 import { JossSettings, getDefaultSettings } from './config/settings';
 import { URI } from 'vscode-uri';
 
@@ -51,7 +53,11 @@ connection.onInitialize((params: InitializeParams) => {
             textDocumentSync: TextDocumentSyncKind.Incremental,
             completionProvider: {
                 resolveProvider: true,
-                triggerCharacters: [':', '@', '$', '.']
+                triggerCharacters: [':', '@', '$', '.', '>']
+            },
+            signatureHelpProvider: {
+                triggerCharacters: ['(', ','],
+                retriggerCharacters: [',']
             },
             hoverProvider: true,
             definitionProvider: true,
@@ -95,9 +101,11 @@ connection.onInitialized(async () => {
 setupHoverProvider();
 setupDefinitionProvider();
 setupCompletionProvider();
+setupSignatureHelpProvider();
 setupDiagnostics();
 setupCustomRequests();
 setupDocumentSymbolProvider();
+setupReferencesProvider();
 
 // Configuration management
 export let globalSettings: JossSettings = getDefaultSettings();
@@ -134,6 +142,20 @@ connection.onDidChangeConfiguration(change => {
 
 documents.onDidClose(e => {
     documentSettings.delete(e.document.uri);
+});
+
+documents.onDidOpen(event => {
+    void indexer.indexDocument(event.document.uri, event.document.getText());
+});
+
+documents.onDidChangeContent(event => {
+    void indexer.indexDocument(event.document.uri, event.document.getText());
+});
+
+let reindexTimer: NodeJS.Timeout | undefined;
+connection.onDidChangeWatchedFiles(() => {
+    if (reindexTimer) clearTimeout(reindexTimer);
+    reindexTimer = setTimeout(() => void indexer.indexWorkspace(), 250);
 });
 
 // Listen on the connection

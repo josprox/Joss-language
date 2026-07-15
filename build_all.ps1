@@ -1,137 +1,197 @@
-# JosSecurity Build Script for Windows PowerShell
-# Must be run from the root of the project (next to go.mod).
-
-$ErrorActionPreference = "Stop"
-
-$SourcePackage = "./cmd/joss"
-$InstallerDir = "installer"
-$VSIXSourceDir = "vscode-joss"
-
-Write-Host "==================" -ForegroundColor Blue
-Write-Host "  JosSecurity Build" -ForegroundColor Blue
-Write-Host "==================" -ForegroundColor Blue
-
-if (-not (Test-Path $InstallerDir)) {
-    New-Item -ItemType Directory -Path $InstallerDir | Out-Null
-}
-Write-Host "Installer directory ready: $InstallerDir"
-
-# Build VSIX
-Write-Host "Building VSIX..."
-Push-Location $VSIXSourceDir
-try {
-    # Remove old vsix
-    Get-ChildItem -Filter "*.vsix" | Remove-Item -Force -ErrorAction SilentlyContinue
-    
-    # Install node modules if missing
-    if (-not (Test-Path "node_modules")) {
-        Write-Host "node_modules not found. Installing dependencies..." -ForegroundColor Yellow
-        cmd /c "npm install"
-    }
-    
-    # Build
-    Write-Host "Running 'npm run package'..."
-    cmd /c "npm run package"
-    
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "npm run package failed. Is Node.js installed?" -ForegroundColor Red
-        # Don't exit, maybe continuing with just binaries is desired? 
-        # But user requested this. Let's flag it.
-    }
-} catch {
-    Write-Host "VSIX Build Error: $($_.Exception.Message)" -ForegroundColor Red
-}
-Pop-Location
-
-# Copy new VSIX
-$LatestVSIX = Get-ChildItem -Path $VSIXSourceDir -Filter "*.vsix" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-
-if ($LatestVSIX) {
-    Copy-Item -Path $LatestVSIX.FullName -Destination $InstallerDir -Force
-    Write-Host "VSIX Built and Copied: $($LatestVSIX.Name)" -ForegroundColor Green
-} else {
-    Write-Host "VSIX Build Failed or Not Found." -ForegroundColor Yellow
-}
-
-# Define Targets
-$Targets = @(
-    @{GOOS="windows"; GOARCH="amd64"; OutputName="joss.exe"},
-    @{GOOS="windows"; GOARCH="arm64"; OutputName="joss-windows-arm64.exe"},
-    @{GOOS="linux"; GOARCH="amd64"; OutputName="joss-linux-amd64"},
-    @{GOOS="linux"; GOARCH="arm64"; OutputName="joss-linux-arm64"},
-    @{GOOS="linux"; GOARCH="arm"; OutputName="joss-linux-armv7"},
-    @{GOOS="darwin"; GOARCH="amd64"; OutputName="joss-macos-amd64"},
-    @{GOOS="darwin"; GOARCH="arm64"; OutputName="joss-macos-arm64"}
+[CmdletBinding()]
+param(
+    [switch]$SkipOfficialPlugins,
+    [switch]$SkipSDKChecks,
+    [switch]$SkipVSCode
 )
 
-Write-Host "Starting compilation..."
+$ErrorActionPreference = 'Stop'
+$root = $PSScriptRoot
+$dist = Join-Path $root 'dist'
+$work = Join-Path $root '.joss-release-work'
 
-foreach ($Target in $Targets) {
-    $GOOS = $Target.GOOS
-    $GOARCH = $Target.GOARCH
-    $OutputName = $Target.OutputName
-    
-    Write-Host "Compiling for $GOOS/$GOARCH ($OutputName)..."
-
-    $env:GOOS = $GOOS
-    $env:GOARCH = $GOARCH
-    $env:CGO_ENABLED = 0
-
-    try {
-        go build -o "$InstallerDir/$OutputName" $SourcePackage
-        Write-Host "  [OK]" -ForegroundColor Green
-    } catch {
-        Write-Host "  [ERROR] Compilation failed: $($_.Exception.Message)" -ForegroundColor Red
+function Invoke-Checked {
+    param([string]$Label, [scriptblock]$Command)
+    Write-Host "==> $Label" -ForegroundColor Cyan
+    & $Command
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Label termino con codigo $LASTEXITCODE"
     }
-    
-    Remove-Item Env:GOOS
-    Remove-Item Env:GOARCH
-    Remove-Item Env:CGO_ENABLED
 }
 
-# Zip Files
-Write-Host "Packaging..." -ForegroundColor Cyan
+function Copy-Required {
+    param([string]$Source, [string]$Destination)
+    if (-not (Test-Path -LiteralPath $Source -PathType Leaf)) {
+        throw "No existe el archivo requerido: $Source"
+    }
+    Copy-Item -LiteralPath $Source -Destination $Destination -Force
+}
 
-function Compress-Files {
-    param($Files, $ZipName)
-    if (Test-Path $ZipName) { Remove-Item $ZipName -Force | Out-Null }
-    
-    $TempZipDir = New-Item -ItemType Directory -Path "$env:TEMP/joss_zip_temp_$(Get-Random)" -Force
-    
-    foreach ($File in $Files) {
-        if (Test-Path "$InstallerDir/$File") {
-            Copy-Item "$InstallerDir/$File" $TempZipDir -Force
+function Compress-Directory {
+    param([string]$Source, [string]$Destination)
+    if (Test-Path -LiteralPath $Destination) {
+        Remove-Item -LiteralPath $Destination -Force
+    }
+    $items = @(Get-ChildItem -LiteralPath $Source -Force)
+    if ($items.Count -eq 0) { throw "No hay archivos para crear $Destination" }
+    Compress-Archive -Path (Join-Path $Source '*') -DestinationPath $Destination -CompressionLevel Optimal
+    Write-Host "Creado: $Destination" -ForegroundColor Green
+}
+
+function New-StagingDirectory {
+    param([string]$Name)
+    $path = Join-Path $work $Name
+    New-Item -ItemType Directory -Force -Path $path | Out-Null
+    return $path
+}
+
+function Remove-WorkDirectory {
+    if (-not (Test-Path -LiteralPath $work)) { return }
+    $resolvedRoot = (Resolve-Path -LiteralPath $root).Path
+    $resolvedWork = (Resolve-Path -LiteralPath $work).Path
+    if (-not $resolvedWork.StartsWith($resolvedRoot + [IO.Path]::DirectorySeparatorChar) -or
+        (Split-Path $resolvedWork -Leaf) -ne '.joss-release-work') {
+        throw "Ruta de limpieza insegura: $resolvedWork"
+    }
+    Remove-Item -LiteralPath $resolvedWork -Recurse -Force
+}
+
+Push-Location $root
+try {
+    $verifyArgs = @()
+    if ($SkipOfficialPlugins) { $verifyArgs += '-SkipOfficialPlugins' }
+    if ($SkipSDKChecks) { $verifyArgs += '-SkipSDKChecks' }
+    & (Join-Path $root 'tools/verify-release.ps1') @verifyArgs
+    if ($LASTEXITCODE -ne 0) { throw 'La verificacion de release fallo' }
+
+    Remove-WorkDirectory
+    New-Item -ItemType Directory -Force -Path $work | Out-Null
+
+    # El instalador historico soporta Linux ARMv7 ademas de los targets JP v2.
+    $armv7Dir = Join-Path $dist 'linux-armv7'
+    New-Item -ItemType Directory -Force -Path $armv7Dir | Out-Null
+    $oldGOOS, $oldGOARCH, $oldGOARM, $oldCGO = $env:GOOS, $env:GOARCH, $env:GOARM, $env:CGO_ENABLED
+    try {
+        $env:GOOS, $env:GOARCH, $env:GOARM, $env:CGO_ENABLED = 'linux', 'arm', '7', '0'
+        Invoke-Checked 'Joss linux-armv7' {
+            go build -trimpath -o (Join-Path $armv7Dir 'joss') ./cmd/joss
+        }
+    } finally {
+        $env:GOOS, $env:GOARCH, $env:GOARM, $env:CGO_ENABLED = $oldGOOS, $oldGOARCH, $oldGOARM, $oldCGO
+    }
+
+    $versionSource = Get-Content (Join-Path $root 'pkg/version/version.go') -Raw
+    if ($versionSource -notmatch 'const Version = "([^"]+)"') {
+        throw 'No se pudo obtener la version de pkg/version/version.go'
+    }
+    $releaseVersion = $Matches[1]
+
+    $windows = New-StagingDirectory 'windows'
+    Copy-Required (Join-Path $dist 'windows-amd64/joss.exe') (Join-Path $windows 'joss.exe')
+    Copy-Required (Join-Path $dist 'windows-arm64/joss.exe') (Join-Path $windows 'joss-windows-arm64.exe')
+    Copy-Required (Join-Path $root 'install/remote-install.ps1') (Join-Path $windows 'remote-install.ps1')
+    Copy-Required (Join-Path $root 'LICENSE') (Join-Path $windows 'LICENSE')
+
+    $linux = New-StagingDirectory 'linux'
+    Copy-Required (Join-Path $dist 'linux-amd64/joss') (Join-Path $linux 'joss-linux-amd64')
+    Copy-Required (Join-Path $dist 'linux-arm64/joss') (Join-Path $linux 'joss-linux-arm64')
+    Copy-Required (Join-Path $dist 'linux-armv7/joss') (Join-Path $linux 'joss-linux-armv7')
+    Copy-Required (Join-Path $root 'install/remote-install.sh') (Join-Path $linux 'remote-install.sh')
+    Copy-Required (Join-Path $root 'LICENSE') (Join-Path $linux 'LICENSE')
+
+    $macos = New-StagingDirectory 'macos'
+    Copy-Required (Join-Path $dist 'darwin-amd64/joss') (Join-Path $macos 'joss-macos-amd64')
+    Copy-Required (Join-Path $dist 'darwin-arm64/joss') (Join-Path $macos 'joss-macos-arm64')
+    Copy-Required (Join-Path $root 'install/remote-install.sh') (Join-Path $macos 'remote-install.sh')
+    Copy-Required (Join-Path $root 'LICENSE') (Join-Path $macos 'LICENSE')
+
+    Compress-Directory $windows (Join-Path $dist 'jossecurity-windows.zip')
+    Compress-Directory $linux (Join-Path $dist 'jossecurity-linux.zip')
+    Compress-Directory $macos (Join-Path $dist 'jossecurity-macos.zip')
+
+    $allBinaries = New-StagingDirectory 'binaries'
+    Copy-Item -Path (Join-Path $windows '*') -Destination $allBinaries -Force
+    Copy-Item -Path (Join-Path $linux '*') -Destination $allBinaries -Force
+    Copy-Item -Path (Join-Path $macos '*') -Destination $allBinaries -Force
+    Compress-Directory $allBinaries (Join-Path $dist 'jossecurity-binaries.zip')
+
+    if (-not $SkipVSCode) {
+        $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
+        if (-not $npm) { $npm = Get-Command npm -ErrorAction SilentlyContinue }
+        if (-not $npm) { throw 'Falta npm para compilar la extension de VS Code' }
+        $extensionPackage = Get-Content (Join-Path $root 'vscode-joss/package.json') -Raw | ConvertFrom-Json
+        if ([string]::IsNullOrWhiteSpace($extensionPackage.version)) {
+            throw 'vscode-joss/package.json no declara una version valida'
+        }
+        $vsixPath = Join-Path $work "joss-language-$($extensionPackage.version).vsix"
+        Push-Location (Join-Path $root 'vscode-joss')
+        try {
+            Invoke-Checked 'Dependencias de VS Code' { & $npm.Source ci }
+            Invoke-Checked 'Auditoria de dependencias VS Code' { & $npm.Source audit --audit-level=high }
+            Invoke-Checked 'Compilacion IntelliSense VS Code' { & $npm.Source run compile }
+            Invoke-Checked 'Extension VS Code' { & $npm.Source run package -- --out $vsixPath }
+        } finally {
+            Pop-Location
+        }
+        $vscode = New-StagingDirectory 'vscode'
+        Copy-Required $vsixPath (Join-Path $vscode (Split-Path $vsixPath -Leaf))
+        Compress-Directory $vscode (Join-Path $dist 'jossecurity-vscode.zip')
+    }
+
+    $sdkStage = New-StagingDirectory 'plugin-sdk'
+    Copy-Item -LiteralPath (Join-Path $root 'sdk') -Destination (Join-Path $sdkStage 'sdk') -Recurse
+    Copy-Required (Join-Path $root 'docs/PLUGINS.md') (Join-Path $sdkStage 'PLUGINS.md')
+    Copy-Required (Join-Path $root 'LICENSE') (Join-Path $sdkStage 'LICENSE')
+    Compress-Directory $sdkStage (Join-Path $dist 'joss-plugin-sdk.zip')
+
+    if (-not $SkipOfficialPlugins) {
+        $plugins = New-StagingDirectory 'plugins'
+        foreach ($name in @('joss_ai', 'joss_smtp', 'joss_notify', 'joss_backup')) {
+            Copy-Required (Join-Path $root "ejemplos/plugins/$name/$name.jp") (Join-Path $plugins "$name.jp")
+        }
+        Compress-Directory $plugins (Join-Path $dist 'joss-official-plugins.zip')
+    }
+
+    # Solo se publican archivos finales; los binarios intermedios se quitan de dist.
+    Get-ChildItem -LiteralPath $dist -Directory | Remove-Item -Recurse -Force
+    $hostBinary = Join-Path $dist $(if ($env:OS -eq 'Windows_NT') { 'joss.exe' } else { 'joss' })
+    if (Test-Path -LiteralPath $hostBinary) { Remove-Item -LiteralPath $hostBinary -Force }
+
+    $artifactFiles = @(Get-ChildItem -LiteralPath $dist -File | Sort-Object Name)
+    $manifestArtifacts = foreach ($file in $artifactFiles) {
+        [ordered]@{
+            name = $file.Name
+            bytes = $file.Length
+            sha256 = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
         }
     }
-    
-    if ((Get-ChildItem $TempZipDir).Count -gt 0) {
-        Get-ChildItem -Path $TempZipDir -Recurse | Compress-Archive -DestinationPath $ZipName -Force
-        Write-Host "Created $ZipName" -ForegroundColor Green
-    } else {
-        Write-Host "Skipped $ZipName (files not found)" -ForegroundColor Yellow
+    $manifest = [ordered]@{
+        schema = 1
+        product = 'Joss'
+        version = $releaseVersion
+        generated_at = [DateTime]::UtcNow.ToString('o')
+        artifacts = @($manifestArtifacts)
     }
-    
-    Remove-Item $TempZipDir -Recurse -Force
+    $utf8 = New-Object Text.UTF8Encoding($false)
+    [IO.File]::WriteAllText(
+        (Join-Path $dist 'release-manifest.json'),
+        ($manifest | ConvertTo-Json -Depth 5),
+        $utf8
+    )
+
+    $checksumLines = foreach ($file in (Get-ChildItem -LiteralPath $dist -File | Sort-Object Name)) {
+        $hash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+        "$hash  $($file.Name)"
+    }
+    [IO.File]::WriteAllText(
+        (Join-Path $dist 'SHA256SUMS.txt'),
+        (($checksumLines -join "`n") + "`n"),
+        $utf8
+    )
+
+    Write-Host "Distribucion Joss v$releaseVersion preparada en $dist" -ForegroundColor Green
+    Get-ChildItem -LiteralPath $dist -File | Sort-Object Name | Format-Table Name, Length
+} finally {
+    Pop-Location
+    Remove-WorkDirectory
 }
-
-try {
-    # 1. Extension
-    $VSIXFiles = Get-ChildItem -Path $InstallerDir -Filter "*.vsix" | Select-Object -ExpandProperty Name
-    Compress-Files -Files $VSIXFiles -ZipName "jossecurity-vscode.zip"
-
-    # 2. Windows
-    Compress-Files -Files @("joss.exe", "joss-windows-arm64.exe") -ZipName "jossecurity-windows.zip"
-
-    # 3. Linux
-    Compress-Files -Files @("joss-linux-amd64", "joss-linux-arm64", "joss-linux-armv7") -ZipName "jossecurity-linux.zip"
-
-    # 4. macOS
-    Compress-Files -Files @("joss-macos-amd64", "joss-macos-arm64") -ZipName "jossecurity-macos.zip"
-
-    Write-Host "Ready for GitHub Releases." -ForegroundColor Yellow
-
-} catch {
-    Write-Host "Compression failed: $($_.Exception.Message)" -ForegroundColor Red
-}
-
-Write-Host "Done." -ForegroundColor Green

@@ -1,6 +1,38 @@
-# JosSecurity VS Code Extension v2.0
+# Joss Language Support 3.5
 
 Advanced language support for JosSecurity with Language Server Protocol (LSP).
+
+## IntelliSense de funciones
+
+La extensión indexa el proyecto y conoce las firmas de las APIs nativas de Joss.
+Al escribir `Response::`, `Router::`, una función del proyecto o un método de
+instancia muestra:
+
+- parámetros requeridos y opcionales;
+- tipos y valores predeterminados;
+- documentación y tipo de retorno conocido;
+- placeholders editables al aceptar una sugerencia;
+- ayuda de firma mientras se escribe cada argumento;
+- navegación a la definición para clases, funciones y métodos del proyecto.
+
+```joss
+function register(string $email, string $password, bool $notify = true) {
+    return Response::json({"ok": true}, 201)
+}
+```
+
+Los comentarios `///` o `/** ... */` colocados antes de una declaración se
+muestran en autocompletado y hover.
+
+### Plugins JP v2
+
+Los plugins compilados nuevos incluyen `META-INF/joss-symbols.json`, un índice
+público comparable a un header: contiene solamente clases, métodos, funciones y
+parámetros. La extensión descubre los `.jp` instalados bajo `plugins/` y ofrece
+el mismo autocompletado y ayuda de firma sin requerir las fuentes del plugin.
+
+Los JP v2 anteriores siguen ejecutándose, pero deben recompilarse una vez para
+incorporar el índice de IntelliSense.
 
 ## Features
 
@@ -65,7 +97,7 @@ npm run compile
 
 ```bash
 npm run package
-# Install joss-language-2.0.0.vsix in VS Code
+# Install joss-language-3.5.0.vsix in VS Code
 ```
 
 ## Configuration
@@ -114,8 +146,8 @@ npm run compile
 # Watch mode
 npm run watch
 
-# Run tests
-npm test
+# Build the installable extension
+npm run package
 
 # Lint
 npm run lint

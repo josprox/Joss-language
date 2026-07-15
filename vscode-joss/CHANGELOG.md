@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.5.0] - 2026-07-14
+### Added
+- Parameter hints and active-argument highlighting for native and project functions.
+- Snippet completions that place the cursor in every required argument.
+- Live indexing of classes, methods, typed parameters, defaults, properties and doc comments.
+- Context-aware completion for `Class::`, `$instance->` and `$this->`.
+- Native API catalog covering routing, auth, requests, responses, strings, JSON, plugins, database queries, cache, sessions and more.
+- IntelliSense indexing directly from JP v2 public symbol metadata, without plugin source code.
+- Automated IntelliSense regression tests.
+
+### Changed
+- Removed the duplicate source completion provider; `.joss` now has one authoritative LSP provider.
+- Preserved the specialized controller-variable completion provider for `.joss.html` views.
+- Workspace symbols are refreshed when an open document changes.
+
 ## [3.3.0] - 2026-02-22
 ### Added
 - **Core Architecture Sync**: Support for JOSS v3.3.0.

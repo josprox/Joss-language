@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto/sha256"
+	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -12,17 +13,19 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jossecurity/joss/pkg/pluginpkg"
 )
 
 type PackageManifest struct {
-	Name           string            `json:"name"`
-	Version        string            `json:"version"`
-	Description    string            `json:"description"`
-	Repository     string            `json:"repository"`
-	License        string            `json:"license"`
-	Entry          map[string]string `json:"entry"`
-	Dependencies   map[string]string `json:"dependencies"`
-	Environment    map[string]string `json:"environment"`
+	Name         string            `json:"name"`
+	Version      string            `json:"version"`
+	Description  string            `json:"description"`
+	Repository   string            `json:"repository"`
+	License      string            `json:"license"`
+	Entry        map[string]string `json:"entry"`
+	Dependencies map[string]string `json:"dependencies"`
+	Environment  map[string]string `json:"environment"`
 }
 
 type LockPackage struct {
@@ -280,7 +283,7 @@ func pubInfo(name string) {
 	fmt.Printf("Descargas: %.0f\n", pkg["downloads"])
 	fmt.Printf("Repositorio: %s\n", pkg["repository_url"])
 	fmt.Println("\nVersiones disponibles:")
-	
+
 	versions, _ := res["versions"].([]interface{})
 	for _, v := range versions {
 		ver := v.(map[string]interface{})
@@ -348,6 +351,9 @@ func pubAdd(name string, ver string) {
 
 	// Update local joss.yaml
 	updateJossYamlDependency(name, "^"+resolvedVer)
+	if manifestData, readErr := os.ReadFile("joss.yaml"); readErr == nil {
+		generateLockFile(parseManifestDependencies(string(manifestData)))
+	}
 
 	fmt.Printf("✓ %s %s instalado correctamente\n", name, resolvedVer)
 }
@@ -364,6 +370,9 @@ func pubRemove(name string) {
 
 	// Read and update joss.yaml
 	removeJossYamlDependency(name)
+	if manifestData, readErr := os.ReadFile("joss.yaml"); readErr == nil {
+		generateLockFile(parseManifestDependencies(string(manifestData)))
+	}
 
 	fmt.Printf("✓ %s eliminado\n", name)
 }
@@ -385,7 +394,7 @@ func downloadAndExtract(name, ver, downloadUrl, expectedChecksum string) error {
 
 	// Check if already in cache and checksum matches
 	if _, err := os.Stat(cachePath); err == nil {
-		if verifyFileSHA256(cachePath, expectedChecksum) {
+		if expectedChecksum == "" || verifyFileSHA256(cachePath, expectedChecksum) {
 			fmt.Println("Usando paquete cacheado...")
 			if isJP {
 				return installJPFile(cachePath, name, ver)
@@ -401,6 +410,9 @@ func downloadAndExtract(name, ver, downloadUrl, expectedChecksum string) error {
 		return err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("el servidor respondió HTTP %d al descargar %s", resp.StatusCode, downloadUrl)
+	}
 
 	tmpPath := cachePath + ".tmp"
 	out, err := os.Create(tmpPath)
@@ -433,17 +445,76 @@ func downloadAndExtract(name, ver, downloadUrl, expectedChecksum string) error {
 
 func installJPFile(cachePath, name, ver string) error {
 	destDir := filepath.Join("plugins", name, ver)
-	if err := os.MkdirAll(destDir, 0755); err != nil {
-		return err
-	}
-	destPath := filepath.Join(destDir, name+".jp")
-	
-	// Read from cache and write to plugins folder
 	data, err := os.ReadFile(cachePath)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(destPath, data, 0644)
+	if len(data) > pluginpkg.MaxArchiveSize {
+		return fmt.Errorf("el paquete .jp excede %d MiB", pluginpkg.MaxArchiveSize>>20)
+	}
+	files := make(map[string][]byte)
+	if pluginpkg.IsV2(data) {
+		archive, err := pluginpkg.Read(data)
+		if err != nil {
+			return err
+		}
+		if archive.Metadata.Name != name || archive.Metadata.Version != ver {
+			return fmt.Errorf("el JP declara %s %s, se esperaba %s %s", archive.Metadata.Name, archive.Metadata.Version, name, ver)
+		}
+		files = archive.Files
+	} else {
+		if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&files); err != nil {
+			return fmt.Errorf("paquete JP legado inválido: %w", err)
+		}
+		manifest, ok := files["joss.yaml"]
+		if !ok {
+			return fmt.Errorf("el paquete JP legado no contiene joss.yaml")
+		}
+		if strings.EqualFold(packageManifestValue(string(manifest), "type", ""), "go_extension") {
+			return fmt.Errorf("JP v1 go_extension contiene fuente Go, no código ejecutable; recompílelo como JP v2")
+		}
+	}
+
+	tmpDir := destDir + fmt.Sprintf(".tmp-%d", os.Getpid())
+	_ = os.RemoveAll(tmpDir)
+	if err := os.MkdirAll(tmpDir, 0755); err != nil {
+		return err
+	}
+	installed := false
+	defer func() {
+		if !installed {
+			_ = os.RemoveAll(tmpDir)
+		}
+	}()
+	total := 0
+	for archivePath, content := range files {
+		clean := filepath.Clean(filepath.FromSlash(archivePath))
+		if clean == "." || clean == ".." || filepath.IsAbs(clean) || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+			return fmt.Errorf("ruta insegura dentro del .jp: %q", archivePath)
+		}
+		total += len(content)
+		if total > pluginpkg.MaxArchiveSize {
+			return fmt.Errorf("el contenido del paquete excede %d MiB", pluginpkg.MaxArchiveSize>>20)
+		}
+		target := filepath.Join(tmpDir, clean)
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(target, content, 0644); err != nil {
+			return err
+		}
+	}
+	if err := os.WriteFile(filepath.Join(tmpDir, name+".jp"), data, 0644); err != nil {
+		return err
+	}
+	if err := os.RemoveAll(destDir); err != nil {
+		return err
+	}
+	if err := os.Rename(tmpDir, destDir); err != nil {
+		return err
+	}
+	installed = true
+	return nil
 }
 
 func verifyFileSHA256(path, expected string) bool {
@@ -513,7 +584,7 @@ func extractZipSecurely(zipPath, name, ver string) error {
 }
 
 func updateJossYamlDependency(name, verRange string) {
-	// Simple manifest handling (in production we would use a YAML parser library, 
+	// Simple manifest handling (in production we would use a YAML parser library,
 	// but to avoid massive dependencies in the core, a simple scanner/editor is very robust)
 	filePath := "joss.yaml"
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -674,7 +745,7 @@ func pubInstall(offline bool) {
 		// Clean range characters (e.g. ^1.2.3 -> 1.2.3)
 		verClean := strings.TrimPrefix(verRange, "^")
 		verClean = strings.TrimPrefix(verClean, "~")
-		
+
 		fmt.Printf("✓ %s %s\n", name, verClean)
 
 		// Download if missing
@@ -684,63 +755,22 @@ func pubInstall(offline bool) {
 				fmt.Printf("Error: Paquete '%s %s' no instalado y modo offline activo.\n", name, verClean)
 				os.Exit(1)
 			}
-			// Official GitHub fallbacks to bypass chicken-and-egg registry loops during build/Dokploy setup
-			officialFallbacks := map[string]string{
-				"joss_ai":      "https://github.com/josprox/joss_ai/releases/download/v1.0.0/joss_ai.jp",
-				"joss_backup":  "https://github.com/josprox/joss_backup/releases/download/v1.0.0/joss_backup.jp",
-				"joss_notify":  "https://github.com/josprox/joss_notify/releases/download/v1.0.0/joss_notify.jp",
-				"joss_smtp":    "https://github.com/josprox/joss_smtp/releases/download/v1.0.0/joss_smtp.jp",
-			}
-
-			// Fetch from registry
-			url := fmt.Sprintf("%s/api/v1/pub/packages/%s", getRegistryURL(), name)
-			resp, err := http.Get(url)
-			
-			var downloadUrl, checksum string
+			downloadURL, checksum, err := resolvePackageDownload(name, verClean)
 			if err != nil {
-				// Registry is offline/not started yet. Try direct GitHub download
-				if fbUrl, ok := officialFallbacks[name]; ok {
-					fmt.Printf("[Fallback] Registro no disponible. Descargando '%s' de GitHub...\n", name)
-					downloadUrl = fbUrl
-					checksum = "" // Skip checksum verification for fallback URLs
-				} else {
-					fmt.Printf("Error al conectar: %v\n", err)
-					os.Exit(1)
-				}
-			} else {
-				defer resp.Body.Close()
-				if resp.StatusCode != http.StatusOK {
-					fmt.Printf("Error: Paquete '%s' no encontrado en el registro.\n", name)
-					os.Exit(1)
-				}
-
-				var res map[string]interface{}
-				json.NewDecoder(resp.Body).Decode(&res)
-				versions, _ := res["versions"].([]interface{})
-				
-				var targetVer map[string]interface{}
-				for _, v := range versions {
-					curr := v.(map[string]interface{})
-					if curr["version"].(string) == verClean {
-						targetVer = curr
-						break
-					}
-				}
-
-				if targetVer == nil {
-					fmt.Printf("Error: Versión '%s' no encontrada para '%s'.\n", verClean, name)
-					os.Exit(1)
-				}
-				downloadUrl = targetVer["download_url"].(string)
-				checksum = targetVer["checksum"].(string)
+				fmt.Printf("Error resolviendo '%s': %v\n", name, err)
+				return
 			}
 
-			err = downloadAndExtract(name, verClean, downloadUrl, checksum)
+			err = downloadAndExtract(name, verClean, downloadURL, checksum)
 			if err != nil {
 				fmt.Printf("Error instalando '%s': %v\n", name, err)
 				os.Exit(1)
 			}
 		}
+	}
+	if err := installTransitiveDependencies(deps, offline); err != nil {
+		fmt.Printf("Error resolviendo dependencias transitivas: %v\n", err)
+		return
 	}
 
 	// Generate joss.lock
@@ -748,26 +778,163 @@ func pubInstall(offline bool) {
 	fmt.Println("✓ Dependencias instaladas correctamente.")
 }
 
+func installTransitiveDependencies(rootDeps map[string]string, offline bool) error {
+	type dependency struct{ name, constraint string }
+	queue := make([]dependency, 0, len(rootDeps))
+	for name, constraint := range rootDeps {
+		queue = append(queue, dependency{name, constraint})
+	}
+	visited := make(map[string]bool)
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		version := cleanPackageConstraint(current.constraint)
+		key := current.name + "@" + version
+		if visited[key] {
+			continue
+		}
+		visited[key] = true
+		pluginPath := filepath.Join("plugins", current.name, version)
+		if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
+			if offline {
+				return fmt.Errorf("%s %s no esta instalado y el modo offline esta activo", current.name, version)
+			}
+			downloadURL, checksum, err := resolvePackageDownload(current.name, version)
+			if err != nil {
+				return err
+			}
+			if err := downloadAndExtract(current.name, version, downloadURL, checksum); err != nil {
+				return fmt.Errorf("instalando %s %s: %w", current.name, version, err)
+			}
+		}
+		manifestData, err := os.ReadFile(filepath.Join(pluginPath, "joss.yaml"))
+		if err != nil {
+			return fmt.Errorf("leyendo manifiesto de %s %s: %w", current.name, version, err)
+		}
+		for child, constraint := range parseManifestDependencies(string(manifestData)) {
+			queue = append(queue, dependency{child, constraint})
+		}
+	}
+	return nil
+}
+
+func resolvePackageDownload(name, version string) (string, string, error) {
+	url := fmt.Sprintf("%s/api/v1/pub/packages/%s", getRegistryURL(), name)
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", "", fmt.Errorf("conectando al registro para %s: %w", name, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", "", fmt.Errorf("el paquete %s no existe en el registro (HTTP %d)", name, resp.StatusCode)
+	}
+	var result struct {
+		Versions []struct {
+			Version     string `json:"version"`
+			DownloadURL string `json:"download_url"`
+			Checksum    string `json:"checksum"`
+		} `json:"versions"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", "", fmt.Errorf("respuesta invalida del registro para %s: %w", name, err)
+	}
+	for _, candidate := range result.Versions {
+		if candidate.Version == version {
+			if candidate.DownloadURL == "" {
+				return "", "", fmt.Errorf("el registro no proporciono download_url para %s %s", name, version)
+			}
+			return candidate.DownloadURL, candidate.Checksum, nil
+		}
+	}
+	return "", "", fmt.Errorf("version %s no encontrada para %s", version, name)
+}
+
+func cleanPackageConstraint(constraint string) string {
+	value := strings.Trim(strings.TrimSpace(constraint), "\"'")
+	value = strings.TrimPrefix(value, "^")
+	value = strings.TrimPrefix(value, "~")
+	return value
+}
+
 func generateLockFile(deps map[string]string) {
+	manifestHash := ""
+	if manifestData, err := os.ReadFile("joss.yaml"); err == nil {
+		sum := sha256.Sum256(manifestData)
+		manifestHash = hex.EncodeToString(sum[:])
+	}
 	lock := LockFile{
-		ManifestHash: "hash_placeholder",
+		ManifestHash: manifestHash,
 		Packages:     make(map[string]LockPackage),
 	}
 
-	for name, verRange := range deps {
+	pending := make(map[string]string, len(deps))
+	for name, constraint := range deps {
+		pending[name] = constraint
+	}
+	processed := make(map[string]bool)
+	for len(pending) > 0 {
+		var name, verRange string
+		for candidate, constraint := range pending {
+			name, verRange = candidate, constraint
+			break
+		}
+		delete(pending, name)
+		if processed[name] {
+			continue
+		}
+		processed[name] = true
 		verClean := strings.TrimPrefix(verRange, "^")
 		verClean = strings.TrimPrefix(verClean, "~")
+
+		checksum := ""
+		archivePath := filepath.Join("plugins", name, verClean, name+".jp")
+		if archiveData, err := os.ReadFile(archivePath); err == nil {
+			sum := sha256.Sum256(archiveData)
+			checksum = hex.EncodeToString(sum[:])
+		}
+		pluginDeps := make(map[string]string)
+		if pluginManifest, err := os.ReadFile(filepath.Join("plugins", name, verClean, "joss.yaml")); err == nil {
+			pluginDeps = parseManifestDependencies(string(pluginManifest))
+		}
+		for child, constraint := range pluginDeps {
+			if !processed[child] {
+				pending[child] = constraint
+			}
+		}
 
 		lock.Packages[name] = LockPackage{
 			Version:      verClean,
 			Resolved:     fmt.Sprintf("%s/api/v1/pub/packages/%s/versions/%s", getRegistryURL(), name, verClean),
-			Checksum:     "checksum_placeholder",
-			Dependencies: make(map[string]string),
+			Checksum:     checksum,
+			Dependencies: pluginDeps,
 		}
 	}
 
 	data, _ := json.MarshalIndent(lock, "", "  ")
 	os.WriteFile("joss.lock", data, 0644)
+}
+
+func parseManifestDependencies(content string) map[string]string {
+	deps := make(map[string]string)
+	inDeps := false
+	for _, line := range strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "dependencies:" {
+			inDeps = true
+			continue
+		}
+		if !inDeps || trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if !strings.HasPrefix(line, " ") && !strings.HasPrefix(line, "\t") {
+			break
+		}
+		parts := strings.SplitN(trimmed, ":", 2)
+		if len(parts) == 2 {
+			deps[strings.TrimSpace(parts[0])] = strings.Trim(strings.TrimSpace(parts[1]), "\"'")
+		}
+	}
+	return deps
 }
 
 func pubUpdate() {
@@ -792,7 +959,7 @@ func pubPublish() {
 	// Load manifest fields
 	data, _ := os.ReadFile("joss.yaml")
 	lines := strings.Split(string(data), "\n")
-	
+
 	pkgInfo := make(map[string]string)
 	for _, line := range lines {
 		trimmed := strings.TrimSpace(line)
@@ -813,7 +980,7 @@ func pubPublish() {
 	}
 
 	fmt.Printf("Preparando publicación de %s v%s...\n", name, version)
-	
+
 	// Create sample zip or verify release file
 	fmt.Print("Introduce la URL de descarga directa de la release zip en GitHub: ")
 	var downloadUrl string
@@ -825,7 +992,7 @@ func pubPublish() {
 
 	// Send publish post
 	url := getRegistryURL() + "/api/v1/pub/packages/publish"
-	
+
 	reqBody, _ := json.Marshal(map[string]string{
 		"name":             name,
 		"display_name":     name,

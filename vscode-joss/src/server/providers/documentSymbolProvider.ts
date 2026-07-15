@@ -1,4 +1,4 @@
-import { DocumentSymbolParams, DocumentSymbol, SymbolKind, Range } from 'vscode-languageserver/node';
+import { DocumentSymbolParams, DocumentSymbol, SymbolInformation, SymbolKind, Range } from 'vscode-languageserver/node';
 import { connection, documents, indexer } from '../server';
 
 export function setupDocumentSymbolProvider() {
@@ -51,5 +51,19 @@ export function setupDocumentSymbolProvider() {
         }
 
         return symbols;
+    });
+
+    connection.onWorkspaceSymbol(async params => {
+        const query = params.query.toLowerCase();
+        return (await indexer.getAllSymbols())
+            .filter(symbol => !query || symbol.name.toLowerCase().includes(query) || symbol.qualifiedName.toLowerCase().includes(query))
+            .map(symbol => ({
+                name: symbol.qualifiedName,
+                kind: symbol.kind === 'class' ? SymbolKind.Class
+                    : symbol.kind === 'property' ? SymbolKind.Property
+                        : symbol.kind === 'method' ? SymbolKind.Method : SymbolKind.Function,
+                location: symbol.location,
+                containerName: symbol.containerName
+            } as SymbolInformation));
     });
 }

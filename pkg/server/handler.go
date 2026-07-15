@@ -222,12 +222,6 @@ func MainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Interceptor de Migración Backup / Restore Site-to-Site (Plugin Requerido)
-	if r.URL.Path == "/api/backup/migrate/receive" && r.Method == "POST" {
-		http.Error(w, "El sistema de backups nativo ha sido removido y extraído al plugin 'joss_backup'. Instala el plugin para usar esta característica.", http.StatusNotImplemented)
-		return
-	}
-
 	// 2.5 Check for WebSocket Upgrade for Routes
 	if r.URL.Path == "/api/chat-ws" {
 		fmt.Printf("[WS DEBUG] Headers for %s:\n", r.URL.Path)

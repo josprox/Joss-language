@@ -33,7 +33,10 @@ func (r *Runtime) CallMethod(method *parser.MethodStatement, instance *Instance,
 	r.Variables["this"] = instance
 
 	// Bind arguments
+	previousParams := make(map[string]interface{}, len(method.Parameters))
+	previousParamExists := make(map[string]bool, len(method.Parameters))
 	for i, param := range method.Parameters {
+		previousParams[param.Name.Value], previousParamExists[param.Name.Value] = r.Variables[param.Name.Value]
 		if i < len(args) {
 			val := r.evaluateExpression(args[i])
 			if param.Type.Literal != "" {
@@ -42,6 +45,8 @@ func (r *Runtime) CallMethod(method *parser.MethodStatement, instance *Instance,
 				}
 			}
 			r.Variables[param.Name.Value] = val
+		} else {
+			r.Variables[param.Name.Value] = nil
 		}
 	}
 
@@ -50,6 +55,13 @@ func (r *Runtime) CallMethod(method *parser.MethodStatement, instance *Instance,
 			r.Variables["this"] = prevThis
 		} else {
 			delete(r.Variables, "this")
+		}
+		for _, param := range method.Parameters {
+			if previousParamExists[param.Name.Value] {
+				r.Variables[param.Name.Value] = previousParams[param.Name.Value]
+			} else {
+				delete(r.Variables, param.Name.Value)
+			}
 		}
 	}()
 
@@ -77,7 +89,10 @@ func (r *Runtime) CallMethodEvaluated(method *parser.MethodStatement, instance *
 	r.Variables["this"] = instance
 
 	// Bind arguments
+	previousParams := make(map[string]interface{}, len(method.Parameters))
+	previousParamExists := make(map[string]bool, len(method.Parameters))
 	for i, param := range method.Parameters {
+		previousParams[param.Name.Value], previousParamExists[param.Name.Value] = r.Variables[param.Name.Value]
 		if i < len(args) {
 			val := args[i]
 			if param.Type.Literal != "" {
@@ -86,6 +101,8 @@ func (r *Runtime) CallMethodEvaluated(method *parser.MethodStatement, instance *
 				}
 			}
 			r.Variables[param.Name.Value] = val
+		} else {
+			r.Variables[param.Name.Value] = nil
 		}
 	}
 
@@ -94,6 +111,13 @@ func (r *Runtime) CallMethodEvaluated(method *parser.MethodStatement, instance *
 			r.Variables["this"] = prevThis
 		} else {
 			delete(r.Variables, "this")
+		}
+		for _, param := range method.Parameters {
+			if previousParamExists[param.Name.Value] {
+				r.Variables[param.Name.Value] = previousParams[param.Name.Value]
+			} else {
+				delete(r.Variables, param.Name.Value)
+			}
 		}
 	}()
 

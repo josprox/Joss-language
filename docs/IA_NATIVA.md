@@ -1,6 +1,6 @@
-# JosSecurity AI Nativa 🧠
+# Plugin de IA para Joss 🧠
 
-JosSecurity incluye ahora soporte nativo para Inteligencia Artificial ("Spring AI Style"), permitiendo interactuar con LLMs (Groq, OpenAI, Gemini) directamente desde el lenguaje sin dependencias externas.
+La API fluida de IA ya no forma parte del núcleo. Para usarla se requiere `joss_ai` 2.0 o posterior declarado en `joss.yaml`; el runtime carga su JP v2 automáticamente y el código conserva llamadas como `AI::client()` sin agregar `use`. Consulte [PLUGINS.md](./PLUGINS.md).
 
 ## Configuración Rápida (CLI) 🚀
 

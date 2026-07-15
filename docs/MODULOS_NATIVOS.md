@@ -2,6 +2,8 @@
 
 Documentación completa de todos los módulos nativos disponibles en JosSecurity.
 
+> Nota de Joss 3.6: `AI`, `ChatClient`, `SmtpClient`, `Notify`, `Backup` y `BackupBuilder` dejaron de formar parte del núcleo. Sus plugins oficiales 2.0 son JP v2 autocontenidos; al declararlos en `joss.yaml`, Joss los carga automáticamente y la API se usa sin `use`. Consulte [PLUGINS.md](./PLUGINS.md).
+
 ## Índice
 - [Auth](#auth) - Autenticación y autorización
 - [GranDB](#grandb) - Base de datos

@@ -530,10 +530,23 @@ func (r *Runtime) evaluateMember(me *parser.MemberExpression) interface{} {
 
 		if ident, ok := me.Left.(*parser.Identifier); ok {
 			className := ident.Value
-			// Check if it's a known native class or user class
-			if _, ok := r.Classes[className]; ok || isNativeClass(className) {
-				// It is a static access.
-				// Return a synthetic BoundMethod with nil Instance.
+			if classStmt, ok := r.Classes[className]; ok {
+				// Native classes are dispatched through their registered handler.
+				if _, native := r.NativeHandlers[className]; native {
+					return &BoundMethod{
+						Method:      &parser.MethodStatement{Name: &parser.Identifier{Value: me.Property.Value}},
+						StaticClass: className,
+					}
+				}
+				// Joss plugins may expose the familiar Class::method() API without
+				// requiring a native Go handler.
+				for _, stmt := range classStmt.Body.Statements {
+					if method, methodOK := stmt.(*parser.MethodStatement); methodOK && method.Name.Value == me.Property.Value {
+						return &BoundMethod{Method: method, Instance: &Instance{Class: classStmt, Fields: make(map[string]interface{})}}
+					}
+				}
+				// Keep a useful error below instead of fabricating a callable method.
+			} else if isNativeClass(className) {
 				return &BoundMethod{
 					Method: &parser.MethodStatement{
 						Name: &parser.Identifier{Value: me.Property.Value},
@@ -543,6 +556,7 @@ func (r *Runtime) evaluateMember(me *parser.MemberExpression) interface{} {
 					StaticClass: className,
 				}
 			}
+			panic(fmt.Sprintf("Error: Clase '%s' no registrada. Si pertenece a un plugin, verifique joss.yaml, joss.lock y la instalación del paquete", className))
 		}
 
 		fmt.Printf("Error: %v (tipo %T) no es una instancia. Intentando acceder a: '%s'\n", left, left, me.Property.Value)
@@ -606,10 +620,7 @@ func (r *Runtime) evaluateMember(me *parser.MemberExpression) interface{} {
 			isNative = true
 			break
 		}
-		if className == "Stack" || className == "Queue" || className == "GranDB" || className == "Auth" ||
-			className == "System" || className == "SmtpClient" || className == "Cron" || className == "Task" || className == "View" || className == "Router" ||
-			className == "Request" || className == "Response" || className == "RedirectResponse" || className == "Session" || className == "Redirect" || className == "Security" || className == "Server" || className == "Log" ||
-			className == "WebSocket" || className == "Redis" || className == "Math" {
+		if _, registered := r.NativeHandlers[className]; registered {
 			isNative = true
 			break
 		}
@@ -639,8 +650,7 @@ func (r *Runtime) evaluateMember(me *parser.MemberExpression) interface{} {
 	if instance.Class != nil {
 		className = instance.Class.Name.Value
 	}
-	fmt.Printf("Error: Propiedad o método '%s' no encontrado en clase '%s'\n", propName, className)
-	return nil
+	panic(fmt.Sprintf("Error: Propiedad o método '%s' no encontrado en clase '%s'", propName, className))
 }
 
 func (r *Runtime) evaluateIsset(ie *parser.IssetExpression) bool {
@@ -711,7 +721,7 @@ func (r *Runtime) evaluatePostfix(pe *parser.PostfixExpression) interface{} {
 
 func isNativeClass(name string) bool {
 	switch name {
-	case "Session", "Math", "Auth", "View", "Request", "Response", "Redirect", "Log", "System", "Router", "Security", "Server", "GranDB", "Stack", "Queue", "SmtpClient", "Cron", "Task", "WebSocket", "Redis", "Backup", "BackupBuilder":
+	case "Session", "Math", "Auth", "View", "Request", "Response", "Redirect", "System", "Router", "Server", "GranDB", "Stack", "Queue", "Cron", "Task", "WebSocket", "Redis":
 		return true
 	}
 	return false

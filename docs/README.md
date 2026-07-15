@@ -25,6 +25,7 @@ Guía completa de JosSecurity v3.0 (Gold Master)
   - Base de datos (migrate, change db)
   - Generadores (make:controller, make:model)
 - [VSCODE_EXTENSION.md](./VSCODE_EXTENSION.md) - Extensión para VS Code (IntelliSense, Highlighting)
+- [PLUGINS.md](./PLUGINS.md) - Crear, instalar y publicar plugins con carga automática
 
 ### Módulos
 - [MODULOS_NATIVOS.md](./MODULOS_NATIVOS.md) - Módulos nativos del lenguaje
@@ -32,7 +33,7 @@ Guía completa de JosSecurity v3.0 (Gold Master)
   - GranDB - ORM de base de datos
   - Router - Sistema de rutas
   - View - Motor de plantillas
-  - SmtpClient - Correo electrónico
+  - SmtpClient - API opcional proporcionada por plugin
   - Response/Request - HTTP
   - Cron/Task - Tareas programadas
   - Schema - Esquemas de BD

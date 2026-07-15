@@ -1,8 +1,8 @@
 {
   "name": "joss-language",
   "displayName": "Joss Language Support",
-  "description": "Advanced language support for Joss with LSP, go-to-definition, hover, diagnostics, and security analysis",
-  "version": "3.4.1",
+  "description": "Joss IntelliSense with parameter hints, project indexing, navigation, diagnostics, and security analysis",
+  "version": "3.5.0",
   "icon": "images/icon.png",
   "publisher": "jossecurity",
   "engines": {
@@ -190,12 +190,11 @@
     "@types/fast-levenshtein": "^0.0.4",
     "@types/node": "^18.0.0",
     "@types/vscode": "^1.75.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
-    "@vscode/vsce": "^2.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.64.0",
+    "@typescript-eslint/parser": "^8.64.0",
+    "@vscode/vsce": "^3.9.2",
     "eslint": "^8.0.0",
-    "typescript": "^5.0.0",
-    "vsce": "^2.15.0"
+    "typescript": "^5.0.0"
   },
   "dependencies": {
     "fast-levenshtein": "^3.0.0",

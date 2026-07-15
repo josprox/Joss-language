@@ -1,0 +1,149 @@
+name: Build manual distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      plugin_ref:
+        description: Branch or tag used for the official plugin repositories
+        required: true
+        default: main
+        type: string
+      include_official_plugins:
+        description: Build and include joss_ai, joss_smtp, joss_notify and joss_backup
+        required: true
+        default: true
+        type: boolean
+      create_release:
+        description: Publish the generated files in a GitHub Release
+        required: true
+        default: false
+        type: boolean
+      release_tag:
+        description: Release tag (required only when create_release is enabled)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manual-distribution
+  cancel-in-progress: false
+
+jobs:
+  distribution:
+    name: Verify and package Joss
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      PLUGIN_REF: ${{ inputs.plugin_ref }}
+
+    steps:
+      - name: Checkout Joss
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: vscode-joss/package-lock.json
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: none
+          coverage: none
+
+      - name: Set up Flutter and Dart
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Set up Rust
+        shell: pwsh
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          cargo --version
+
+      - name: Set up Kotlin compiler
+        shell: pwsh
+        run: |
+          $version = '2.4.10'
+          $archive = Join-Path $env:RUNNER_TEMP 'kotlin.zip'
+          $destination = Join-Path $env:RUNNER_TEMP 'kotlin'
+          Invoke-WebRequest "https://github.com/JetBrains/kotlin/releases/download/v$version/kotlin-compiler-$version.zip" -OutFile $archive
+          Expand-Archive -LiteralPath $archive -DestinationPath $destination
+          $bin = Join-Path $destination 'kotlinc/bin'
+          $bin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & (Join-Path $bin 'kotlinc.bat') -version
+
+      - name: Checkout official plugin sources
+        if: ${{ inputs.include_official_plugins }}
+        shell: pwsh
+        run: |
+          $pluginsRoot = Join-Path $PWD 'ejemplos/plugins'
+          New-Item -ItemType Directory -Force -Path $pluginsRoot | Out-Null
+          foreach ($name in @('joss_ai', 'joss_smtp', 'joss_notify', 'joss_backup')) {
+            $destination = Join-Path $pluginsRoot $name
+            if (Test-Path -LiteralPath $destination) {
+              if (-not (Test-Path -LiteralPath (Join-Path $destination '.git'))) {
+                throw "$destination existe pero no es un repositorio Git"
+              }
+              git -C $destination fetch --depth 1 origin $env:PLUGIN_REF
+              git -C $destination checkout --detach FETCH_HEAD
+            } else {
+              git clone --depth 1 --branch $env:PLUGIN_REF "https://github.com/josprox/$name.git" $destination
+            }
+            if ($LASTEXITCODE -ne 0) { throw "No se pudo preparar $name" }
+          }
+
+      - name: Build and package distribution
+        shell: pwsh
+        run: |
+          $arguments = @()
+          if ('${{ inputs.include_official_plugins }}' -ne 'true') {
+            $arguments += '-SkipOfficialPlugins'
+          }
+          ./build_all.ps1 @arguments
+
+      - name: Upload distribution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: joss-distribution
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Validate release input
+        if: ${{ inputs.create_release }}
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace('${{ inputs.release_tag }}')) {
+            throw 'release_tag es obligatorio cuando create_release esta habilitado'
+          }
+
+      - name: Publish GitHub Release
+        if: ${{ inputs.create_release }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          $files = Get-ChildItem -LiteralPath dist -File | ForEach-Object FullName
+          gh release create $env:RELEASE_TAG $files --title "Joss $env:RELEASE_TAG" --generate-notes

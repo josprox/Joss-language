@@ -3,6 +3,8 @@
 *.dll
 *.so
 *.dylib
+/dist/
+/.joss-release-work/
 
 # Joss
 env.joss

@@ -23,7 +23,8 @@ export function activate(context: vscode.ExtensionContext) {
         // Register Commands
         registerCommands(context, client);
 
-        // Register Completion Provider
+        // View templates keep their controller-variable suggestions. Source
+        // files use the richer language-server completion provider.
         context.subscriptions.push(getCompletionItemProvider());
 
         // Status Bar
@@ -65,7 +66,10 @@ function startLanguageServer(context: vscode.ExtensionContext): LanguageClient {
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{ scheme: 'file', language: 'joss' }],
         synchronize: {
-            fileEvents: vscode.workspace.createFileSystemWatcher('**/*.joss')
+            fileEvents: [
+                vscode.workspace.createFileSystemWatcher('**/*.joss'),
+                vscode.workspace.createFileSystemWatcher('**/*.jp')
+            ]
         }
     };
 

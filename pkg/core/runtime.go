@@ -38,6 +38,10 @@ var (
 				CurrentMiddleware: make([]string, 0),
 				CustomMiddlewares: make(map[string]interface{}),
 				NativeHandlers:    make(map[string]NativeHandler),
+				NativePlugins:     make(map[string]*NativePluginDefinition),
+				LoadedPlugins:     make(map[string]string),
+				loadingPlugins:    make(map[string]bool),
+				importedFiles:     make(map[string]bool),
 			}
 			r.Variables["cout"] = &Cout{}
 			r.Variables["cin"] = &Cin{}
@@ -61,6 +65,18 @@ func NewRuntime() *Runtime {
 	InitLogger()
 
 	r := runtimePool.Get().(*Runtime)
+	if r.LoadedPlugins == nil {
+		r.LoadedPlugins = make(map[string]string)
+	}
+	if r.loadingPlugins == nil {
+		r.loadingPlugins = make(map[string]bool)
+	}
+	if r.importedFiles == nil {
+		r.importedFiles = make(map[string]bool)
+	}
+	if r.NativePlugins == nil {
+		r.NativePlugins = make(map[string]*NativePluginDefinition)
+	}
 	// Ensure native classes are registered (if recycled)
 	if _, ok := r.Variables["View"]; !ok {
 		r.Variables["cout"] = &Cout{}
@@ -81,6 +97,27 @@ func (r *Runtime) Free() {
 	for k := range r.Variables {
 		delete(r.Variables, k)
 	}
+	for k := range r.VarTypes {
+		delete(r.VarTypes, k)
+	}
+	for k := range r.Classes {
+		delete(r.Classes, k)
+	}
+	for k := range r.Functions {
+		delete(r.Functions, k)
+	}
+	for k := range r.Routes {
+		delete(r.Routes, k)
+	}
+	for k := range r.CustomMiddlewares {
+		delete(r.CustomMiddlewares, k)
+	}
+	for k := range r.NativeHandlers {
+		delete(r.NativeHandlers, k)
+	}
+	for k := range r.NativePlugins {
+		delete(r.NativePlugins, k)
+	}
 	// Restore standard variables
 	r.Variables["cout"] = &Cout{}
 	r.Variables["cin"] = &Cin{}
@@ -90,6 +127,19 @@ func (r *Runtime) Free() {
 	// But parsing every time is slow.
 	// We should also clear CurrentMiddleware
 	r.CurrentMiddleware = r.CurrentMiddleware[:0]
+	for k := range r.LoadedPlugins {
+		delete(r.LoadedPlugins, k)
+	}
+	for k := range r.loadingPlugins {
+		delete(r.loadingPlugins, k)
+	}
+	for k := range r.importedFiles {
+		delete(r.importedFiles, k)
+	}
+	r.pluginsAutoloaded = false
+	r.ProjectRoot = ""
+	r.importBaseDir = ""
+	r.usePluginVFS = false
 
 	runtimePool.Put(r)
 }
@@ -108,6 +158,20 @@ func (r *Runtime) Fork() *Runtime {
 		Variables:         make(map[string]interface{}),
 		VarTypes:          make(map[string]string),
 		NativeHandlers:    r.NativeHandlers, // Share Dispatch Table
+		NativePlugins:     r.NativePlugins,  // Share immutable plugin definitions
+		LoadedPlugins:     make(map[string]string),
+		loadingPlugins:    make(map[string]bool),
+		importedFiles:     make(map[string]bool),
+		pluginsAutoloaded: r.pluginsAutoloaded,
+		ProjectRoot:       r.ProjectRoot,
+		importBaseDir:     r.importBaseDir,
+		usePluginVFS:      r.usePluginVFS,
+	}
+	for name, version := range r.LoadedPlugins {
+		newR.LoadedPlugins[name] = version
+	}
+	for path, loaded := range r.importedFiles {
+		newR.importedFiles[path] = loaded
 	}
 	// fmt.Println("[RUNTIME] Fork: Maps initialized")
 

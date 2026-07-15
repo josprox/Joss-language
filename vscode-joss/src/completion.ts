@@ -4,7 +4,7 @@ import * as path from 'path';
 
 export function getCompletionItemProvider() {
     return vscode.languages.registerCompletionItemProvider(
-        ['joss', 'joss-html'],
+        'joss-html',
         {
             provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken, context: vscode.CompletionContext) {
                 const linePrefix = document.lineAt(position).text.substr(0, position.character);
