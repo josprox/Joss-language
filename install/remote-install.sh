@@ -47,6 +47,19 @@ detect_vscode() {
     command -v code &> /dev/null
 }
 
+run_privileged() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+        return $?
+    fi
+    if command -v sudo &> /dev/null; then
+        sudo "$@"
+        return $?
+    fi
+    log ERROR "[X] Administrator privileges are required, but sudo is not available."
+    return 1
+}
+
 # Detecta el nombre del binario a buscar en el ZIP
 get_binary_name() {
     OS=$(uname -s)
@@ -91,21 +104,26 @@ install_jossecurity() {
     fi
     
     log INFO "Found binary: $BINARY_FILE. Installing to $INSTALL_DIR..."
-    
-    # Remove existing binary to prevent "Text file busy" error
-    if [ -f "$INSTALL_DIR/joss" ]; then
-        sudo rm -f "$INSTALL_DIR/joss"
-    fi
 
-    if sudo cp "$BINARY_PATH" "$INSTALL_DIR/joss"; then
-        sudo chmod +x "$INSTALL_DIR/joss"
-        log SUCCESS "[OK] Binary installed and executable."
-        log WARNING "Please restart your terminal (e.g., 'source ~/.bashrc') to update PATH."
-        return 0
-    else
-        log ERROR "[X] Failed to copy binary. Requires sudo."
+    if ! run_privileged mkdir -p "$INSTALL_DIR"; then
+        log ERROR "[X] Could not create installation directory $INSTALL_DIR."
         return 1
     fi
+
+    STAGED_BINARY="$INSTALL_DIR/.joss-install-$$"
+    if ! run_privileged cp "$BINARY_PATH" "$STAGED_BINARY" ||
+       ! run_privileged chmod +x "$STAGED_BINARY" ||
+       ! run_privileged mv -f "$STAGED_BINARY" "$INSTALL_DIR/joss"; then
+        run_privileged rm -f "$STAGED_BINARY" || true
+        log ERROR "[X] Failed to install binary in $INSTALL_DIR."
+        return 1
+    fi
+
+    log SUCCESS "[OK] Binary installed and executable."
+    if ! command -v joss &> /dev/null; then
+        log WARNING "$INSTALL_DIR is not currently in PATH. Restart the terminal or add it to your shell profile."
+    fi
+    return 0
 }
 
 install_sdk() {
@@ -117,23 +135,34 @@ install_sdk() {
         return 1
     fi
 
-    sudo rm -rf "$SDK_INSTALL_DIR"
-    sudo mkdir -p "$SDK_INSTALL_DIR"
-    if sudo cp -R "$SDK_SOURCE"/. "$SDK_INSTALL_DIR"/; then
-        log SUCCESS "[OK] SDK installed at $SDK_INSTALL_DIR"
-        return 0
+    SDK_PARENT=$(dirname "$SDK_INSTALL_DIR")
+    STAGED_SDK="$SDK_PARENT/.sdk-install-$$"
+    if ! run_privileged mkdir -p "$SDK_PARENT" ||
+       ! run_privileged rm -rf "$STAGED_SDK" ||
+       ! run_privileged mkdir -p "$STAGED_SDK" ||
+       ! run_privileged cp -R "$SDK_SOURCE"/. "$STAGED_SDK"/; then
+        run_privileged rm -rf "$STAGED_SDK" || true
+        log ERROR "[X] SDK staging failed."
+        return 1
     fi
 
-    log ERROR "[X] SDK installation failed."
-    return 1
+    if ! run_privileged rm -rf "$SDK_INSTALL_DIR" ||
+       ! run_privileged mv "$STAGED_SDK" "$SDK_INSTALL_DIR"; then
+        run_privileged rm -rf "$STAGED_SDK" || true
+        log ERROR "[X] SDK installation failed."
+        return 1
+    fi
+
+    log SUCCESS "[OK] SDK installed at $SDK_INSTALL_DIR"
+    return 0
 }
 
 install_extension() {
     log INFO "[3/3] Installing VS Code extension..."
     
     if ! detect_vscode; then
-        log WARNING "[X] VS Code not detected. Skipping extension install."
-        return 1
+        log WARNING "[SKIP] VS Code not detected. Extension installation skipped."
+        return 0
     fi
 
     # Buscar CUALQUIER archivo VSIX
@@ -159,14 +188,20 @@ install_extension() {
 # 2. Desinstalación
 uninstall_jossecurity() {
     log INFO "Uninstalling JosSecurity..."
-    if command -v joss &> /dev/null; then
-        sudo rm -f "$INSTALL_DIR/joss"
+    if [ -f "$INSTALL_DIR/joss" ]; then
+        if ! run_privileged rm -f "$INSTALL_DIR/joss"; then
+            log ERROR "[X] Failed to remove $INSTALL_DIR/joss"
+            return 1
+        fi
         log SUCCESS "[OK] Binary removed from $INSTALL_DIR"
     else
         log INFO "[OK] Binary not found."
     fi
     if [ -d "$SDK_INSTALL_DIR" ]; then
-        sudo rm -rf "$SDK_INSTALL_DIR"
+        if ! run_privileged rm -rf "$SDK_INSTALL_DIR"; then
+            log ERROR "[X] Failed to remove $SDK_INSTALL_DIR"
+            return 1
+        fi
         log SUCCESS "[OK] SDK removed from $SDK_INSTALL_DIR"
     fi
 }
@@ -237,7 +272,7 @@ ensure_vscode() {
         else
              # Linux attempt
              if command -v snap &> /dev/null; then
-                 sudo snap install code --classic
+                 run_privileged snap install code --classic
                  return 0
              elif command -v apt-get &> /dev/null; then
                  # Complex on debian/ubuntu without repo added.

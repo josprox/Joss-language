@@ -18,7 +18,7 @@ El runtime y el SDK se instalan en `C:\Program Files\JosSecurity`. El instalador
 curl -fsSL https://raw.githubusercontent.com/josprox/Joss-language/main/install/remote-install.sh | bash
 ```
 
-El runtime queda en `/usr/local/bin/joss` y el SDK en `/usr/local/share/joss/sdk`. Se usa `sudo` al copiar o eliminar archivos. Si `code` está en el `PATH`, se instala también el VSIX.
+El runtime queda en `/usr/local/bin/joss` y el SDK en `/usr/local/share/joss/sdk`. El instalador crea ambas rutas cuando no existen. Si se ejecuta como `root`, realiza las operaciones directamente; para usuarios normales utiliza `sudo` cuando está disponible. Si `code` está en el `PATH`, también instala el VSIX. La ausencia de VS Code no hace fallar la instalación del runtime ni del SDK.
 
 Ambos scripts muestran un menú para instalar, buscar una actualización o desinstalar. La descarga requiere `curl` y `unzip` en Linux/macOS; en Windows requiere PowerShell 5.1 o posterior.
 
