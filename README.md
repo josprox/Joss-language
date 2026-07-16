@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://joss.red/docs"><img alt="Documentación" src="https://img.shields.io/badge/docs-joss.red-ff5f6d?style=flat-square"></a>
   <a href="https://joss.red/pub"><img alt="Joss Pub" src="https://img.shields.io/badge/pub-librerías-ff8a65?style=flat-square"></a>
-  <a href="https://github.com/josprox/Joss-language/releases"><img alt="Release" src="https://img.shields.io/badge/release-3.6.0-3f51b5?style=flat-square"></a>
+  <a href="https://github.com/josprox/Joss-language/releases"><img alt="Release" src="https://img.shields.io/badge/release-3.6.1-3f51b5?style=flat-square"></a>
   <img alt="Plataformas" src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-263238?style=flat-square">
   <a href="./LICENSE"><img alt="Licencia MIT" src="https://img.shields.io/badge/license-MIT-2e7d32?style=flat-square"></a>
 </p>

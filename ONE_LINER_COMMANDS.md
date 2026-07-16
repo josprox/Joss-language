@@ -26,3 +26,5 @@ joss server start
 ```
 
 Consulta los detalles y requisitos en [install/README.md](install/README.md).
+
+La opción **Reinstall** permite indicar una versión concreta como `3.6.1`; si se deja vacía, reinstala el último release disponible.

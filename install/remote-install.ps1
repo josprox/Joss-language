@@ -10,7 +10,7 @@ $Host.UI.RawUI.ForegroundColor = "White"
 
 # --- CONFIGURACIÓN ---
 # Configuración que DEBE ser actualizada manualmente en el script
-$JossVersion = "3.6.0"
+$JossVersion = "3.6.1"
 $RepoOwner = "josprox"
 $RepoName = "Joss-language"
 
@@ -43,13 +43,49 @@ function Test-Administrator {
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
-function Test-VSCode {
-    try {
-        $null = Get-Command code -ErrorAction Stop
-        return $true
-    } catch {
-        return $false
+function Get-VSCodeCommand {
+    foreach ($name in @("code.cmd", "code")) {
+        $command = Get-Command $name -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($command) { return $command.Source }
     }
+
+    $candidates = @(
+        (Join-Path $env:LOCALAPPDATA "Programs\Microsoft VS Code\bin\code.cmd"),
+        (Join-Path $env:ProgramFiles "Microsoft VS Code\bin\code.cmd")
+    )
+    foreach ($candidate in $candidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
+    }
+    return $null
+}
+
+function Test-VSCode {
+    return $null -ne (Get-VSCodeCommand)
+}
+
+function Invoke-VSCode {
+    param([Parameter(Mandatory = $true)][string[]]$Arguments)
+
+    $command = Get-VSCodeCommand
+    if (-not $command) {
+        return [pscustomobject]@{ ExitCode = 127; Output = @("VS Code CLI was not found") }
+    }
+
+    # VS Code/Node can emit deprecation warnings on stderr with exit code 0.
+    $previousErrorAction = $ErrorActionPreference
+    $nativePreferenceExists = $null -ne (Get-Variable PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue)
+    if ($nativePreferenceExists) { $previousNativePreference = $PSNativeCommandUseErrorActionPreference }
+    try {
+        $ErrorActionPreference = "Continue"
+        if ($nativePreferenceExists) { $PSNativeCommandUseErrorActionPreference = $false }
+        $output = @(& $command @Arguments 2>&1 | ForEach-Object { $_.ToString() })
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousErrorAction
+        if ($nativePreferenceExists) { $PSNativeCommandUseErrorActionPreference = $previousNativePreference }
+    }
+
+    return [pscustomobject]@{ ExitCode = $exitCode; Output = $output }
 }
 
 function Add-ToPath {
@@ -184,12 +220,17 @@ function Install-Extension {
         Write-Log "Found VSIX: $($vsixFile.Name)" "INFO"
         
         # Usar --force para asegurar la instalación/actualización
-        & code --install-extension $vsixFile.FullName --force 2>&1 | Out-Null
+        $installResult = Invoke-VSCode -Arguments @("--install-extension", $vsixFile.FullName, "--force")
+        if ($installResult.ExitCode -ne 0) {
+            $detail = ($installResult.Output -join " ").Trim()
+            Write-Log "[X] Extension installation failed (exit $($installResult.ExitCode)): $detail" "ERROR"
+            return $false
+        }
         
         # Verificación simple (asume que la extensión se llama 'joss-language')
-        Start-Sleep -Seconds 2
-        $extensions = & code --list-extensions 2>&1
-        if ($extensions -match "joss-language") {
+        $listResult = Invoke-VSCode -Arguments @("--list-extensions")
+        $extensionIds = @($listResult.Output | ForEach-Object { $_.Trim().ToLowerInvariant() })
+        if ($listResult.ExitCode -eq 0 -and $extensionIds -contains "jossecurity.joss-language") {
             Write-Log "[OK] Extension installed successfully" "SUCCESS"
             return $true
         } else {
@@ -217,7 +258,7 @@ function Uninstall-JosSecurity {
         }
         
         # Remover directorio solo si está vacío
-        if (Test-Path $InstallDir -and (Get-ChildItem $InstallDir -Force | Measure-Object).Count -eq 0) {
+        if ((Test-Path -LiteralPath $InstallDir) -and (Get-ChildItem -LiteralPath $InstallDir -Force | Measure-Object).Count -eq 0) {
             Remove-Item $InstallDir -Recurse -Force
             Write-Log "[OK] Installation directory removed" "SUCCESS"
         }
@@ -246,9 +287,15 @@ function Uninstall-Extension {
     Write-Log "Uninstalling VS Code extension..." "INFO"
     try {
         if (Test-VSCode) {
-            $extensions = & code --list-extensions 2>&1
-            if ($extensions -match "joss-language") {
-                & code --uninstall-extension jossecurity.joss-language 2>&1 | Out-Null
+            $listResult = Invoke-VSCode -Arguments @("--list-extensions")
+            $extensionIds = @($listResult.Output | ForEach-Object { $_.Trim().ToLowerInvariant() })
+            if ($listResult.ExitCode -eq 0 -and $extensionIds -contains "jossecurity.joss-language") {
+                $uninstallResult = Invoke-VSCode -Arguments @("--uninstall-extension", "jossecurity.joss-language")
+                if ($uninstallResult.ExitCode -ne 0) {
+                    $detail = ($uninstallResult.Output -join " ").Trim()
+                    Write-Log "[X] Extension uninstall failed (exit $($uninstallResult.ExitCode)): $detail" "ERROR"
+                    return $false
+                }
                 Write-Log "[OK] Extension uninstalled" "SUCCESS"
                 return $true
             }
@@ -292,33 +339,40 @@ function Test-Update {
     Write-Log "Current version: $LocalVersion" "INFO"
     
     try {
-        $release = Invoke-RestMethod -Uri $RepoUrl -UseBasicParsing
+        $release = Get-ReleaseInfo
         $latestVersion = $release.tag_name -replace '^v', ''
         
         Write-Log "Latest version: $latestVersion" "INFO"
         
         if ([version]$latestVersion -gt [version]$LocalVersion) {
             Write-Log "[!] Update available: $latestVersion" "WARNING"
-            return @{ Available = $true; Version = $latestVersion }
+            return @{ Available = $true; Version = $latestVersion; Release = $release }
         } else {
             Write-Log "[OK] You have the latest version" "SUCCESS"
-            return @{ Available = $false }
+            return @{ Available = $false; Version = $latestVersion; Release = $release }
         }
     } catch {
         Write-Log "[X] Error checking for updates: $($_.Exception.Message)" "ERROR"
-        return @{ Available = $false }
+        return @{ Available = $false; Error = $_.Exception.Message }
     }
 }
 
 
 function Run-Update {
     Write-Log "Running update: Download and reinstalling."
-    if ((Install-JosSecurity) -and (Install-SDK) -and (Install-Extension)) {
+    if (Invoke-InstallComponents) {
         Write-Log "Update completed successfully." "SUCCESS"
         return $true
     }
     Write-Log "Update failed." "ERROR"
     return $false
+}
+
+function Invoke-InstallComponents {
+    $binaryInstalled = Install-JosSecurity
+    $sdkInstalled = Install-SDK
+    $extensionInstalled = Install-Extension
+    return $binaryInstalled -and $sdkInstalled -and $extensionInstalled
 }
 
 # --- FLUJO DE TRABAJO PRINCIPAL ---
@@ -360,14 +414,57 @@ function Download-File {
     }
 }
 
+function Get-ReleaseInfo {
+    param([string]$Version)
+
+    if ([string]::IsNullOrWhiteSpace($Version)) {
+        return Invoke-RestMethod -Uri $RepoUrl -UseBasicParsing
+    }
+
+    $normalized = $Version.Trim() -replace '^[vV]', ''
+    if ($normalized -notmatch '^\d+\.\d+\.\d+([-.][0-9A-Za-z.-]+)?$') {
+        throw "Invalid version '$Version'. Use a value such as 3.6.1."
+    }
+
+    $tags = @($Version.Trim(), "v$normalized", "V$normalized") | Select-Object -Unique
+    foreach ($tag in $tags) {
+        try {
+            $encodedTag = [Uri]::EscapeDataString($tag)
+            return Invoke-RestMethod -Uri "https://api.github.com/repos/$RepoOwner/$RepoName/releases/tags/$encodedTag" -UseBasicParsing
+        } catch {
+            # Try the next conventional tag spelling.
+        }
+    }
+    throw "Release $normalized was not found in $RepoOwner/$RepoName."
+}
+
+function Get-ReleaseAssetUrl {
+    param([Parameter(Mandatory = $true)]$Release, [Parameter(Mandatory = $true)][string]$Name)
+
+    $asset = @($Release.assets | Where-Object { $_.name -eq $Name } | Select-Object -First 1)
+    if ($asset.Count -eq 0) {
+        throw "Release $($Release.tag_name) does not contain required asset $Name."
+    }
+    return $asset[0].browser_download_url
+}
+
 function Download-And-Extract {
+    param($Release = $null)
+
     $WindowsZip = "jossecurity-windows.zip"
     $ExtensionZip = "jossecurity-vscode.zip"
     $SdkZip = "joss-plugin-sdk.zip"
-    
-    $WindowsUrl = "https://github.com/$RepoOwner/$RepoName/releases/latest/download/$WindowsZip"
-    $ExtensionUrl = "https://github.com/$RepoOwner/$RepoName/releases/latest/download/$ExtensionZip"
-    $SdkUrl = "https://github.com/$RepoOwner/$RepoName/releases/latest/download/$SdkZip"
+
+    try {
+        if ($null -eq $Release) { $Release = Get-ReleaseInfo }
+        $WindowsUrl = Get-ReleaseAssetUrl -Release $Release -Name $WindowsZip
+        $ExtensionUrl = Get-ReleaseAssetUrl -Release $Release -Name $ExtensionZip
+        $SdkUrl = Get-ReleaseAssetUrl -Release $Release -Name $SdkZip
+        Write-Log "Selected release: $($Release.tag_name)" "INFO"
+    } catch {
+        Write-Log "[X] Could not resolve release assets: $($_.Exception.Message)" "ERROR"
+        return $false
+    }
 
     Write-Log "[INIT] Preparing temp directory..."
     if (Test-Path $TempDir) { Remove-Item $TempDir -Recurse -Force }
@@ -403,54 +500,62 @@ function Download-And-Extract {
     return $true
 }
 
-# 2. Menú de Acción
+# Ejecutar lógica principal
 function Show-MainMenu {
     Write-Host "=======================================" -ForegroundColor Blue
-    Write-Host "   JosSecurity Action Menu            " -ForegroundColor Blue
+    Write-Host "   JosSecurity Action Menu" -ForegroundColor Blue
     Write-Host "=======================================" -ForegroundColor Blue
     Write-Host ""
     Write-Host "Select an action:" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "  [1] Install (Joss Binary + SDK + Extension)" -ForegroundColor White
-    Write-Host "  [2] Update (Check and Reinstall)" -ForegroundColor White
-    Write-Host "  [3] Uninstall (Remove Binary + SDK + Extension)" -ForegroundColor White
-    Write-Host "  [0] Exit" -ForegroundColor White
+    Write-Host "  [1] Install (Joss Binary + SDK + Extension)" -ForegroundColor White
+    Write-Host "  [2] Update (Only When a New Version Exists)" -ForegroundColor White
+    Write-Host "  [3] Reinstall (Latest or Specific Version)" -ForegroundColor White
+    Write-Host "  [4] Uninstall (Remove Binary + SDK + Extension)" -ForegroundColor White
+    Write-Host "  [0] Exit" -ForegroundColor White
     Write-Host ""
-    
+
     $option = Read-Host "Option"
-    
+
     switch ($option) {
-        "1" { # INSTALAR
-            if (Download-And-Extract) {
-                Install-JosSecurity
-                Install-SDK
-                Install-Extension
-            }
+        "1" {
+            if (Download-And-Extract) { $null = Invoke-InstallComponents }
         }
-        "2" { # ACTUALIZAR
+        "2" {
             $updateInfo = Test-Update
             if ($updateInfo.Available) {
                 Write-Host "Updating to v$($updateInfo.Version)" -ForegroundColor Green
-                if (Download-And-Extract) { Run-Update }
+                if (Download-And-Extract -Release $updateInfo.Release) { $null = Run-Update }
             }
         }
-        "3" { # DESINSTALAR
-            Uninstall-JosSecurity
-            Uninstall-Extension
+        "3" {
+            $requestedVersion = Read-Host "Version to reinstall (leave blank for latest)"
+            try {
+                $release = Get-ReleaseInfo -Version $requestedVersion
+                Write-Host "Reinstalling $($release.tag_name)..." -ForegroundColor Green
+                if (Download-And-Extract -Release $release) { $null = Run-Update }
+            } catch {
+                Write-Log "[X] Reinstallation failed: $($_.Exception.Message)" "ERROR"
+            }
         }
-        "0" { Write-Log "Operation cancelled."; exit }
-        default { Write-Log "Invalid option"; Show-MainMenu }
+        "4" {
+            $null = Uninstall-JosSecurity
+            $null = Uninstall-Extension
+        }
+        "0" { Write-Log "Operation cancelled."; return }
+        default { Write-Log "Invalid option" "ERROR" }
     }
-    
+
     Write-Host ""
     Write-Log "Cleaning up temp directory..."
     Remove-Item $TempDir -Recurse -Force -ErrorAction SilentlyContinue
     Write-Log "Operation finished. Log: $LogFile" "SUCCESS"
 }
 
-# Ejecutar lógica principal
-if (-not (Test-Administrator)) {
-    Write-Host "WARNING: Not running as Administrator. PATH changes or installation to 'Program Files' may fail." -ForegroundColor Yellow
-    Write-Host "Run as Administrator for full functionality." -ForegroundColor Yellow
+if ($env:JOSS_INSTALLER_SKIP_MENU -ne "1") {
+    if (-not (Test-Administrator)) {
+        Write-Host "WARNING: Not running as Administrator. PATH changes or installation to 'Program Files' may fail." -ForegroundColor Yellow
+        Write-Host "Run as Administrator for full functionality." -ForegroundColor Yellow
+    }
+    Show-MainMenu
 }
-Show-MainMenu

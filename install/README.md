@@ -29,3 +29,7 @@ joss version
 ```
 
 Logs: `%TEMP%\jossecurity-action.log` en Windows y `/tmp/jossecurity-action.log` en Linux/macOS.
+
+## Reinstalar una versión
+
+Selecciona **Reinstall** en el menú. Puedes escribir una versión concreta, por ejemplo `3.6.1`, o dejarla vacía para descargar e instalar nuevamente el release más reciente aunque esa misma versión ya esté instalada. La reinstalación reemplaza el runtime, el SDK de plugins y la extensión de VS Code.

@@ -16,7 +16,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Configuración que DEBE ser actualizada manualmente en el script
-JOSS_VERSION="3.6.0"
+JOSS_VERSION="3.6.1"
 REPO_OWNER="josprox"
 REPO_NAME="Joss-language"
 
@@ -196,13 +196,14 @@ check_update() {
     log INFO "Current version: $LOCAL_VERSION"
     
     RELEASE_INFO=$(curl -s "$REPO_URL")
-    LATEST_VERSION=$(echo "$RELEASE_INFO" | grep '"tag_name"' | sed -E 's/.*"v?([^"]+)".*/\1/' || echo "0.0.0")
+    LATEST_TAG=$(echo "$RELEASE_INFO" | grep '"tag_name"' | head -n 1 | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/' || echo "")
+    LATEST_VERSION="${LATEST_TAG#[vV]}"
+    if [ -z "$LATEST_VERSION" ]; then LATEST_VERSION="0.0.0"; fi
     
     log INFO "Latest version: $LATEST_VERSION"
     
     if [ "$LATEST_VERSION" != "0.0.0" ] && [ "$(printf '%s\n' "$LATEST_VERSION" "$LOCAL_VERSION" | sort -V | head -n1)" != "$LATEST_VERSION" ]; then
         log WARNING "[!] Update available: $LATEST_VERSION"
-        echo "$LATEST_VERSION" # Devuelve la versión para el menú
         return 0 # Update available
     fi
     log SUCCESS "[OK] You have the latest version ($LOCAL_VERSION)."
@@ -249,7 +250,38 @@ ensure_vscode() {
 }
 
 # 1. Descarga y Extracción
+resolve_release_tag() {
+    local requested="${1:-}"
+    local payload=""
+    if [ -z "$requested" ]; then
+        payload=$(curl -fsSL "$REPO_URL") || return 1
+        echo "$payload" | grep '"tag_name"' | head -n 1 | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/'
+        return 0
+    fi
+
+    local normalized="${requested#[vV]}"
+    if ! [[ "$normalized" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+        return 1
+    fi
+
+    local tag
+    for tag in "$requested" "v$normalized" "V$normalized"; do
+        payload=$(curl -fsSL "https://api.github.com/repos/$REPO_OWNER/$REPO_NAME/releases/tags/$tag" 2>/dev/null) || continue
+        echo "$payload" | grep '"tag_name"' | head -n 1 | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/'
+        return 0
+    done
+    return 1
+}
+
 download_and_extract() {
+    RELEASE_TAG="${1:-}"
+    if [ -z "$RELEASE_TAG" ]; then
+        RELEASE_TAG=$(resolve_release_tag) || {
+            log ERROR "[X] Could not resolve the latest release."
+            return 1
+        }
+    fi
+
     log INFO "[INIT] Preparing temp directory..."
     rm -rf "$TEMP_DIR"
     mkdir -p "$TEMP_DIR"
@@ -264,9 +296,10 @@ download_and_extract() {
     EXT_ZIP="jossecurity-vscode.zip"
     SDK_ZIP="joss-plugin-sdk.zip"
 
-    BINARY_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/$OS_ZIP"
-    EXT_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/$EXT_ZIP"
-    SDK_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/latest/download/$SDK_ZIP"
+    BINARY_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$RELEASE_TAG/$OS_ZIP"
+    EXT_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$RELEASE_TAG/$EXT_ZIP"
+    SDK_URL="https://github.com/$REPO_OWNER/$REPO_NAME/releases/download/$RELEASE_TAG/$SDK_ZIP"
+    log INFO "Selected release: $RELEASE_TAG"
     
     # 1. Binaries
     log INFO "[INIT] Downloading Binaries ($OS_ZIP)..."
@@ -301,53 +334,54 @@ download_and_extract() {
     return 0
 }
 
-# 2. Menú de Acción
 main_menu() {
     echo -e "${BLUE}"
     echo "======================================="
     echo "  JosSecurity Action Menu"
     echo "======================================="
     echo -e "${NC}"
-    
     echo ""
-    echo "Select an action:"
-    echo ""
-    echo "  [1] Install (Joss Binary + SDK + Extension)"
-    echo "  [2] Update (Check and Reinstall)"
-    echo "  [3] Uninstall (Remove Binary + SDK + Extension)"
-    echo "  [0] Exit"
+    echo "  [1] Install (Joss Binary + SDK + Extension)"
+    echo "  [2] Update (Only When a New Version Exists)"
+    echo "  [3] Reinstall (Latest or Specific Version)"
+    echo "  [4] Uninstall (Remove Binary + SDK + Extension)"
+    echo "  [0] Exit"
     echo ""
     read -p "Option: " option < /dev/tty
-    
+
     case $option in
-        1) # INSTALAR
-            if download_and_extract; then
-                install_jossecurity
-                install_sdk
-                install_extension
-            fi
+        1)
+            if download_and_extract; then run_update; fi
             ;;
-        2) # ACTUALIZAR
-            LATEST_VER=$(check_update)
-            if [ $? -eq 0 ]; then
-                log SUCCESS "Updating to v$LATEST_VER"
+        2)
+            if check_update; then
+                log SUCCESS "Updating to v$LATEST_VERSION"
                 if download_and_extract; then run_update; fi
-            else
-                log WARNING "No update required."
             fi
             ;;
-        3) # DESINSTALAR
+        3)
+            read -p "Version to reinstall (leave blank for latest): " requested_version < /dev/tty
+            release_tag=$(resolve_release_tag "$requested_version") || {
+                log ERROR "[X] Requested release was not found."
+                return 1
+            }
+            log INFO "Reinstalling $release_tag..."
+            if download_and_extract "$release_tag"; then run_update; fi
+            ;;
+        4)
             uninstall_jossecurity
             uninstall_extension
             ;;
-        0) log INFO "Operation cancelled."; exit 0;;
-        *) log ERROR "Invalid option"; main_menu;;
+        0) log INFO "Operation cancelled."; return 0;;
+        *) log ERROR "Invalid option";;
     esac
-    
+
     log INFO "Cleaning up temp directory..."
     rm -rf "$TEMP_DIR"
     log SUCCESS "Operation finished. Log: $LOG_FILE"
 }
 
 # Execute main logic
-main_menu
+if [ "${JOSS_INSTALLER_SKIP_MENU:-0}" != "1" ]; then
+    main_menu
+fi
